@@ -6,6 +6,7 @@ import Partners from "@/components/Partners";
 import UGC from "@/components/UGC";
 import Blog from "@/components/Blog";
 import Contact from "@/components/Contact";
+import NewsletterSection from "@/components/NewsletterSection";
 import Footer from "@/components/Footer";
 
 export default function Home() {
@@ -19,6 +20,7 @@ export default function Home() {
       <UGC />
       <Blog />
       <Contact />
+      <NewsletterSection />
       <Footer />
     </main>
   );

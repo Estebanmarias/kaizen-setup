@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { GoogleAnalytics } from '@next/third-parties/google';
+import NewsletterPopup from "@/components/NewsletterPopup";
+
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -46,6 +48,7 @@ export default function RootLayout({
       <body className={inter.className} suppressHydrationWarning>
         <Navbar />
         {children}
+        <NewsletterPopup />
         <GoogleAnalytics gaId="G-M13PZ1RESN" />
       </body>
     </html>

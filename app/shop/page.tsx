@@ -5,16 +5,6 @@ import { supabase } from "@/lib/supabase";
 import { MessageCircle, ShoppingCart, X } from "lucide-react";
 import Link from "next/link";
 
-const PRODUCT_IMAGES: Record<string, string> = {
-  'Xiaomi 34" Monitor G34QW': "https://i05.appmifile.com/584_item_uk/20/08/2024/697b272616dc15c9f730a88f5d418ea1.png?thumb=1&w=600&f=webp&q=85",
-  "Mi Computer Monitor Light Bar": "https://i01.appmifile.com/v1/MI_18455B3E4DA706226CF7535A58E875F0267/pms_1643183298.41047328.png?thumb=1&w=600&f=webp&q=85",
-  "Wireless Tag Dual Tracker": "https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcTeOextV8rHWqU8EblJW1foD9HnWWvLANyIsu_FDsYbrsZ1rZlUeWOhcxGVD6rbgRYqDDVX5EHW0LnWMEbkJ_Yi7OYHnmRlSs7abe_teBeS2AArbMb7pZGXtjwD-nO1yqKWrdpk2BA&usqp=CAc",
-  "Logitech MX Master 4": "https://resource.logitech.com/w_416,h_312,ar_4:3,c_pad,q_auto,f_auto,dpr_2.0/d_transparent.gif/content/dam/logitech/en/products/mice/mx-master-4/gallery/mx-master-4-graphite-software-angle-gallery-7.png",
-  "Logitech MX Keys S": "https://resource.logitech.com/w_544,h_466,ar_7:6,c_pad,q_auto,f_auto,dpr_2.0/d_transparent.gif/content/dam/logitech/en/products/keyboards/mx-keys-s/migration-assets-for-delorean-2025/gallery/mx-keys-s-top-view-graphite-ukr.png",
-  "Logitech MX Keys Mini": "https://resource.logitech.com/w_416,h_312,ar_4:3,c_pad,q_auto,f_auto,dpr_2.0/d_transparent.gif/content/dam/logitech/en/products/keyboards/mx-keys-mini/gallery/deu/mx-keys-mini-3q-tilted-graphite-deu.png",
-  "CX23 Mechanical Keyboard": "/images/products/cx23-keyboard.jpg",
-};
-
 const CATEGORIES = ["All", "Desk & Seating", "Monitors & Lighting", "Accessories", "Cables & Hubs", "Smart Home", "Cleaning", "Bags", "Keyboards", "Mice", "Monitors"];
 
 type Product = {
@@ -25,6 +15,8 @@ type Product = {
   category: string;
   partner: string | null;
   in_stock: boolean;
+  image_url: string | null;
+  slug: string;
 };
 
 function OrderModal({ product, onClose }: { product: Product; onClose: () => void }) {
@@ -174,16 +166,22 @@ export default function ShopPage() {
             {filtered.map(p => (
               <div key={p.id}
                 className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden hover:border-blue-500 transition-colors flex flex-col">
-                <div className="bg-white dark:bg-[#111] h-52 flex items-center justify-center p-4">
-                  <img
-                    src={PRODUCT_IMAGES[p.name] ?? "/images/products/placeholder.jpg"}
-                    alt={p.name}
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </div>
+                <Link href={`/shop/${p.slug}`} className="block">
+                  <div className="bg-white dark:bg-[#111] h-52 flex items-center justify-center p-4">
+                    <img
+                      src={p.image_url ?? "/images/products/placeholder.jpg"}
+                      alt={p.name}
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  </div>
+                </Link>
                 <div className="p-5 flex flex-col flex-1">
                   <span className="text-xs font-semibold text-blue-500 mb-1">{p.category}</span>
-                  <h2 className="font-semibold text-base text-gray-900 dark:text-white mb-2">{p.name}</h2>
+                  <Link href={`/shop/${p.slug}`}>
+                    <h2 className="font-semibold text-base text-gray-900 dark:text-white mb-2 hover:text-blue-500 transition-colors">
+                      {p.name}
+                    </h2>
+                  </Link>
                   <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed flex-1 mb-4">
                     {p.description}
                   </p>
