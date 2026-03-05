@@ -5,7 +5,8 @@ const NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "Services", href: "#services" },
   { label: "Reviews", href: "#reviews" },
-  { label: "Guides", href: "#guides" },
+  { label: "Shop", href: "/shop" },
+  { label: "Creators", href: "/ugc" },
   { label: "Blog", href: "/blog" },
   { label: "Contact", href: "#contact" },
 ];
@@ -52,53 +53,42 @@ const SOCIALS = [
 
 export default function Footer() {
   return (
-    <footer className="bg-white dark:bg-[#0f0f0f] border-t border-gray-100 dark:border-gray-800 py-12 px-6">
+    <footer className="bg-gray-900 dark:bg-[#0a0a0a] border-t border-gray-800 py-12 px-6">
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
-          {/* Brand */}
           <div>
-            <p className="font-bold text-xl text-gray-900 dark:text-white mb-2">
-              Kaizen<span className="text-emerald-500">Setup</span>
+            <p className="font-bold text-xl text-white mb-2">
+              Kaizen<span className="text-blue-500">Setup</span>
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed max-w-xs">
+            <p className="text-sm text-gray-400 leading-relaxed max-w-xs">
               Smart & affordable tech setups for homes and businesses in Nigeria.
             </p>
           </div>
 
-          {/* Nav */}
           <div>
-            <p className="text-xs font-semibold tracking-widest uppercase text-gray-400 dark:text-gray-600 mb-4">
+            <p className="text-xs font-semibold tracking-widest uppercase text-gray-600 mb-4">
               Navigation
             </p>
             <div className="flex flex-col gap-2">
               {NAV_LINKS.map((l) => (
-                <Link
-                  key={l.label}
-                  href={l.href}
-                  className="text-sm text-gray-500 dark:text-gray-400 hover:text-emerald-500 transition-colors"
-                >
+                <Link key={l.label} href={l.href}
+                  className="text-sm text-gray-400 hover:text-blue-500 transition-colors">
                   {l.label}
                 </Link>
               ))}
             </div>
           </div>
 
-          {/* Socials */}
           <div>
-            <p className="text-xs font-semibold tracking-widest uppercase text-gray-400 dark:text-gray-600 mb-4">
+            <p className="text-xs font-semibold tracking-widest uppercase text-gray-600 mb-4">
               Follow Us
             </p>
             <div className="flex flex-col gap-3">
               {SOCIALS.map((s) => {
                 const Icon = s.icon;
                 return (
-                  <a
-                    key={s.label}
-                    href={s.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-emerald-500 transition-colors"
-                  >
+                  <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-sm text-gray-400 hover:text-blue-500 transition-colors">
                     <Icon />
                     {s.label}
                   </a>
@@ -108,7 +98,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-gray-100 dark:border-gray-800 pt-6 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-gray-400 dark:text-gray-600">
+        <div className="border-t border-gray-800 pt-6 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-gray-600">
           <p>© {new Date().getFullYear()} KaizenSetup. All rights reserved.</p>
           <p>Built in Ibadan, Nigeria 🇳🇬</p>
         </div>

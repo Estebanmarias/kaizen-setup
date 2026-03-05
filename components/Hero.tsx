@@ -21,31 +21,29 @@ export default function Hero() {
       id="home"
       className="relative min-h-screen flex flex-col justify-center px-6 pt-24 pb-16 overflow-hidden bg-white dark:bg-[#0f0f0f]"
     >
-      {/* Tech grid background */}
+      {/* Grid background */}
       <div
-        className="absolute inset-0 opacity-[0.04] dark:opacity-[0.07]"
+        className="absolute inset-0 opacity-[0.04] dark:opacity-[0.06]"
         style={{
           backgroundImage:
-            "linear-gradient(#10b981 1px, transparent 1px), linear-gradient(90deg, #10b981 1px, transparent 1px)",
+            "linear-gradient(#111 1px, transparent 1px), linear-gradient(90deg, #111 1px, transparent 1px)",
           backgroundSize: "40px 40px",
         }}
       />
 
-      {/* Glow */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-400 opacity-[0.06] rounded-full blur-3xl pointer-events-none" />
+      {/* Subtle glow */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gray-300 dark:bg-gray-700 opacity-10 rounded-full blur-3xl pointer-events-none" />
 
-      <div
-        className={`max-w-4xl mx-auto relative z-10 transition-all duration-700 ${
-          visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-        }`}
-      >
-        <span className="inline-block text-xs font-semibold tracking-widest uppercase text-emerald-500 mb-4">
+      <div className={`max-w-4xl mx-auto relative z-10 transition-all duration-700 ${
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+      }`}>
+        <span className="inline-block text-xs font-semibold tracking-widest uppercase text-blue-500 mb-4">
           Ibadan, Nigeria · Est. 2024
         </span>
 
         <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6 text-gray-900 dark:text-white">
           Smart & Affordable <br />
-          <span className="text-emerald-500">Tech Setups</span> in Nigeria
+          <span className="text-gray-400 dark:text-gray-500">Tech Setups</span> in Nigeria
         </h1>
 
         <p className="text-lg md:text-xl text-gray-500 dark:text-gray-400 max-w-2xl mb-10 leading-relaxed">
@@ -54,16 +52,12 @@ export default function Hero() {
         </p>
 
         <div className="flex flex-wrap gap-4">
-          <a
-            href="#contact"
-            className="bg-emerald-500 hover:bg-emerald-400 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-colors"
-          >
+          <a href="#contact"
+            className="bg-gray-900 hover:bg-gray-700 dark:bg-white dark:hover:bg-gray-200 text-white dark:text-gray-900 px-6 py-3 rounded-lg font-semibold text-sm transition-colors">
             Book a Consultation
           </a>
-          <a
-            href="#reviews"
-            className="border border-emerald-500 text-emerald-500 hover:bg-emerald-500 hover:text-white px-6 py-3 rounded-lg font-semibold text-sm transition-colors"
-          >
+          <a href="#reviews"
+            className="border border-gray-900 dark:border-white text-gray-900 dark:text-white hover:bg-gray-900 hover:text-white dark:hover:bg-white dark:hover:text-gray-900 px-6 py-3 rounded-lg font-semibold text-sm transition-colors">
             View Reviews
           </a>
         </div>
@@ -71,7 +65,7 @@ export default function Hero() {
         <div className="mt-16 flex flex-wrap gap-6 text-sm text-gray-500 dark:text-gray-400">
           {TRUST_SIGNALS.map((t) => (
             <span key={t} className="flex items-center gap-2">
-              <span className="text-emerald-500 font-bold">✓</span> {t}
+              <span className="text-blue-500 font-bold">✓</span> {t}
             </span>
           ))}
         </div>

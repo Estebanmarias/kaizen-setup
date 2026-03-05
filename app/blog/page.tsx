@@ -43,9 +43,7 @@ export default function BlogPage() {
     } else {
       setFiltered(
         posts.filter((p) =>
-          p.categories.some((c) =>
-            c.toLowerCase().includes(cat.toLowerCase())
-          )
+          p.categories.some((c) => c.toLowerCase().includes(cat.toLowerCase()))
         )
       );
     }
@@ -54,14 +52,11 @@ export default function BlogPage() {
   return (
     <main className="min-h-screen bg-white dark:bg-[#0f0f0f] pt-24 pb-20 px-6">
       <div className="max-w-6xl mx-auto">
-        <Link
-          href="/"
-          className="text-sm text-emerald-500 hover:underline mb-8 inline-block"
-        >
+        <Link href="/" className="text-sm text-blue-500 hover:underline mb-8 inline-block">
           ← Back to Home
         </Link>
 
-        <p className="text-xs font-semibold tracking-widest uppercase text-emerald-500 mb-3">
+        <p className="text-xs font-semibold tracking-widest uppercase text-blue-500 mb-3">
           The Blog
         </p>
         <h1 className="text-3xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-white">
@@ -71,31 +66,24 @@ export default function BlogPage() {
           Tech news, honest reviews, and setup guides from KaizenSetup.
         </p>
 
-        {/* Category Filter */}
         <div className="flex flex-wrap gap-3 mb-10">
           {CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => filter(cat)}
+            <button key={cat} onClick={() => filter(cat)}
               className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
                 active === cat
-                  ? "bg-emerald-500 text-white border-emerald-500"
-                  : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-emerald-500"
-              }`}
-            >
+                  ? "bg-blue-500 text-white border-blue-500"
+                  : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-blue-500"
+              }`}>
               {cat}
             </button>
           ))}
         </div>
 
-        {/* Posts Grid */}
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
-              <div
-                key={i}
-                className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl p-6 animate-pulse h-52"
-              />
+              <div key={i}
+                className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl p-6 animate-pulse h-52" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
@@ -106,19 +94,14 @@ export default function BlogPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((post) => (
-              <a
-                key={post.link}
-                href={post.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-emerald-500 transition-colors flex flex-col group"
-              >
+              <a key={post.link} href={post.link} target="_blank" rel="noopener noreferrer"
+                className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-blue-500 transition-colors flex flex-col group">
                 {post.categories[0] && (
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 w-fit mb-4">
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400 w-fit mb-4">
                     {post.categories[0]}
                   </span>
                 )}
-                <h2 className="font-semibold text-base mb-2 text-gray-900 dark:text-white group-hover:text-emerald-500 transition-colors">
+                <h2 className="font-semibold text-base mb-2 text-gray-900 dark:text-white group-hover:text-blue-500 transition-colors">
                   {post.title}
                 </h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 leading-relaxed flex-1">
