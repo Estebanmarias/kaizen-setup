@@ -15,7 +15,7 @@ const PRODUCT_IMAGES: Record<string, string> = {
   "CX23 Mechanical Keyboard": "/images/products/cx23-keyboard.jpg",
 };
 
-const CATEGORIES = ["All", "Monitors", "Keyboards", "Mice", "Accessories"];
+const CATEGORIES = ["All", "Desk & Seating", "Monitors & Lighting", "Accessories", "Cables & Hubs", "Smart Home", "Cleaning", "Bags", "Keyboards", "Mice", "Monitors"];
 
 type Product = {
   id: string;

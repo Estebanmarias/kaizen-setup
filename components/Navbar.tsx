@@ -18,8 +18,10 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [dark, setDark] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     setDark(document.documentElement.classList.contains("dark"));
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", onScroll);
@@ -52,14 +54,14 @@ export default function Navbar() {
           ))}
           <button onClick={toggleDark}
             className="p-2 rounded-full border border-gray-200 dark:border-gray-700 hover:border-gray-900 dark:hover:border-white transition-colors text-gray-600 dark:text-gray-300">
-            {dark ? <Sun size={16} /> : <Moon size={16} />}
+            {mounted ? (dark ? <Sun size={16} /> : <Moon size={16} />) : <Moon size={16} />}
           </button>
         </div>
 
         <div className="md:hidden flex items-center gap-3">
           <button onClick={toggleDark}
             className="p-2 rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300">
-            {dark ? <Sun size={16} /> : <Moon size={16} />}
+            {mounted ? (dark ? <Sun size={16} /> : <Moon size={16} />) : <Moon size={16} />}
           </button>
           <button onClick={() => setMenuOpen(!menuOpen)} className="text-gray-700 dark:text-gray-300">
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
