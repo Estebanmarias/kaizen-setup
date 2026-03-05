@@ -26,15 +26,19 @@ export default function BlogPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/blog")
-      .then((r) => r.json())
-      .then((data) => {
-        setPosts(data);
-        setFiltered(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+  fetch("/api/blog")
+    .then((r) => r.json())
+    .then((data) => {
+      console.log("Blog data:", data);
+      setPosts(data);
+      setFiltered(data);
+      setLoading(false);
+    })
+    .catch((err) => {
+      console.error("Fetch error:", err);
+      setLoading(false);
+    });
+}, []);
 
   const filter = (cat: string) => {
     setActive(cat);
