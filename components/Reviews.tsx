@@ -5,7 +5,7 @@ const REVIEWS = [
     title: "Wireless Tag Dual Tracker",
     summary:
       "A $10–15 tracker that punches above its weight. Full breakdown of real-world performance after weeks of use.",
-    link: "https://medium.com/@kaizensetup.ng",
+    link: "https://medium.com/@kaizensetup.ng/the-20-tracker-that-works-with-both-iphone-and-android-we-tested-it-ac4aa6ebb6a6",
   },
   {
     tag: "Recommended",
@@ -13,7 +13,7 @@ const REVIEWS = [
     title: "Logitech MX Master 4",
     summary:
       "The productivity mouse everyone talks about — but does it justify the price in Nigeria?",
-    link: "https://medium.com/@kaizensetup.ng",
+    link: "https://medium.com/@kaizensetup.ng/logitech-mx-master-4-review-is-the-new-action-ring-worth-120-44c5759c109e",
   },
   {
     tag: "Guide",
@@ -21,7 +21,7 @@ const REVIEWS = [
     title: "Snapchat Storage Update",
     summary:
       "What changed, why it matters, and how to manage your storage smartly going forward.",
-    link: "https://medium.com/@kaizensetup.ng",
+    link: "https://medium.com/@kaizensetup.ng/snapchat-ends-unlimited-memories-storage-what-you-need-to-know-521716223f3f",
   },
   {
     tag: "Tested",
@@ -29,7 +29,7 @@ const REVIEWS = [
     title: "EDC Breakdown",
     summary:
       "KaizenSetup's personal everyday carry — practical gear for Nigerian tech users who move a lot.",
-    link: "https://medium.com/@kaizensetup.ng",
+    link: "https://medium.com/@kaizensetup.ng/my-everyday-carry-whats-in-my-tech-bag-2026-setup-eec97c5bdd17",
   },
 ];
 
