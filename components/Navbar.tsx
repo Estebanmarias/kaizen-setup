@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X, Sun, Moon } from "lucide-react";
+import { Menu, X, Sun, Moon, ShoppingCart } from "lucide-react";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
@@ -19,13 +19,30 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [dark, setDark] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+
+  const getCartCount = () => {
+    try {
+      const cart = JSON.parse(localStorage.getItem("kaizen_cart") ?? "[]");
+      return cart.reduce((sum: number, item: { quantity: number }) => sum + item.quantity, 0);
+    } catch { return 0; }
+  };
 
   useEffect(() => {
     setMounted(true);
     setDark(document.documentElement.classList.contains("dark"));
+    setCartCount(getCartCount());
+
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
+
+    const onCartUpdate = () => setCartCount(getCartCount());
+    window.addEventListener("cart_updated", onCartUpdate);
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("cart_updated", onCartUpdate);
+    };
   }, []);
 
   const toggleDark = () => {
@@ -52,6 +69,14 @@ export default function Navbar() {
               {l.label}
             </Link>
           ))}
+          <Link href="/cart" className="relative p-2 rounded-full border border-gray-200 dark:border-gray-700 hover:border-gray-900 dark:hover:border-white transition-colors text-gray-600 dark:text-gray-300">
+            <ShoppingCart size={16} />
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                {cartCount}
+              </span>
+            )}
+          </Link>
           <button onClick={toggleDark}
             className="p-2 rounded-full border border-gray-200 dark:border-gray-700 hover:border-gray-900 dark:hover:border-white transition-colors text-gray-600 dark:text-gray-300">
             {mounted ? (dark ? <Sun size={16} /> : <Moon size={16} />) : <Moon size={16} />}
@@ -59,6 +84,14 @@ export default function Navbar() {
         </div>
 
         <div className="md:hidden flex items-center gap-3">
+          <Link href="/cart" className="relative p-2 rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300">
+            <ShoppingCart size={16} />
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                {cartCount}
+              </span>
+            )}
+          </Link>
           <button onClick={toggleDark}
             className="p-2 rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300">
             {mounted ? (dark ? <Sun size={16} /> : <Moon size={16} />) : <Moon size={16} />}
@@ -77,6 +110,10 @@ export default function Navbar() {
               {l.label}
             </Link>
           ))}
+          <Link href="/cart" onClick={() => setMenuOpen(false)}
+            className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+            Cart {cartCount > 0 && `(${cartCount})`}
+          </Link>
         </div>
       )}
     </nav>

@@ -3,13 +3,10 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { MessageCircle, ShoppingCart, ArrowLeft } from "lucide-react";
+import { MessageCircle, ShoppingCart, ArrowLeft, Plus, Minus, Check } from "lucide-react";
 import Link from "next/link";
 
-type Variant = {
-  name: string;
-  options: string[];
-};
+type Variant = { name: string; options: string[]; prices?: number[] };
 
 type Product = {
   id: string;
@@ -20,34 +17,91 @@ type Product = {
   partner: string | null;
   in_stock: boolean;
   image_url: string | null;
+  images: string[] | null;
   slug: string;
   variants: Variant[] | null;
+};
+
+export type CartItem = {
+  id: string;
+  name: string;
+  slug: string;
+  image_url: string | null;
+  price_naira: number | null;
+  quantity: number;
+  variants: Record<string, string>;
 };
 
 export default function ProductDetailPage() {
   const { slug } = useParams();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeImg, setActiveImg] = useState(0);
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+  const [quantity, setQuantity] = useState(1);
+  const [addedToCart, setAddedToCart] = useState(false);
   const [orderForm, setOrderForm] = useState({ name: "", email: "", phone: "", message: "" });
   const [formStatus, setFormStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [formError, setFormError] = useState("");
 
   useEffect(() => {
     if (!supabase || !slug) return;
-    supabase
-      .from("products")
-      .select("*")
-      .eq("slug", slug)
-      .single()
-      .then(({ data }) => {
-        setProduct(data);
-        setLoading(false);
-      });
+    supabase.from("products").select("*").eq("slug", slug).single()
+      .then(({ data }) => { setProduct(data); setLoading(false); });
   }, [slug]);
 
-  const handleInput = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const images = product
+    ? (product.images && product.images.length > 0 ? product.images : product.image_url ? [product.image_url] : ["/images/products/placeholder.jpg"])
+    : [];
+
+  const handleInput = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setOrderForm({ ...orderForm, [e.target.name]: e.target.value });
+
+  const variantSummary = Object.entries(selectedVariants).map(([k, v]) => `${k}: ${v}`).join(", ");
+
+  // Compute effective price — check if any variant has per-option pricing
+  const effectivePrice = (() => {
+    if (!product?.variants) return product?.price_naira ?? null;
+    for (const variant of product.variants) {
+      if (variant.prices && selectedVariants[variant.name]) {
+        const idx = variant.options.indexOf(selectedVariants[variant.name]);
+        if (idx >= 0) return variant.prices[idx];
+      }
+    }
+    return product?.price_naira ?? null;
+  })();
+
+  const hasVariantPricing = product?.variants?.some(v => v.prices && v.prices.length > 0);
+  const minVariantPrice = (() => {
+    if (!product?.variants) return null;
+    for (const variant of product.variants) {
+      if (variant.prices && variant.prices.length > 0) return Math.min(...variant.prices);
+    }
+    return null;
+  })();
+
+  const addToCart = () => {
+    if (!product) return;
+    const cart: CartItem[] = JSON.parse(localStorage.getItem("kaizen_cart") ?? "[]");
+    const key = `${product.id}-${variantSummary}`;
+    const existing = cart.findIndex(i => i.id === key);
+    if (existing >= 0) {
+      cart[existing].quantity += quantity;
+    } else {
+      cart.push({
+        id: key,
+        name: product.name,
+        slug: product.slug,
+        image_url: images[0] ?? null,
+        price_naira: effectivePrice,
+        quantity,
+        variants: selectedVariants,
+      });
+    }
+    localStorage.setItem("kaizen_cart", JSON.stringify(cart));
+    window.dispatchEvent(new Event("cart_updated"));
+    setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 2500);
   };
 
   const submitOrder = async () => {
@@ -57,33 +111,22 @@ export default function ProductDetailPage() {
     }
     setFormStatus("loading");
     setFormError("");
-
     if (supabase && product) {
       const { error } = await supabase.from("consultation_requests").insert([{
         name: orderForm.name,
         email: orderForm.email,
         phone: orderForm.phone,
-        message: `Order request for: ${product.name}${variantSummary ? ` (${variantSummary})` : ""}. ${orderForm.message}`,
+        message: `Order request for: ${product.name}${variantSummary ? ` (${variantSummary})` : ""}, Qty: ${quantity}. ${orderForm.message}`,
         setup_type: product.category,
         status: "pending",
       }]);
-
-      if (error) {
-        setFormStatus("error");
-        setFormError("Something went wrong. Try again.");
-        return;
-      }
+      if (error) { setFormStatus("error"); setFormError("Something went wrong. Try again."); return; }
     }
-
     setFormStatus("success");
   };
 
-  const variantSummary = Object.entries(selectedVariants)
-    .map(([k, v]) => `${k}: ${v}`)
-    .join(", ");
-
   const waMessage = product
-    ? encodeURIComponent(`Hi KaizenSetup! I'm interested in ordering the ${product.name}${variantSummary ? ` (${variantSummary})` : ""}. Please let me know the price and availability.`)
+    ? encodeURIComponent(`Hi KaizenSetup! I'd like to order the ${product.name}${variantSummary ? ` (${variantSummary})` : ""}, Qty: ${quantity}. Please confirm price and availability.`)
     : "";
 
   if (loading) {
@@ -97,7 +140,6 @@ export default function ProductDetailPage() {
               <div className="h-4 w-20 bg-gray-200 dark:bg-gray-800 rounded" />
               <div className="h-8 w-3/4 bg-gray-200 dark:bg-gray-800 rounded" />
               <div className="h-4 w-full bg-gray-200 dark:bg-gray-800 rounded" />
-              <div className="h-4 w-2/3 bg-gray-200 dark:bg-gray-800 rounded" />
             </div>
           </div>
         </div>
@@ -121,19 +163,36 @@ export default function ProductDetailPage() {
     <main className="min-h-screen bg-white dark:bg-[#0f0f0f] pt-24 pb-20 px-6">
       <div className="max-w-4xl mx-auto">
         <Link href="/shop" className="inline-flex items-center gap-2 text-sm text-blue-500 hover:underline mb-8">
-          <ArrowLeft size={14} />
-          Back to Shop
+          <ArrowLeft size={14} /> Back to Shop
         </Link>
 
         {/* Product Info */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-16">
-          {/* Image */}
-          <div className="bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-2xl h-80 flex items-center justify-center p-6">
-            <img
-              src={product.image_url ?? "/images/products/placeholder.jpg"}
-              alt={product.name}
-              className="max-h-full max-w-full object-contain"
-            />
+
+          {/* Image Gallery */}
+          <div className="flex flex-col gap-3">
+            <div className="bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-2xl h-80 flex items-center justify-center p-6">
+              <img
+                src={images[activeImg]}
+                alt={product.name}
+                className="max-h-full max-w-full object-contain transition-opacity duration-200"
+              />
+            </div>
+            {images.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {images.map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveImg(i)}
+                    className={`flex-shrink-0 w-16 h-16 rounded-lg border-2 overflow-hidden bg-white dark:bg-[#111] transition-colors ${
+                      activeImg === i ? "border-blue-500" : "border-gray-200 dark:border-gray-800 hover:border-gray-400"
+                    }`}
+                  >
+                    <img src={img} alt={`${product.name} ${i + 1}`} className="w-full h-full object-contain p-1" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Details */}
@@ -148,6 +207,7 @@ export default function ProductDetailPage() {
               {product.description}
             </p>
 
+            {/* Variants */}
             {product.variants && product.variants.length > 0 && (
               <div className="flex flex-col gap-4 mb-6">
                 {product.variants.map((variant) => (
@@ -169,30 +229,24 @@ export default function ProductDetailPage() {
                             const isSelected = selectedVariants[variant.name] === opt;
                             const colors = colorMap[opt];
                             return (
-                              <button
-                                key={opt}
+                              <button key={opt}
                                 onClick={() => setSelectedVariants(prev => ({ ...prev, [variant.name]: opt }))}
                                 style={isSelected ? { backgroundColor: colors?.bg, color: colors?.text } : {}}
                                 className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-                                  isSelected
-                                    ? "border-transparent"
-                                    : "border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-blue-500"
-                                }`}
-                              >
+                                  isSelected ? "border-transparent" : "border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-blue-500"
+                                }`}>
                                 {opt}
                               </button>
                             );
                           })
                         : variant.options.map((opt) => (
-                            <button
-                              key={opt}
+                            <button key={opt}
                               onClick={() => setSelectedVariants(prev => ({ ...prev, [variant.name]: opt }))}
                               className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
                                 selectedVariants[variant.name] === opt
                                   ? "bg-blue-500 text-white border-blue-500"
                                   : "border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-blue-500"
-                              }`}
-                            >
+                              }`}>
                               {opt}
                             </button>
                           ))}
@@ -202,23 +256,50 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            {product.price_naira ? (
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                ₦{product.price_naira.toLocaleString()}
+            {/* Price */}
+            {effectivePrice ? (
+              <p className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                ₦{effectivePrice.toLocaleString()}
+              </p>
+            ) : hasVariantPricing && minVariantPrice ? (
+              <p className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                from ₦{minVariantPrice.toLocaleString()}
               </p>
             ) : (
-              <p className="text-sm text-gray-400 mb-6">Price available on request</p>
+              <p className="text-sm text-gray-400 mb-4">Price available on request</p>
             )}
 
+            {/* Quantity */}
+            <div className="flex items-center gap-3 mb-6">
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Quantity</p>
+              <div className="flex items-center border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
+                <button onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                  className="px-3 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                  <Minus size={14} />
+                </button>
+                <span className="px-4 py-2 text-sm font-semibold text-gray-900 dark:text-white border-x border-gray-300 dark:border-gray-700">
+                  {quantity}
+                </span>
+                <button onClick={() => setQuantity(q => q + 1)}
+                  className="px-3 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                  <Plus size={14} />
+                </button>
+              </div>
+            </div>
+
+            {/* Actions */}
             <div className="flex flex-col gap-3">
-              <a
-                href={`https://wa.me/2347035378462?text=${waMessage}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 border border-gray-900 dark:border-white text-gray-900 dark:text-white hover:bg-gray-900 hover:text-white dark:hover:bg-white dark:hover:text-gray-900 py-3 rounded-lg font-semibold text-sm transition-colors"
-              >
-                <MessageCircle size={16} />
-                Order via WhatsApp
+              <button onClick={addToCart}
+                className={`flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm transition-colors ${
+                  addedToCart
+                    ? "bg-green-500 text-white"
+                    : "bg-blue-500 hover:bg-blue-400 text-white"
+                }`}>
+                {addedToCart ? <><Check size={16} /> Added to Cart</> : <><ShoppingCart size={16} /> Add to Cart</>}
+              </button>
+              <a href={`https://wa.me/2347035378462?text=${waMessage}`} target="_blank" rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 border border-gray-900 dark:border-white text-gray-900 dark:text-white hover:bg-gray-900 hover:text-white dark:hover:bg-white dark:hover:text-gray-900 py-3 rounded-lg font-semibold text-sm transition-colors">
+                <MessageCircle size={16} /> Order via WhatsApp
               </a>
             </div>
           </div>
@@ -230,7 +311,6 @@ export default function ProductDetailPage() {
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
             Fill in your details and we'll get back to you within 24 hours.
           </p>
-
           {formStatus === "success" ? (
             <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-xl p-4 text-blue-700 dark:text-blue-400 text-sm font-medium">
               ✓ Order request received! We'll contact you shortly.
