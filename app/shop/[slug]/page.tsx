@@ -6,6 +6,11 @@ import { supabase } from "@/lib/supabase";
 import { MessageCircle, ShoppingCart, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
+type Variant = {
+  name: string;
+  options: string[];
+};
+
 type Product = {
   id: string;
   name: string;
@@ -16,12 +21,14 @@ type Product = {
   in_stock: boolean;
   image_url: string | null;
   slug: string;
+  variants: Variant[] | null;
 };
 
 export default function ProductDetailPage() {
   const { slug } = useParams();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [orderForm, setOrderForm] = useState({ name: "", email: "", phone: "", message: "" });
   const [formStatus, setFormStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [formError, setFormError] = useState("");
@@ -56,7 +63,7 @@ export default function ProductDetailPage() {
         name: orderForm.name,
         email: orderForm.email,
         phone: orderForm.phone,
-        message: `Order request for: ${product.name}. ${orderForm.message}`,
+        message: `Order request for: ${product.name}${variantSummary ? ` (${variantSummary})` : ""}. ${orderForm.message}`,
         setup_type: product.category,
         status: "pending",
       }]);
@@ -71,8 +78,12 @@ export default function ProductDetailPage() {
     setFormStatus("success");
   };
 
+  const variantSummary = Object.entries(selectedVariants)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join(", ");
+
   const waMessage = product
-    ? encodeURIComponent(`Hi KaizenSetup! I'm interested in ordering the ${product.name}. Please let me know the price and availability.`)
+    ? encodeURIComponent(`Hi KaizenSetup! I'm interested in ordering the ${product.name}${variantSummary ? ` (${variantSummary})` : ""}. Please let me know the price and availability.`)
     : "";
 
   if (loading) {
@@ -136,6 +147,60 @@ export default function ProductDetailPage() {
             <p className="text-gray-500 dark:text-gray-400 leading-relaxed mb-6">
               {product.description}
             </p>
+
+            {product.variants && product.variants.length > 0 && (
+              <div className="flex flex-col gap-4 mb-6">
+                {product.variants.map((variant) => (
+                  <div key={variant.name}>
+                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      {variant.name}
+                      {selectedVariants[variant.name] && (
+                        <span className="font-normal text-blue-500 ml-2">{selectedVariants[variant.name]}</span>
+                      )}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {variant.name === "Color"
+                        ? variant.options.map((opt) => {
+                            const colorMap: Record<string, { bg: string; text: string }> = {
+                              Yellow: { bg: "#FACC15", text: "#000000" },
+                              Green: { bg: "#22C55E", text: "#ffffff" },
+                              Blue: { bg: "#3B82F6", text: "#ffffff" },
+                            };
+                            const isSelected = selectedVariants[variant.name] === opt;
+                            const colors = colorMap[opt];
+                            return (
+                              <button
+                                key={opt}
+                                onClick={() => setSelectedVariants(prev => ({ ...prev, [variant.name]: opt }))}
+                                style={isSelected ? { backgroundColor: colors?.bg, color: colors?.text } : {}}
+                                className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                                  isSelected
+                                    ? "border-transparent"
+                                    : "border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-blue-500"
+                                }`}
+                              >
+                                {opt}
+                              </button>
+                            );
+                          })
+                        : variant.options.map((opt) => (
+                            <button
+                              key={opt}
+                              onClick={() => setSelectedVariants(prev => ({ ...prev, [variant.name]: opt }))}
+                              className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                                selectedVariants[variant.name] === opt
+                                  ? "bg-blue-500 text-white border-blue-500"
+                                  : "border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-blue-500"
+                              }`}
+                            >
+                              {opt}
+                            </button>
+                          ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {product.price_naira ? (
               <p className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
