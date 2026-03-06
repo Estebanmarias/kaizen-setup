@@ -18,13 +18,23 @@ export async function POST(req: Request) {
       .from("newsletter_signups")
       .insert([{ email }]);
 
-    if (error) {
-      // Handle duplicate email gracefully
-      if (error.code === "23505") {
-        return NextResponse.json({ message: "Already subscribed" }, { status: 200 });
-      }
+    if (error && error.code !== "23505") {
       throw error;
     }
+
+    // Sync to Brevo
+    await fetch("https://api.brevo.com/v3/contacts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": process.env.BREVO_API_KEY!,
+      },
+      body: JSON.stringify({
+        email,
+        listIds: [2],
+        updateEnabled: true,
+      }),
+    });
 
     return NextResponse.json({ message: "Subscribed" }, { status: 200 });
   } catch (e) {
