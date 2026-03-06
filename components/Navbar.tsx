@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X, Sun, Moon, ShoppingCart } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Menu, X, Sun, Moon, User, LogOut, ChevronDown } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
@@ -15,34 +18,30 @@ const NAV_LINKS = [
 ];
 
 export default function Navbar() {
+  const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [dark, setDark] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
-
-  const getCartCount = () => {
-    try {
-      const cart = JSON.parse(localStorage.getItem("kaizen_cart") ?? "[]");
-      return cart.reduce((sum: number, item: { quantity: number }) => sum + item.quantity, 0);
-    } catch { return 0; }
-  };
+  const [user, setUser] = useState<SupabaseUser | null>(null)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
 
   useEffect(() => {
     setMounted(true);
     setDark(document.documentElement.classList.contains("dark"));
-    setCartCount(getCartCount());
-
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", onScroll);
 
-    const onCartUpdate = () => setCartCount(getCartCount());
-    window.addEventListener("cart_updated", onCartUpdate);
+    // Auth state
+    supabase?.auth.getUser().then(({ data }) => setUser(data.user ?? null))
+    const { data: listener } = supabase?.auth.onAuthStateChange((_e, session) => {
+      setUser(session?.user ?? null)
+    }) ?? { data: null }
 
     return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("cart_updated", onCartUpdate);
-    };
+      window.removeEventListener("scroll", onScroll)
+      listener?.subscription.unsubscribe()
+    }
   }, []);
 
   const toggleDark = () => {
@@ -50,6 +49,15 @@ export default function Navbar() {
     localStorage.setItem("theme", isDark ? "dark" : "light");
     setDark(isDark);
   };
+
+  const signOut = async () => {
+    await supabase?.auth.signOut()
+    setUserMenuOpen(false)
+    router.push('/')
+  }
+
+  const avatarUrl = user?.user_metadata?.avatar_url
+  const displayName = user?.user_metadata?.full_name ?? user?.email?.split('@')[0]
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
@@ -69,29 +77,50 @@ export default function Navbar() {
               {l.label}
             </Link>
           ))}
-          <Link href="/cart" className="relative p-2 rounded-full border border-gray-200 dark:border-gray-700 hover:border-gray-900 dark:hover:border-white transition-colors text-gray-600 dark:text-gray-300">
-            <ShoppingCart size={16} />
-            {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                {cartCount}
-              </span>
-            )}
-          </Link>
+
           <button onClick={toggleDark}
             className="p-2 rounded-full border border-gray-200 dark:border-gray-700 hover:border-gray-900 dark:hover:border-white transition-colors text-gray-600 dark:text-gray-300">
             {mounted ? (dark ? <Sun size={16} /> : <Moon size={16} />) : <Moon size={16} />}
           </button>
+
+          {/* Auth */}
+          {user ? (
+            <div className="relative">
+              <button onClick={() => setUserMenuOpen(v => !v)}
+                className="flex items-center gap-2 border border-gray-200 dark:border-gray-700 rounded-full pl-1 pr-3 py-1 hover:border-blue-500 transition-colors">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt={displayName} className="w-7 h-7 rounded-full object-cover" />
+                ) : (
+                  <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">
+                    {displayName?.[0]?.toUpperCase()}
+                  </div>
+                )}
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 max-w-[100px] truncate">{displayName}</span>
+                <ChevronDown size={14} className="text-gray-400" />
+              </button>
+
+              {userMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden">
+                  <Link href="/account" onClick={() => setUserMenuOpen(false)}
+                    className="flex items-center gap-2 px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#111] transition-colors">
+                    <User size={14} /> My Account
+                  </Link>
+                  <button onClick={signOut}
+                    className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-500 hover:bg-gray-50 dark:hover:bg-[#111] transition-colors">
+                    <LogOut size={14} /> Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link href="/auth"
+              className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
+              Sign In
+            </Link>
+          )}
         </div>
 
         <div className="md:hidden flex items-center gap-3">
-          <Link href="/cart" className="relative p-2 rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300">
-            <ShoppingCart size={16} />
-            {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                {cartCount}
-              </span>
-            )}
-          </Link>
           <button onClick={toggleDark}
             className="p-2 rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300">
             {mounted ? (dark ? <Sun size={16} /> : <Moon size={16} />) : <Moon size={16} />}
@@ -110,10 +139,23 @@ export default function Navbar() {
               {l.label}
             </Link>
           ))}
-          <Link href="/cart" onClick={() => setMenuOpen(false)}
-            className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-            Cart {cartCount > 0 && `(${cartCount})`}
-          </Link>
+          {user ? (
+            <>
+              <Link href="/account" onClick={() => setMenuOpen(false)}
+                className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                My Account
+              </Link>
+              <button onClick={signOut}
+                className="text-left text-sm font-medium text-red-500">
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <Link href="/auth" onClick={() => setMenuOpen(false)}
+              className="bg-blue-500 text-white text-sm font-semibold px-4 py-2 rounded-lg text-center transition-colors">
+              Sign In
+            </Link>
+          )}
         </div>
       )}
     </nav>

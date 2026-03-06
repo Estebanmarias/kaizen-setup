@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { ShoppingCart, X, Plus, Minus, Trash2, ArrowRight, ChevronDown, ChevronUp } from "lucide-react";
@@ -282,6 +283,31 @@ function QuickAddDrawer({ product, onClose, onAdded }: {
   );
 }
 
+function CheckoutButton({ onClose }: { onClose: () => void }) {
+  const router = useRouter()
+  const [checking, setChecking] = useState(false)
+
+  const handleCheckout = async () => {
+    setChecking(true)
+    const { data } = await supabase?.auth.getUser() ?? { data: { user: null } }
+    if (data.user) {
+      onClose()
+      router.push('/cart')
+    } else {
+      onClose()
+      router.push('/auth?next=/cart')
+    }
+    setChecking(false)
+  }
+
+  return (
+    <button onClick={handleCheckout} disabled={checking}
+      className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white py-3 rounded-lg font-semibold text-sm transition-colors">
+      <ShoppingCart size={16} /> Checkout
+    </button>
+  )
+}
+
 // ── Cart Drawer ────────────────────────────────────────────────────────────────
 function CartDrawer({ onClose }: { onClose: () => void }) {
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -405,10 +431,7 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
                 <span className="text-blue-500">₦{total.toLocaleString()}</span>
               </div>
             )}
-            <Link href="/cart" onClick={onClose}
-              className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-400 text-white py-3 rounded-lg font-semibold text-sm transition-colors">
-              <ShoppingCart size={16} /> Checkout
-            </Link>
+            <CheckoutButton onClose={onClose} />
           </div>
         )}
       </div>
@@ -494,9 +517,9 @@ export default function ShopPage() {
                 <div key={p.id}
                   className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden hover:border-blue-500 transition-colors flex flex-col">
                   <Link href={`/shop/${p.slug}`} className="block">
-                    <div className="bg-white dark:bg-[#111] h-52 flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-[#111] h-52 flex items-center justify-center p-4 overflow-hidden">
                       <img src={p.image_url ?? "/images/products/placeholder.jpg"} alt={p.name}
-                        className="max-h-full max-w-full object-contain" />
+                        className="max-h-full max-w-full object-contain transition-transform duration-300 ease-in-out hover:scale-110" />
                     </div>
                   </Link>
                   <div className="p-5 flex flex-col flex-1">
