@@ -10,11 +10,21 @@ const TRUST_SIGNALS = [
 
 export default function Hero() {
   const [visible, setVisible] = useState(false);
+  const [dark, setDark] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 100);
-    return () => clearTimeout(t);
+    setDark(document.documentElement.classList.contains("dark"));
+
+    const observer = new MutationObserver(() => {
+      setDark(document.documentElement.classList.contains("dark"));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+
+    return () => { clearTimeout(t); observer.disconnect(); };
   }, []);
+
+  const gridColor = dark ? "#ffffff" : "#000000";
 
   return (
     <section
@@ -23,11 +33,11 @@ export default function Hero() {
     >
       {/* Grid background */}
       <div
-        className="absolute inset-0 opacity-[0.04] dark:opacity-[0.06]"
+        className="absolute inset-0"
         style={{
-          backgroundImage:
-            "linear-gradient(#111 1px, transparent 1px), linear-gradient(90deg, #111 1px, transparent 1px)",
+          backgroundImage: `linear-gradient(${gridColor} 1px, transparent 1px), linear-gradient(90deg, ${gridColor} 1px, transparent 1px)`,
           backgroundSize: "40px 40px",
+          opacity: dark ? 0.06 : 0.04,
         }}
       />
 

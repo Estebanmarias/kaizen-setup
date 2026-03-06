@@ -351,7 +351,7 @@ export default function ShopPage() {
 
   useEffect(() => {
     if (!supabase) { setLoading(false); return; }
-    supabase.from("products").select("*").eq("in_stock", true)
+    supabase.from("products").select("*")
       .then(({ data }) => {
         setProducts(data ?? []);
         setFiltered(data ?? []);
@@ -443,11 +443,18 @@ export default function ShopPage() {
                       from ₦{Math.min(...(p.variants?.flatMap(v => v.prices ?? []) ?? [])).toLocaleString()}
                     </p>
                   ) : null}
-                  <button onClick={() => setQuickAdd(p)}
-                    className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-400 text-white py-2.5 rounded-lg font-semibold text-sm transition-colors">
-                    <ShoppingCart size={16} />
-                    Add to Cart
-                  </button>
+                  {p.in_stock ? (
+                    <button onClick={() => setQuickAdd(p)}
+                      className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-400 text-white py-2.5 rounded-lg font-semibold text-sm transition-colors">
+                      <ShoppingCart size={16} />
+                      Add to Cart
+                    </button>
+                  ) : (
+                    <button disabled
+                      className="w-full flex items-center justify-center gap-2 bg-gray-200 dark:bg-gray-800 text-gray-400 py-2.5 rounded-lg font-semibold text-sm cursor-not-allowed">
+                      Out of Stock
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
