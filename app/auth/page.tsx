@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 
-export default function AuthPage() {
+function AuthForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const next = searchParams.get('next') ?? '/'
@@ -151,3 +151,15 @@ export default function AuthPage() {
 }
 
 const inp = 'w-full bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors'
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-white dark:bg-[#0f0f0f] flex items-center justify-center">
+        <Loader2 size={24} className="animate-spin text-blue-500" />
+      </main>
+    }>
+      <AuthForm />
+    </Suspense>
+  )
+}
