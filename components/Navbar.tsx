@@ -56,9 +56,9 @@ export default function Navbar() {
     router.push('/')
   }
 
-  const googleAvatar = user?.user_metadata?.avatar_url
   const displayName = user?.user_metadata?.full_name ?? user?.email?.split('@')[0]
-  const avatarUrl = googleAvatar ?? `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName ?? 'U')}&backgroundColor=3b82f6&textColor=ffffff&fontSize=40`
+  const avatarUrl = user?.user_metadata?.avatar_url
+    ?? `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName ?? 'U')}&backgroundColor=3b82f6&textColor=ffffff`
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
@@ -90,7 +90,7 @@ export default function Navbar() {
               <button onClick={() => setUserMenuOpen(v => !v)}
                 className="flex items-center gap-2 border border-gray-200 dark:border-gray-700 rounded-full pl-1 pr-3 py-1 hover:border-blue-500 transition-colors">
                 {avatarUrl ? (
-                  <img src={avatarUrl} alt={displayName} className="w-7 h-7 rounded-full object-cover" />
+                  <img src={avatarUrl} alt={displayName ?? ''} className="w-7 h-7 rounded-full object-cover bg-blue-500" />
                 ) : (
                   <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">
                     {displayName?.[0]?.toUpperCase()}
