@@ -34,13 +34,17 @@ function AuthForm() {
         options: { data: { full_name: fullName } },
       })
       if (error) { setError(error.message); setLoading(false); return }
+      await supabase.from('newsletter_signups').upsert({ email }, { onConflict: 'email', ignoreDuplicates: true })
       setSuccess('Check your email to confirm your account.')
       setLoading(false)
       return
     }
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) { setError(error.message); setLoading(false); return }
+    if (signInData.user) {
+      await supabase.from('newsletter_signups').upsert({ email: signInData.user.email }, { onConflict: 'email', ignoreDuplicates: true })
+    }
     router.push(next)
   }
 
