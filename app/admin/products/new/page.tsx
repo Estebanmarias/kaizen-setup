@@ -2,13 +2,8 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase'
 import { ToggleLeft, ToggleRight } from 'lucide-react'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
 
 const PRESET_CATEGORIES = [
   'Monitors', 'Monitors & Lighting', 'Keyboards', 'Mice',
@@ -137,14 +132,16 @@ export default function NewProductPage() {
 
     setSaving(true)
     try {
-      // Upload images
+      // Upload images via API route (keeps service role key server-side)
       const urls: string[] = []
       for (const file of imageFiles) {
-        const ext = file.name.split('.').pop()
-        const path = `${slug}-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-        const { error: upErr } = await supabase.storage.from('product-images').upload(path, file)
-        if (upErr) throw new Error(`Upload failed: ${upErr.message}`)
-        urls.push(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/product-images/${path}`)
+        const fd = new FormData()
+        fd.append('file', file)
+        fd.append('slug', slug.trim())
+        const res = await fetch('/api/upload-image', { method: 'POST', body: fd })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error ?? 'Upload failed')
+        urls.push(data.url)
       }
 
       // Build variants JSON
@@ -175,6 +172,7 @@ export default function NewProductPage() {
           })
       }
 
+      if (!supabase) throw new Error('Supabase client not available')
       const { error: insertErr } = await supabase.from('products').insert({
         name: name.trim(),
         description: description.trim() || null,
