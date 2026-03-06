@@ -56,8 +56,9 @@ export default function Navbar() {
     router.push('/')
   }
 
-  const avatarUrl = user?.user_metadata?.avatar_url
+  const googleAvatar = user?.user_metadata?.avatar_url
   const displayName = user?.user_metadata?.full_name ?? user?.email?.split('@')[0]
+  const avatarUrl = googleAvatar ?? `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName ?? 'U')}&backgroundColor=3b82f6&textColor=ffffff&fontSize=40`
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
