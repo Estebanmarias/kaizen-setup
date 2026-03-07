@@ -1,9 +1,9 @@
 "use client";
 
-import Link from 'next/link'
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Save, ToggleLeft, ToggleRight } from "lucide-react";
+import { Save, ToggleLeft, ToggleRight, Plus, Package } from "lucide-react";
 
 type Product = {
   id: string;
@@ -19,6 +19,7 @@ export default function AdminProducts() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Record<string, { price: string }>>({});
   const [saving, setSaving] = useState<string | null>(null);
+  const [saved, setSaved] = useState<string | null>(null);
 
   useEffect(() => {
     if (!supabase) return;
@@ -41,6 +42,8 @@ export default function AdminProducts() {
     await supabase.from("products").update({ price_naira }).eq("id", id);
     setProducts(prev => prev.map(p => p.id === id ? { ...p, price_naira } : p));
     setSaving(null);
+    setSaved(id);
+    setTimeout(() => setSaved(null), 2000);
   };
 
   const toggleStock = async (id: string, current: boolean) => {
@@ -49,69 +52,72 @@ export default function AdminProducts() {
     setProducts(prev => prev.map(p => p.id === id ? { ...p, in_stock: !current } : p));
   };
 
+  const categories = [...new Set(products.map(p => p.category))].sort();
+
   return (
     <div className="p-8">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Products</h1>
-          <p className="text-gray-500 text-sm mt-1">{products.length} products</p>
-        </div>
-        <Link
-          href="/admin/products/new"
-          className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-        >
-          + Add Product
+      <div className="mb-6 flex items-center justify-between">
+        <p className="text-xs text-gray-500">{products.length} products</p>
+        <Link href="/admin/products/new"
+          className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+          <Plus size={14} /> Add Product
         </Link>
       </div>
 
       {loading ? (
-        <div className="flex flex-col gap-3">
-          {[...Array(6)].map((_, i) => <div key={i} className="h-16 bg-gray-800 rounded-xl animate-pulse" />)}
+        <div className="flex flex-col gap-2">
+          {[...Array(6)].map((_, i) => <div key={i} className="h-14 bg-white/[0.03] rounded-xl animate-pulse" />)}
         </div>
       ) : (
-        <div className="bg-[#1a1a1a] border border-gray-800 rounded-xl overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-800">
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Product</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Category</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Price (₦)</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Stock</th>
-              </tr>
-            </thead>
-            <tbody>
-              {products.map((p, i) => (
-                <tr key={p.id} className={`border-b border-gray-800 last:border-0 ${i % 2 === 0 ? "" : "bg-white/[0.02]"}`}>
-                  <td className="px-5 py-3 text-sm text-white font-medium">{p.name}</td>
-                  <td className="px-5 py-3 text-sm text-gray-400">{p.category}</td>
-                  <td className="px-5 py-3">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        value={editing[p.id]?.price ?? ""}
-                        onChange={e => setEditing(prev => ({ ...prev, [p.id]: { price: e.target.value } }))}
-                        placeholder="Set price"
-                        className="w-32 px-3 py-1.5 rounded-lg bg-[#0f0f0f] border border-gray-700 text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
-                      />
+        <div className="flex flex-col gap-6">
+          {categories.map(cat => (
+            <div key={cat} className="bg-[#141414] border border-white/[0.06] rounded-2xl overflow-hidden">
+              <div className="px-6 py-3 border-b border-white/[0.06] flex items-center gap-2">
+                <Package size={13} className="text-gray-500" />
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{cat}</p>
+                <span className="text-xs text-gray-600 ml-auto">{products.filter(p => p.category === cat).length}</span>
+              </div>
+              <div className="divide-y divide-white/[0.04]">
+                {products.filter(p => p.category === cat).map(p => (
+                  <div key={p.id} className="px-6 py-4 flex items-center gap-4 hover:bg-white/[0.02] transition-colors">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{p.name}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">/shop/{p.slug}</p>
+                    </div>
+                    {/* Price input */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">₦</span>
+                        <input
+                          type="number"
+                          value={editing[p.id]?.price ?? ""}
+                          onChange={e => setEditing(prev => ({ ...prev, [p.id]: { price: e.target.value } }))}
+                          placeholder="Set price"
+                          className="w-32 pl-7 pr-3 py-1.5 rounded-lg bg-[#0a0a0a] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                        />
+                      </div>
                       <button onClick={() => savePrice(p.id)} disabled={saving === p.id}
-                        className="p-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 transition-colors disabled:opacity-50">
-                        <Save size={14} />
+                        className={`p-1.5 rounded-lg transition-all text-sm ${
+                          saved === p.id
+                            ? "bg-green-500/10 text-green-400"
+                            : "bg-blue-500/10 hover:bg-blue-500/20 text-blue-400"
+                        } disabled:opacity-50`}>
+                        <Save size={13} />
                       </button>
                     </div>
-                  </td>
-                  <td className="px-5 py-3">
+                    {/* Stock toggle */}
                     <button onClick={() => toggleStock(p.id, p.in_stock)}
-                      className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${
-                        p.in_stock ? "text-green-400" : "text-gray-500"
+                      className={`flex items-center gap-1.5 text-xs font-medium transition-colors flex-shrink-0 ${
+                        p.in_stock ? "text-green-400" : "text-gray-600"
                       }`}>
                       {p.in_stock ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
-                      {p.in_stock ? "In Stock" : "Out of Stock"}
+                      <span className="w-16">{p.in_stock ? "In Stock" : "Out of Stock"}</span>
                     </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
