@@ -6,7 +6,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-const BASE_URL = "https://kaizen-setup.vercel.app";
+const BASE_URL = "https://kaizensetup.name.ng";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch all product slugs

@@ -11,7 +11,7 @@ const inter = Inter({ subsets: ["latin"] });
 const OG_IMAGE = "https://tyegjxrlfblojnimzkzp.supabase.co/storage/v1/object/public/product-images/kaizenSetup.jpg";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://kaizen-setup.vercel.app"),
+  metadataBase: new URL("https://kaizensetup.name.ng"),
   title: {
     default: "KaizenSetup — Smart & Affordable Tech Setups in Nigeria",
     template: "%s | KaizenSetup",
