@@ -14,6 +14,7 @@ const NAV_LINKS = [
   { label: "Shop", href: "/shop" },
   { label: "Creators", href: "/ugc" },
   { label: "Blog", href: "/blog" },
+  { label: "About", href: "/about" },
   { label: "Contact", href: "#contact" },
 ];
 
