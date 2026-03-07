@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Save, ToggleLeft, ToggleRight, Plus, Package } from "lucide-react";
+import { Save, ToggleLeft, ToggleRight, Plus, Package, Pencil } from "lucide-react";
 
 type Product = {
   id: string;
@@ -79,7 +79,7 @@ export default function AdminProducts() {
               </div>
               <div className="divide-y divide-white/[0.04]">
                 {products.filter(p => p.category === cat).map(p => (
-                  <div key={p.id} className="px-6 py-4 flex items-center gap-4 hover:bg-white/[0.02] transition-colors">
+                  <div key={p.id} className="px-6 py-4 flex items-center gap-4 hover:bg-white/[0.02] transition-colors group">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-white truncate">{p.name}</p>
                       <p className="text-xs text-gray-500 mt-0.5">/shop/{p.slug}</p>
@@ -113,6 +113,11 @@ export default function AdminProducts() {
                       {p.in_stock ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
                       <span className="w-16">{p.in_stock ? "In Stock" : "Out of Stock"}</span>
                     </button>
+                    {/* Edit button */}
+                    <Link href={`/admin/products/${p.slug}/edit`}
+                      className="p-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-gray-500 hover:text-white transition-all flex-shrink-0 opacity-0 group-hover:opacity-100">
+                      <Pencil size={13} />
+                    </Link>
                   </div>
                 ))}
               </div>

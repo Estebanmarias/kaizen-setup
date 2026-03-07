@@ -19,6 +19,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/products/new": "Add Product",
   "/admin/newsletter": "Newsletter",
   "/admin/contacts": "Contacts",
+  "/admin/products/[slug]/edit": "Edit Product",
 };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
