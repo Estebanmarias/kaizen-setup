@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { MessageCircle, ShoppingCart, ArrowLeft, Plus, Minus, Check, Share2, Copy, CheckCheck } from "lucide-react";
+import { MessageCircle, ShoppingCart, ArrowLeft, Plus, Minus, Check, Share2, Copy, CheckCheck, CreditCard, Loader2 } from "lucide-react";
 import Link from "next/link";
 
 type Variant = {
@@ -103,6 +103,13 @@ export default function ProductDetailPage() {
   const [formStatus, setFormStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [formError, setFormError] = useState("");
   const [authEmail, setAuthEmail] = useState<string | null>(null);
+  const [payLoading, setPayLoading] = useState(false);
+
+  useEffect(() => {
+    supabase?.auth.getUser().then(({ data }) => {
+      if (data.user) setAuthEmail(data.user.email ?? null);
+    });
+  }, []);
 
   useEffect(() => {
   supabase?.auth.getUser().then(({ data }) => {
@@ -171,7 +178,7 @@ export default function ProductDetailPage() {
   };
 
   const submitOrder = async () => {
-    if (!orderForm.name || !orderForm.email || !orderForm.phone) {
+    if (!orderForm.name || !(authEmail ?? orderForm.email) || !orderForm.phone) {
       setFormError("Please fill in name, email and phone.");
       return;
     }
@@ -199,6 +206,65 @@ export default function ProductDetailPage() {
       if (error) { setFormStatus("error"); setFormError("Something went wrong. Try again."); return; }
     }
     setFormStatus("success");
+  };
+
+  const handlePaystack = async () => {
+    if (!orderForm.name || !(authEmail ?? orderForm.email) || !orderForm.phone) {
+      setFormError("Please fill in name, email and phone.");
+      return;
+    }
+    if (!effectivePrice || !product) {
+      setFormError("Price not available for payment. Use WhatsApp instead.");
+      return;
+    }
+    setFormError("");
+    setPayLoading(true);
+
+    const orderTotal = effectivePrice * quantity;
+    const PaystackPop = (await import("@paystack/inline-js")).default;
+    const handler = new PaystackPop();
+
+    handler.newTransaction({
+      key: process.env.NEXT_PUBLIC_PAYSTACK_KEY!,
+      email: authEmail ?? orderForm.email,
+      amount: orderTotal * 100,
+      currency: "NGN",
+      metadata: {
+        custom_fields: [
+          { display_name: "Customer Name", variable_name: "name", value: orderForm.name },
+          { display_name: "Phone", variable_name: "phone", value: orderForm.phone },
+          { display_name: "Product", variable_name: "product", value: product.name },
+        ],
+      },
+      onSuccess: async (transaction: { reference: string }) => {
+        try {
+          const orderData = {
+            name: orderForm.name,
+            email: authEmail ?? orderForm.email,
+            phone: orderForm.phone,
+            message: orderForm.message || null,
+            setup_type: product.category,
+            items: [{ name: product.name, quantity, price: effectivePrice, variant: variantSummary || undefined }],
+            total_naira: orderTotal,
+          };
+          const res = await fetch("/api/verify-payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ reference: transaction.reference, orderData }),
+          });
+          const data = await res.json();
+          if (!res.ok) { setFormError(data.error ?? "Payment verified but order failed. Contact us."); setPayLoading(false); return; }
+          setFormStatus("success");
+        } catch {
+          setFormError("Order saving failed. Please contact us with your payment reference.");
+          setPayLoading(false);
+        }
+      },
+      onCancel: () => {
+        setFormError("Payment cancelled.");
+        setPayLoading(false);
+      },
+    });
   };
 
   const waMessage = product
@@ -364,11 +430,18 @@ export default function ProductDetailPage() {
                   className={`px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors ${authEmail ? "opacity-60 cursor-not-allowed" : ""}`} />
               <textarea name="message" value={orderForm.message} onChange={handleInput} placeholder="Any specific requirements? (optional)" rows={3} className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors" />
               {formError && <p className="text-red-500 text-xs">{formError}</p>}
-              <button onClick={submitOrder} disabled={formStatus === "loading"}
+              {effectivePrice && (
+              <button onClick={handlePaystack} disabled={payLoading}
                 className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white py-3 rounded-lg font-semibold text-sm transition-colors">
-                <ShoppingCart size={16} />
-                {formStatus === "loading" ? "Submitting..." : "Submit Order Request"}
+                {payLoading ? <Loader2 size={15} className="animate-spin" /> : <CreditCard size={15} />}
+                {payLoading ? "Processing..." : `Pay ₦${(effectivePrice * quantity).toLocaleString()}`}
               </button>
+              )}
+              <button onClick={submitOrder} disabled={formStatus === "loading"}
+              className="flex items-center justify-center gap-2 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 py-3 rounded-lg font-semibold text-sm transition-colors">
+              <ShoppingCart size={16} />
+              {formStatus === "loading" ? "Submitting..." : "Request Without Paying"}
+            </button>
             </div>
           )}
         </div>
