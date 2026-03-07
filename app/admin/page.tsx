@@ -105,10 +105,18 @@ export default function AdminDashboard() {
   }, []);
 
   const updateStatus = async (id: string, status: string) => {
-    if (!supabase) return;
-    await supabase.from("consultation_requests").update({ status }).eq("id", id);
+  const res = await fetch("/api/update-order-status", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, status }),
+  });
+
+  if (res.ok) {
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
-  };
+  } else {
+    console.error("Failed to update order status");
+  }
+};
 
   const pending   = orders.filter(o => o.status === "pending");
   const fulfilled = orders.filter(o => o.status === "fulfilled");
