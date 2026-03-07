@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import { ShoppingCart, X, Plus, Minus, Trash2, ArrowRight, ChevronDown, ChevronUp } from "lucide-react";
+import { ShoppingCart, X, Plus, Minus, Trash2, ArrowRight, ChevronDown, ChevronUp, Search } from "lucide-react";
 import Link from "next/link";
 
 const CATEGORIES = ["All", "Desk & Seating", "Monitors & Lighting", "Accessories", "Cables & Hubs", "Smart Home", "Cleaning", "Bags", "Keyboards", "Mice", "Monitors"];
@@ -368,6 +368,7 @@ export default function ShopPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [filtered, setFiltered] = useState<Product[]>([]);
   const [active, setActive] = useState("All");
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [quickAdd, setQuickAdd] = useState<Product | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
@@ -398,8 +399,12 @@ export default function ShopPage() {
 
   const filter = (cat: string) => {
     setActive(cat);
-    setFiltered(cat === "All" ? products : products.filter(p => p.category === cat));
+    setSearch("");
   };
+
+  const displayProducts = search.trim()
+    ? products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.description.toLowerCase().includes(search.toLowerCase()))
+    : filtered;
 
   const togglePrices = (id: string) => setExpandedPrices(prev => ({ ...prev, [id]: !prev[id] }));
 
@@ -453,6 +458,22 @@ export default function ShopPage() {
           Tested and recommended gear. Every product on this page has been used or reviewed by KaizenSetup.
         </p>
 
+        {/* Search */}
+        <div className="relative mb-6">
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search products..."
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1a1a1a] text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors"
+          />
+          {search && (
+            <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
         <div className="flex flex-wrap gap-3 mb-10">
           {CATEGORIES.map(cat => (
             <button key={cat} onClick={() => filter(cat)}
@@ -468,7 +489,13 @@ export default function ShopPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map(p => {
+            {displayProducts.length === 0 ? (
+              <div className="col-span-3 text-center py-20 text-gray-400">
+                <p className="text-4xl mb-4">🔍</p>
+                <p className="font-medium">No products found for "{search}"</p>
+                <button onClick={() => setSearch("")} className="text-blue-500 text-sm hover:underline mt-2 inline-block">Clear search</button>
+              </div>
+            ) : displayProducts.map(p => {
               const combo = isComboProduct(p.variants);
               const comboMin = combo ? getComboMin(p.variants) : null;
               const perOptionMin = !combo && p.variants?.some(v => v.prices?.length)
@@ -510,7 +537,7 @@ export default function ShopPage() {
                     ) : null}
 
                     {p.in_stock ? (
-                      <button onClick={() => setQuickAdd(p)}
+                      <button onClick={() => { setQuickAdd(p); openDrawer(); }}
                         className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-400 text-white py-2.5 rounded-lg font-semibold text-sm transition-colors mt-auto">
                         <ShoppingCart size={16} /> Add to Cart
                       </button>
