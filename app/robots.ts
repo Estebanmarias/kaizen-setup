@@ -2,11 +2,13 @@ import { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: {
-      userAgent: "*",
-      allow: "/",
-      disallow: "/api/",
-    },
-    sitemap: "https://kaizensetup.ng/sitemap.xml",
+    rules: [
+      {
+        userAgent: "*",
+        allow: "/",
+        disallow: ["/admin", "/admin/", "/api/"],
+      },
+    ],
+    sitemap: "https://kaizen-setup.vercel.app/sitemap.xml",
   };
 }
