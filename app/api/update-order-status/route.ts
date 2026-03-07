@@ -6,10 +6,9 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// ← Replace with your actual Brevo template IDs
 const TEMPLATE_IDS = {
-  fulfilled: 4, // ← your fulfilled template ID
-  cancelled: 5, // ← your cancelled template ID
+  fulfilled: 4,
+  cancelled: 5,
 };
 
 function fmt(n: number) {
@@ -70,7 +69,7 @@ export async function POST(req: NextRequest) {
     const items = order.items ?? [];
     const total = order.total_naira ? fmt(order.total_naira) : "—";
 
-    await fetch("https://api.brevo.com/v3/smtp/email", {
+    const brevoRes = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -86,6 +85,9 @@ export async function POST(req: NextRequest) {
         },
       }),
     });
+
+    const brevoData = await brevoRes.json();
+    console.log("Brevo response:", JSON.stringify(brevoData));
   }
 
   return NextResponse.json({ ok: true });
