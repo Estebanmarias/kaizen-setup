@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Menu, X, Sun, Moon, User, LogOut, ChevronDown } from "lucide-react";
+import { Menu, X, Sun, Moon, User, LogOut, ChevronDown, ShoppingCart } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
@@ -25,6 +25,12 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [cartCount, setCartCount] = useState(0)
+
+  const updateCartCount = () => {
+    const cart = JSON.parse(localStorage.getItem("kaizen_cart") ?? "[]")
+    setCartCount(cart.reduce((s: number, i: { quantity: number }) => s + i.quantity, 0))
+  }
 
   useEffect(() => {
     setMounted(true);
@@ -37,8 +43,12 @@ export default function Navbar() {
       setUser(session?.user ?? null)
     }) ?? { data: null }
 
+    updateCartCount()
+    window.addEventListener("cart_updated", updateCartCount)
+
     return () => {
       window.removeEventListener("scroll", onScroll)
+      window.removeEventListener("cart_updated", updateCartCount)
       listener?.subscription.unsubscribe()
     }
   }, []);
@@ -77,6 +87,15 @@ export default function Navbar() {
               {l.label}
             </Link>
           ))}
+
+          <Link href="/cart" className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
+            <ShoppingCart size={20} />
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                {cartCount}
+              </span>
+            )}
+          </Link>
 
           <button onClick={toggleDark}
             className="p-2 rounded-full border border-gray-200 dark:border-gray-700 hover:border-gray-900 dark:hover:border-white transition-colors text-gray-600 dark:text-gray-300">
