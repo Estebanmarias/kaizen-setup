@@ -8,8 +8,8 @@ const supabase = createClient(
 
 // ← Replace with your actual Brevo template IDs
 const TEMPLATE_IDS = {
-  fulfilled: 2, // ← your fulfilled template ID
-  cancelled: 3, // ← your cancelled template ID
+  fulfilled: 4, // ← your fulfilled template ID
+  cancelled: 5, // ← your cancelled template ID
 };
 
 function fmt(n: number) {
