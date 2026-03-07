@@ -14,15 +14,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid email" }, { status: 400 });
     }
 
-    const { error } = await supabase
+    // Check if already subscribed (duplicate = skip welcome email)
+    const { error: insertError } = await supabase
       .from("newsletter_signups")
       .insert([{ email }]);
 
-    if (error && error.code !== "23505") {
-      throw error;
+    const isNew = !insertError; // 23505 = duplicate, so not new
+
+    if (insertError && insertError.code !== "23505") {
+      throw insertError;
     }
 
-    // Sync to Brevo
+    // Sync to Brevo contact list
     await fetch("https://api.brevo.com/v3/contacts", {
       method: "POST",
       headers: {
@@ -35,6 +38,21 @@ export async function POST(req: Request) {
         updateEnabled: true,
       }),
     });
+
+    // Send welcome email only to new subscribers
+    if (isNew) {
+      await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "api-key": process.env.BREVO_API_KEY!,
+        },
+        body: JSON.stringify({
+          to: [{ email }],
+          templateId: 1, // ⚠️ Replace with your Brevo template ID after creating it
+        }),
+      });
+    }
 
     return NextResponse.json({ message: "Subscribed" }, { status: 200 });
   } catch (e) {

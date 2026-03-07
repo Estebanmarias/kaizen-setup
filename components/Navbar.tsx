@@ -32,7 +32,6 @@ export default function Navbar() {
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", onScroll);
 
-    // Auth state
     supabase?.auth.getUser().then(({ data }) => setUser(data.user ?? null))
     const { data: listener } = supabase?.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null)
@@ -58,7 +57,7 @@ export default function Navbar() {
 
   const displayName = user?.user_metadata?.full_name ?? user?.email?.split('@')[0]
   const avatarUrl = user?.user_metadata?.avatar_url
-    ?? `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName ?? 'U')}&backgroundColor=3b82f6&textColor=ffffff`
+    ?? `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(displayName ?? 'U')}`
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
@@ -84,18 +83,11 @@ export default function Navbar() {
             {mounted ? (dark ? <Sun size={16} /> : <Moon size={16} />) : <Moon size={16} />}
           </button>
 
-          {/* Auth */}
           {user ? (
             <div className="relative">
               <button onClick={() => setUserMenuOpen(v => !v)}
                 className="flex items-center gap-2 border border-gray-200 dark:border-gray-700 rounded-full pl-1 pr-3 py-1 hover:border-blue-500 transition-colors">
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt={displayName ?? ''} className="w-7 h-7 rounded-full object-cover bg-blue-500" />
-                ) : (
-                  <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">
-                    {displayName?.[0]?.toUpperCase()}
-                  </div>
-                )}
+                <img src={avatarUrl} alt={displayName ?? ''} className="w-7 h-7 rounded-full object-cover bg-blue-500" />
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300 max-w-[100px] truncate">{displayName}</span>
                 <ChevronDown size={14} className="text-gray-400" />
               </button>

@@ -73,9 +73,8 @@ export default function AccountPage() {
   )
 
   const displayName = profile?.full_name ?? profile?.email?.split('@')[0]
-  const initials = displayName?.[0]?.toUpperCase()
   const avatarUrl = profile?.avatar_url
-    ?? `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName ?? 'U')}&backgroundColor=3b82f6&textColor=ffffff`
+    ?? `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(displayName ?? 'U')}`
   const memberSince = profile?.created_at
     ? new Date(profile.created_at).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
     : ''
@@ -87,13 +86,7 @@ export default function AccountPage() {
 
         {/* Profile card */}
         <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl p-6 mb-6 flex items-center gap-5">
-          {profile?.avatar_url ? (
-            <img src={profile.avatar_url} alt={displayName ?? ''} className="w-16 h-16 rounded-full object-cover" />
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
-              {initials}
-            </div>
-          )}
+          <img src={avatarUrl} alt={displayName ?? ''} className="w-16 h-16 rounded-full object-cover bg-blue-500/10 flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-bold text-gray-900 dark:text-white truncate">{displayName}</h1>
             <p className="text-sm text-gray-400 truncate">{profile?.email}</p>
