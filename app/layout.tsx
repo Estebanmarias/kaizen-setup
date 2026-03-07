@@ -4,6 +4,7 @@ import "./globals.css";
 import { GoogleAnalytics } from '@next/third-parties/google';
 import NavbarWrapper from "@/components/NavbarWrapper";
 import NewsletterPopupWrapper from "@/components/NewsletterPopupWrapper";
+import WhatsAppBubble from "@/components/WhatsAppBubble";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -78,6 +79,7 @@ export default function RootLayout({
         <NavbarWrapper />
         {children}
         <NewsletterPopupWrapper />
+        <WhatsAppBubble />
         <GoogleAnalytics gaId="G-M13PZ1RESN" />
       </body>
     </html>
