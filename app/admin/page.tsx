@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer
+  ResponsiveContainer, BarChart, Bar, Cell
 } from "recharts";
 
 type Order = {
@@ -21,11 +21,13 @@ type Order = {
   status: string;
   created_at: string;
   total_naira: number | null;
-  items: unknown;
+  items: { name: string; quantity: number; price?: number; variant?: string }[] | null;
 };
 
+type Product = { name: string; category: string };
+
 const STATUS_STYLE: Record<string, string> = {
-  pending: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+  pending:   "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
   fulfilled: "bg-green-500/10 text-green-400 border-green-500/20",
   cancelled: "bg-red-500/10 text-red-400 border-red-500/20",
 };
@@ -34,13 +36,11 @@ function fmt(n: number) {
   return "₦" + n.toLocaleString("en-NG");
 }
 
-// Build last 8 weeks buckets from orders
 function buildWeeklyData(orders: Order[]) {
   const now = new Date();
-  const weeks: { label: string; revenue: number; count: number }[] = [];
-  for (let i = 7; i >= 0; i--) {
+  return Array.from({ length: 8 }, (_, i) => {
     const start = new Date(now);
-    start.setDate(now.getDate() - i * 7 - 6);
+    start.setDate(now.getDate() - (7 - i) * 7);
     start.setHours(0, 0, 0, 0);
     const end = new Date(start);
     end.setDate(start.getDate() + 6);
@@ -50,27 +50,59 @@ function buildWeeklyData(orders: Order[]) {
       const d = new Date(o.created_at);
       return d >= start && d <= end && o.status !== "cancelled";
     });
-    weeks.push({ label, revenue: bucket.reduce((s, o) => s + (o.total_naira ?? 0), 0), count: bucket.length });
-  }
-  return weeks;
+    return { label, revenue: bucket.reduce((s, o) => s + (o.total_naira ?? 0), 0), count: bucket.length };
+  });
 }
+
+function buildTopProducts(orders: Order[]) {
+  const counts: Record<string, number> = {};
+  orders.filter(o => o.status !== "cancelled").forEach(o => {
+    (o.items ?? []).forEach(item => {
+      counts[item.name] = (counts[item.name] ?? 0) + item.quantity;
+    });
+  });
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([name, count]) => ({ name: name.length > 22 ? name.slice(0, 22) + "…" : name, count }));
+}
+
+function buildCategoryRevenue(orders: Order[], products: Product[]) {
+  const catMap: Record<string, string> = {};
+  products.forEach(p => { catMap[p.name] = p.category; });
+
+  const revenue: Record<string, number> = {};
+  orders.filter(o => o.status === "fulfilled").forEach(o => {
+    (o.items ?? []).forEach(item => {
+      const cat = catMap[item.name] ?? "Other";
+      const itemRevenue = item.price ? item.price * item.quantity : 0;
+      revenue[cat] = (revenue[cat] ?? 0) + itemRevenue;
+    });
+  });
+  return Object.entries(revenue)
+    .sort((a, b) => b[1] - a[1])
+    .map(([cat, revenue]) => ({ cat: cat.length > 14 ? cat.slice(0, 14) + "…" : cat, revenue }));
+}
+
+const BAR_COLORS = ["#3b82f6", "#6366f1", "#8b5cf6", "#a855f7", "#ec4899", "#f43f5e"];
 
 export default function AdminDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
 
-  useEffect(() => { fetchOrders(); }, []);
-
-  const fetchOrders = async () => {
+  useEffect(() => {
     if (!supabase) return;
-    const { data } = await supabase
-      .from("consultation_requests")
-      .select("*")
-      .order("created_at", { ascending: false });
-    setOrders(data ?? []);
-    setLoading(false);
-  };
+    Promise.all([
+      supabase.from("consultation_requests").select("*").order("created_at", { ascending: false }),
+      supabase.from("products").select("name,category"),
+    ]).then(([{ data: orders }, { data: products }]) => {
+      setOrders(orders ?? []);
+      setProducts(products ?? []);
+      setLoading(false);
+    });
+  }, []);
 
   const updateStatus = async (id: string, status: string) => {
     if (!supabase) return;
@@ -78,57 +110,63 @@ export default function AdminDashboard() {
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
   };
 
-  const pending = orders.filter(o => o.status === "pending");
+  const pending   = orders.filter(o => o.status === "pending");
   const fulfilled = orders.filter(o => o.status === "fulfilled");
   const cancelled = orders.filter(o => o.status === "cancelled");
-  const revenue = fulfilled.reduce((s, o) => s + (o.total_naira ?? 0), 0);
+  const revenue   = fulfilled.reduce((s, o) => s + (o.total_naira ?? 0), 0);
+  const avgOrder  = fulfilled.length ? Math.round(revenue / fulfilled.length) : 0;
 
   const thisMonth = orders.filter(o => {
-    const d = new Date(o.created_at);
-    const now = new Date();
+    const d = new Date(o.created_at), now = new Date();
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
   const lastMonth = orders.filter(o => {
-    const d = new Date(o.created_at);
-    const now = new Date();
+    const d = new Date(o.created_at), now = new Date();
     const lm = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     return d.getMonth() === lm.getMonth() && d.getFullYear() === lm.getFullYear();
   });
-  const orderGrowth = lastMonth.length ? Math.round(((thisMonth.length - lastMonth.length) / lastMonth.length) * 100) : null;
+  const orderGrowth = lastMonth.length
+    ? Math.round(((thisMonth.length - lastMonth.length) / lastMonth.length) * 100)
+    : null;
 
-  const weekly = buildWeeklyData(orders);
-  const filtered = filter === "all" ? orders : orders.filter(o => o.status === filter);
+  const weekly         = buildWeeklyData(orders);
+  const topProducts    = buildTopProducts(orders);
+  const categoryRevenue = buildCategoryRevenue(orders, products);
+  const filtered       = filter === "all" ? orders : orders.filter(o => o.status === filter);
 
   const STATS = [
     {
-      label: "Total Orders", value: orders.length, icon: ShoppingBag,
+      label: "Total Orders", value: orders.length, icon: ShoppingBag, color: "blue",
       sub: orderGrowth !== null
         ? { text: `${orderGrowth >= 0 ? "+" : ""}${orderGrowth}% vs last month`, up: orderGrowth >= 0 }
-        : { text: "This month: " + thisMonth.length, up: true },
-      color: "blue",
+        : { text: `This month: ${thisMonth.length}`, up: true },
     },
     {
-      label: "Revenue (Fulfilled)", value: fmt(revenue), icon: TrendingUp,
-      sub: { text: `${fulfilled.length} fulfilled orders`, up: true },
-      color: "green",
+      label: "Revenue (Fulfilled)", value: fmt(revenue), icon: TrendingUp, color: "green",
+      sub: { text: `Avg order: ${fmt(avgOrder)}`, up: true },
     },
     {
-      label: "Pending", value: pending.length, icon: Clock,
+      label: "Pending", value: pending.length, icon: Clock, color: "yellow",
       sub: { text: "Needs attention", up: false },
-      color: "yellow",
     },
     {
-      label: "Cancelled", value: cancelled.length, icon: XCircle,
+      label: "Cancelled", value: cancelled.length, icon: XCircle, color: "red",
       sub: { text: `${orders.length ? Math.round((cancelled.length / orders.length) * 100) : 0}% of total`, up: false },
-      color: "red",
     },
   ];
 
   const colorMap: Record<string, string> = {
-    blue: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-    green: "bg-green-500/10 text-green-400 border-green-500/20",
+    blue:   "bg-blue-500/10 text-blue-400 border-blue-500/20",
+    green:  "bg-green-500/10 text-green-400 border-green-500/20",
     yellow: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-    red: "bg-red-500/10 text-red-400 border-red-500/20",
+    red:    "bg-red-500/10 text-red-400 border-red-500/20",
+  };
+
+  const tooltipStyle = {
+    contentStyle: { background: "#1a1a1a", border: "1px solid #ffffff14", borderRadius: "10px", fontSize: "12px" },
+    labelStyle: { color: "#9ca3af", marginBottom: "4px" },
+    itemStyle: { color: "#ffffff" },
+    cursor: { stroke: "#3b82f6", strokeWidth: 1, strokeDasharray: "4 4" },
   };
 
   if (loading) return (
@@ -161,60 +199,90 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* Revenue chart */}
-      <div className="bg-[#141414] border border-white/[0.06] rounded-2xl p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <p className="text-sm font-semibold text-white">Revenue (8 weeks)</p>
+      {/* Revenue chart + Top products */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* Revenue area chart */}
+        <div className="lg:col-span-2 bg-[#141414] border border-white/[0.06] rounded-2xl p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <p className="text-sm font-semibold text-white">Revenue (8 weeks)</p>
+              <p className="text-xs text-gray-500 mt-0.5">Fulfilled orders only</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <span className="text-xs text-gray-500">Weekly revenue</span>
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height={180}>
+            <AreaChart data={weekly} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
+              <XAxis dataKey="label" tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false} dy={6} />
+              <YAxis tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false}
+                tickFormatter={v => v === 0 ? "0" : `₦${(v / 1000).toFixed(0)}k`} width={48} />
+              <Tooltip {...tooltipStyle} formatter={(v: unknown) => [fmt(v as number), "Revenue"]} />
+              <Area type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={2}
+                fill="url(#revenueGrad)" dot={false}
+                activeDot={{ r: 4, fill: "#3b82f6", stroke: "#0a0a0a", strokeWidth: 2 }} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Top products */}
+        <div className="bg-[#141414] border border-white/[0.06] rounded-2xl p-6">
+          <p className="text-sm font-semibold text-white mb-1">Top Products</p>
+          <p className="text-xs text-gray-500 mb-5">By units ordered</p>
+          {topProducts.length === 0 ? (
+            <p className="text-xs text-gray-600 text-center py-8">No item data yet.</p>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {topProducts.map((p, i) => (
+                <div key={p.name} className="flex items-center gap-3">
+                  <span className="text-xs text-gray-600 w-4 flex-shrink-0">{i + 1}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-300 truncate">{p.name}</p>
+                    <div className="mt-1 h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                      <div className="h-full rounded-full bg-blue-500"
+                        style={{ width: `${(p.count / topProducts[0].count) * 100}%` }} />
+                    </div>
+                  </div>
+                  <span className="text-xs font-semibold text-white flex-shrink-0">{p.count}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Category revenue bar chart */}
+      {categoryRevenue.length > 0 && (
+        <div className="bg-[#141414] border border-white/[0.06] rounded-2xl p-6">
+          <div className="mb-6">
+            <p className="text-sm font-semibold text-white">Revenue by Category</p>
             <p className="text-xs text-gray-500 mt-0.5">Fulfilled orders only</p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-blue-500" />
-            <span className="text-xs text-gray-500">Weekly revenue</span>
-          </div>
+          <ResponsiveContainer width="100%" height={160}>
+            <BarChart data={categoryRevenue} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
+              <XAxis dataKey="cat" tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false} dy={6} />
+              <YAxis tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false}
+                tickFormatter={v => v === 0 ? "0" : `₦${(v / 1000).toFixed(0)}k`} width={48} />
+              <Tooltip {...tooltipStyle} formatter={(v: unknown) => [fmt(v as number), "Revenue"]} />
+              <Bar dataKey="revenue" radius={[4, 4, 0, 0]}>
+                {categoryRevenue.map((_, i) => (
+                  <Cell key={i} fill={BAR_COLORS[i % BAR_COLORS.length]} fillOpacity={0.85} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </div>
-        <ResponsiveContainer width="100%" height={180}>
-          <AreaChart data={weekly} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-            <defs>
-              <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25} />
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
-            <XAxis
-              dataKey="label"
-              tick={{ fill: "#6b7280", fontSize: 10 }}
-              axisLine={false}
-              tickLine={false}
-              dy={6}
-            />
-            <YAxis
-              tick={{ fill: "#6b7280", fontSize: 10 }}
-              axisLine={false}
-              tickLine={false}
-              tickFormatter={v => v === 0 ? "0" : `₦${(v / 1000).toFixed(0)}k`}
-              width={48}
-            />
-            <Tooltip
-              contentStyle={{ background: "#1a1a1a", border: "1px solid #ffffff14", borderRadius: "10px", fontSize: "12px" }}
-              labelStyle={{ color: "#9ca3af", marginBottom: "4px" }}
-              itemStyle={{ color: "#ffffff" }}
-              formatter={(v: unknown) => [fmt(v as number), "Revenue"]}
-              cursor={{ stroke: "#3b82f6", strokeWidth: 1, strokeDasharray: "4 4" }}
-            />
-            <Area
-              type="monotone"
-              dataKey="revenue"
-              stroke="#3b82f6"
-              strokeWidth={2}
-              fill="url(#revenueGrad)"
-              dot={false}
-              activeDot={{ r: 4, fill: "#3b82f6", stroke: "#0a0a0a", strokeWidth: 2 }}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
+      )}
 
       {/* Orders table */}
       <div className="bg-[#141414] border border-white/[0.06] rounded-2xl overflow-hidden">
@@ -250,7 +318,11 @@ export default function AdminDashboard() {
                     {order.total_naira ? ` · ${fmt(order.total_naira)}` : ""}
                     {" · "}{new Date(order.created_at).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
                   </p>
-                  {order.message && <p className="text-xs text-gray-600 truncate mt-0.5">{order.message}</p>}
+                  {Array.isArray(order.items) && order.items.length > 0 && (
+                    <p className="text-xs text-gray-600 truncate mt-0.5">
+                      {order.items.map(i => `${i.name} x${i.quantity}`).join(", ")}
+                    </p>
+                  )}
                 </div>
                 <div className="flex gap-1.5 flex-shrink-0">
                   <button onClick={() => updateStatus(order.id, "fulfilled")} title="Mark fulfilled"

@@ -173,7 +173,7 @@ export default function AccountPage() {
 
     try {
       const ext = file.name.split(".").pop();
-      const path = `avatars/${profile.id}.${ext}`;
+      const path = `${profile.id}.${ext}`;
       const { error: uploadErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
       if (uploadErr) throw uploadErr;
       const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);

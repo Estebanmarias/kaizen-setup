@@ -21,6 +21,13 @@ export default function CartPage() {
   const [orderForm, setOrderForm] = useState({ name: "", email: "", phone: "", note: "" });
   const [formStatus, setFormStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [formError, setFormError] = useState("");
+  const [authEmail, setAuthEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+  supabase?.auth.getUser().then(({ data }) => {
+    if (data.user) setAuthEmail(data.user.email ?? null);
+  });
+}, []);
 
   useEffect(() => {
     setMounted(true);
@@ -66,13 +73,22 @@ export default function CartPage() {
     setFormError("");
 
     if (supabase) {
+      const items = cart.map(i => ({
+        name: i.name,
+        quantity: i.quantity,
+        price: i.price_naira ?? undefined,
+        variant: Object.entries(i.variants).map(([k, v]) => `${k}: ${v}`).join(", ") || undefined,
+      }));
+
       const { error } = await supabase.from("consultation_requests").insert([{
         name: orderForm.name,
-        email: orderForm.email,
+        email: authEmail ?? orderForm.email,
         phone: orderForm.phone,
-        message: `Cart order: ${cartSummary}. ${orderForm.note}`,
+        message: orderForm.note || null,
         setup_type: "Shop Order",
         status: "pending",
+        items,
+        total_naira: hasAllPrices ? total : null,
       }]);
       if (error) { setFormStatus("error"); setFormError("Something went wrong. Try again."); return; }
     }
@@ -216,9 +232,9 @@ export default function CartPage() {
                 <input name="phone" value={orderForm.phone} onChange={e => setOrderForm({ ...orderForm, phone: e.target.value })}
                   placeholder="Phone Number"
                   className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors" />
-                <input name="email" value={orderForm.email} onChange={e => setOrderForm({ ...orderForm, email: e.target.value })}
-                  placeholder="Email Address" type="email"
-                  className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors" />
+               <input name="email" value={authEmail ?? orderForm.email} onChange={e => !authEmail && setOrderForm({ ...orderForm, email: e.target.value })}
+                  placeholder="Email Address" type="email" readOnly={!!authEmail}
+                  className={`px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors ${authEmail ? "opacity-60 cursor-not-allowed" : ""}`} />
                 <textarea value={orderForm.note} onChange={e => setOrderForm({ ...orderForm, note: e.target.value })}
                   placeholder="Additional notes (optional)" rows={2}
                   className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors" />

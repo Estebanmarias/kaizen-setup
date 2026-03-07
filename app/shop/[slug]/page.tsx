@@ -102,6 +102,13 @@ export default function ProductDetailPage() {
   const [orderForm, setOrderForm] = useState({ name: "", email: "", phone: "", message: "" });
   const [formStatus, setFormStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [formError, setFormError] = useState("");
+  const [authEmail, setAuthEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+  supabase?.auth.getUser().then(({ data }) => {
+    if (data.user) setAuthEmail(data.user.email ?? null);
+  });
+}, []);
 
   useEffect(() => {
     if (!supabase || !slug) return;
@@ -164,14 +171,30 @@ export default function ProductDetailPage() {
   };
 
   const submitOrder = async () => {
-    if (!orderForm.name || !orderForm.email || !orderForm.phone) { setFormError("Please fill in name, email and phone."); return; }
+    if (!orderForm.name || !orderForm.email || !orderForm.phone) {
+      setFormError("Please fill in name, email and phone.");
+      return;
+    }
     setFormStatus("loading");
     setFormError("");
+
     if (supabase && product) {
+      const items = [{
+        name: product.name,
+        quantity,
+        price: effectivePrice ?? undefined,
+        variant: variantSummary || undefined,
+      }];
+
       const { error } = await supabase.from("consultation_requests").insert([{
-        name: orderForm.name, email: orderForm.email, phone: orderForm.phone,
-        message: `Order request for: ${product.name}${variantSummary ? ` (${variantSummary})` : ""}, Qty: ${quantity}. ${orderForm.message}`,
-        setup_type: product.category, status: "pending",
+        name: orderForm.name,
+        email: authEmail ?? orderForm.email,
+        phone: orderForm.phone,
+        message: orderForm.message || null,
+        setup_type: product.category,
+        status: "pending",
+        items,
+        total_naira: effectivePrice ? effectivePrice * quantity : null,
       }]);
       if (error) { setFormStatus("error"); setFormError("Something went wrong. Try again."); return; }
     }
@@ -337,7 +360,8 @@ export default function ProductDetailPage() {
                 <input name="name" value={orderForm.name} onChange={handleInput} placeholder="Your Name" className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors" />
                 <input name="phone" value={orderForm.phone} onChange={handleInput} placeholder="Phone Number" className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors" />
               </div>
-              <input name="email" value={orderForm.email} onChange={handleInput} placeholder="Email Address" type="email" className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors" />
+              <input name="email" value={authEmail ?? orderForm.email} onChange={e => !authEmail && handleInput(e)} placeholder="Email Address" type="email" readOnly={!!authEmail}
+                  className={`px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors ${authEmail ? "opacity-60 cursor-not-allowed" : ""}`} />
               <textarea name="message" value={orderForm.message} onChange={handleInput} placeholder="Any specific requirements? (optional)" rows={3} className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors" />
               {formError && <p className="text-red-500 text-xs">{formError}</p>}
               <button onClick={submitOrder} disabled={formStatus === "loading"}
