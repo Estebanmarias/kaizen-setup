@@ -34,6 +34,7 @@ function buildItemsHtml(
 }
 
 export async function POST(req: NextRequest) {
+  console.log("update-order-status hit");
   const { id, status } = await req.json();
 
   if (!id || !["fulfilled", "cancelled"].includes(status)) {
@@ -48,6 +49,7 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (fetchErr || !order) {
+    console.log("Fetch error:", fetchErr);
     return NextResponse.json({ error: "Order not found" }, { status: 404 });
   }
 
@@ -60,6 +62,7 @@ export async function POST(req: NextRequest) {
     .eq("id", id);
 
   if (updateErr) {
+    console.log("Update error:", updateErr);
     return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
   }
 
@@ -88,6 +91,8 @@ export async function POST(req: NextRequest) {
 
     const brevoData = await brevoRes.json();
     console.log("Brevo response:", JSON.stringify(brevoData));
+  } else {
+    console.log("Skipped email — alreadySameStatus:", alreadySameStatus, "email:", order.email);
   }
 
   return NextResponse.json({ ok: true });
