@@ -400,16 +400,14 @@ export default function ProductDetailPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-16">
           {/* Image Gallery */}
           <div className="flex flex-col gap-3">
-            <div className="bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-2xl h-80 flex items-center justify-center p-6">
-              <div className="relative w-full h-full">
-                <Image src={images[activeImg]} alt={product.name} fill className="object-contain transition-opacity duration-200" />
-              </div>
+           <div className="bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-2xl h-80 flex items-center justify-center p-6 overflow-hidden">
+              <img src={images[activeImg]} alt={product.name} className="max-h-full max-w-full object-contain transition-opacity duration-200" />
             </div>
             {images.length > 1 && (
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {images.map((img, i) => (
                   <button key={i} onClick={() => setActiveImg(i)}
-                    className={`flex-shrink-0 w-16 h-16 rounded-lg border-2 overflow-hidden bg-white dark:bg-[#111] transition-colors ${activeImg === i ? "border-blue-500" : "border-gray-200 dark:border-gray-800 hover:border-gray-400"}`}>
+                    className={`relative flex-shrink-0 w-16 h-16 rounded-lg border-2 overflow-hidden bg-white dark:bg-[#111] transition-colors ${activeImg === i ? "border-blue-500" : "border-gray-200 dark:border-gray-800 hover:border-gray-400"}`}>
                     <Image src={img} alt={`${product.name} ${i + 1}`} fill className="object-contain p-1" />
                   </button>
                 ))}
