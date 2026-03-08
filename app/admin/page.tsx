@@ -30,6 +30,7 @@ const STATUS_STYLE: Record<string, string> = {
   pending:   "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
   fulfilled: "bg-green-500/10 text-green-400 border-green-500/20",
   cancelled: "bg-red-500/10 text-red-400 border-red-500/20",
+  cancellation_requested: "bg-orange-500/10 text-orange-400 border-orange-500/20",
 };
 
 function fmt(n: number) {
@@ -297,14 +298,14 @@ export default function AdminDashboard() {
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
           <p className="text-sm font-semibold text-white">Orders</p>
           <div className="flex gap-1.5">
-            {["all", "pending", "fulfilled", "cancelled"].map(s => (
-              <button key={s} onClick={() => setFilter(s)}
-                className={`px-3 py-1 rounded-lg text-xs font-medium capitalize transition-all ${
-                  filter === s ? "bg-blue-500 text-white" : "bg-white/[0.04] text-gray-500 hover:text-white"
-                }`}>
-                {s}{s !== "all" && ` (${orders.filter(o => o.status === s).length})`}
-              </button>
-            ))}
+           {["all", "pending", "cancellation_requested", "fulfilled", "cancelled"].map(s => (
+           <button key={s} onClick={() => setFilter(s)}
+           className={`px-3 py-1 rounded-lg text-xs font-medium capitalize transition-all ${
+            filter === s ? "bg-blue-500 text-white" : "bg-white/[0.04] text-gray-500 hover:text-white"
+             }`}>
+            {s === "cancellation_requested" ? `Cancel Req (${orders.filter(o => o.status === "cancellation_requested").length})` : `${s}${s !== "all" ? ` (${orders.filter(o => o.status === s).length})` : ""}`}
+           </button>
+          ))}
           </div>
         </div>
 
@@ -333,6 +334,18 @@ export default function AdminDashboard() {
                   )}
                 </div>
                 <div className="flex gap-1.5 flex-shrink-0">
+                {order.status === "cancellation_requested" ? (<>
+                  <button onClick={() => updateStatus(order.id, "cancelled")} title="Approve cancellation"
+                    className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors">
+                    <Check size={13} />
+                  </button>
+                  <button onClick={() => updateStatus(order.id, "pending")} title="Reject cancellation"
+                    className="p-1.5 rounded-lg bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 transition-colors">
+                    <X size={13} />
+                  </button>
+                  </>
+                  ) : (
+                  <>
                   <button onClick={() => updateStatus(order.id, "fulfilled")} title="Mark fulfilled"
                     className="p-1.5 rounded-lg bg-green-500/10 hover:bg-green-500/20 text-green-400 transition-colors">
                     <Check size={13} />
@@ -345,9 +358,11 @@ export default function AdminDashboard() {
                     className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors">
                     <X size={13} />
                   </button>
-                </div>
-              </div>
-            ))}
+                </>
+              )}
+            </div>
+            </div>
+              ))}
           </div>
         )}
       </div>
