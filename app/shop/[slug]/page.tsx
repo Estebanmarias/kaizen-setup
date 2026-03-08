@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { MessageCircle, ShoppingCart, ArrowLeft, Plus, Minus, Check, Share2, Copy, CheckCheck, CreditCard, Loader2 } from "lucide-react";
+import { MessageCircle, ShoppingCart, ArrowLeft, Plus, Minus, Check, Share2, Copy, CheckCheck, CreditCard, Loader2, Star } from "lucide-react";
 import Link from "next/link";
 
 type Variant = {
@@ -37,6 +37,14 @@ export type CartItem = {
   variants: Record<string, string>;
 };
 
+type Review = {
+  id: string;
+  rating: number;
+  body: string;
+  created_at: string;
+  user_id: string;
+};
+
 function isComboProduct(variants: Variant[] | null) {
   return !!(variants?.find(v => v.combo_prices));
 }
@@ -52,6 +60,39 @@ function getComboMin(variants: Variant[] | null): number | null {
 }
 function allComboSelected(variants: Variant[] | null, selected: Record<string, string>) {
   return variants?.filter(v => v.name && v.options).every(g => !!selected[g.name!]) ?? true;
+}
+
+// ── Star Rating Input ──────────────────────────────────────────────────────────
+function StarInput({ value, onChange }: { value: number; onChange: (n: number) => void }) {
+  const [hovered, setHovered] = useState(0);
+  return (
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map(n => (
+        <button key={n} type="button"
+          onClick={() => onChange(n)}
+          onMouseEnter={() => setHovered(n)}
+          onMouseLeave={() => setHovered(0)}
+          className="transition-transform hover:scale-110">
+          <Star size={24}
+            className={n <= (hovered || value) ? "fill-yellow-400 text-yellow-400" : "text-gray-300 dark:text-gray-700"}
+          />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ── Star Display ───────────────────────────────────────────────────────────────
+function StarDisplay({ rating }: { rating: number }) {
+  return (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map(n => (
+        <Star key={n} size={14}
+          className={n <= rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300 dark:text-gray-700"}
+        />
+      ))}
+    </div>
+  );
 }
 
 // ── Share Bar ──────────────────────────────────────────────────────────────────
@@ -74,7 +115,6 @@ function ShareBar({ name, slug }: { name: string; slug: string }) {
       <span className="text-xs text-gray-400 font-medium flex items-center gap-1"><Share2 size={12} /> Share:</span>
       <button onClick={shareWA}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-green-500 hover:text-green-600 transition-colors">
-        {/* WhatsApp icon */}
         <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.118 1.528 5.849L.057 23.428a.75.75 0 0 0 .916.916l5.579-1.471A11.943 11.943 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.695 9.695 0 0 1-4.945-1.355l-.355-.21-3.676.968.984-3.595-.229-.368A9.698 9.698 0 0 1 2.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg>
         WhatsApp
       </button>
@@ -103,19 +143,26 @@ export default function ProductDetailPage() {
   const [formStatus, setFormStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [formError, setFormError] = useState("");
   const [authEmail, setAuthEmail] = useState<string | null>(null);
+  const [authUserId, setAuthUserId] = useState<string | null>(null);
   const [payLoading, setPayLoading] = useState(false);
+
+  // Reviews state
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [hasOrdered, setHasOrdered] = useState(false);
+  const [alreadyReviewed, setAlreadyReviewed] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewBody, setReviewBody] = useState("");
+  const [reviewStatus, setReviewStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [reviewError, setReviewError] = useState("");
 
   useEffect(() => {
     supabase?.auth.getUser().then(({ data }) => {
-      if (data.user) setAuthEmail(data.user.email ?? null);
+      if (data.user) {
+        setAuthEmail(data.user.email ?? null);
+        setAuthUserId(data.user.id);
+      }
     });
   }, []);
-
-  useEffect(() => {
-  supabase?.auth.getUser().then(({ data }) => {
-    if (data.user) setAuthEmail(data.user.email ?? null);
-  });
-}, []);
 
   useEffect(() => {
     if (!supabase || !slug) return;
@@ -132,6 +179,40 @@ export default function ProductDetailPage() {
         }
       });
   }, [slug]);
+
+  // Fetch approved reviews
+  useEffect(() => {
+    if (!supabase || !product) return;
+    supabase.from("reviews")
+      .select("id, rating, body, created_at, user_id")
+      .eq("product_id", product.id)
+      .eq("status", "approved")
+      .order("created_at", { ascending: false })
+      .then(({ data }) => setReviews(data ?? []));
+  }, [product]);
+
+  // Check if user has ordered this product + already reviewed
+  useEffect(() => {
+    if (!supabase || !product || !authUserId || !authEmail) return;
+
+    // Check ordered
+    supabase.from("consultation_requests")
+      .select("id, items")
+      .eq("email", authEmail)
+      .then(({ data }) => {
+        const ordered = (data ?? []).some(order =>
+          (order.items ?? []).some((item: { name: string }) => item.name === product.name)
+        );
+        setHasOrdered(ordered);
+      });
+
+    // Check already reviewed
+    supabase.from("reviews")
+      .select("id")
+      .eq("product_id", product.id)
+      .eq("user_id", authUserId)
+      .then(({ data }) => setAlreadyReviewed((data ?? []).length > 0));
+  }, [product, authUserId, authEmail]);
 
   const images = product
     ? (product.images?.length ? product.images : product.image_url ? [product.image_url] : ["/images/products/placeholder.jpg"])
@@ -184,24 +265,12 @@ export default function ProductDetailPage() {
     }
     setFormStatus("loading");
     setFormError("");
-
     if (supabase && product) {
-      const items = [{
-        name: product.name,
-        quantity,
-        price: effectivePrice ?? undefined,
-        variant: variantSummary || undefined,
-      }];
-
+      const items = [{ name: product.name, quantity, price: effectivePrice ?? undefined, variant: variantSummary || undefined }];
       const { error } = await supabase.from("consultation_requests").insert([{
-        name: orderForm.name,
-        email: authEmail ?? orderForm.email,
-        phone: orderForm.phone,
-        message: orderForm.message || null,
-        setup_type: product.category,
-        status: "pending",
-        items,
-        total_naira: effectivePrice ? effectivePrice * quantity : null,
+        name: orderForm.name, email: authEmail ?? orderForm.email, phone: orderForm.phone,
+        message: orderForm.message || null, setup_type: product.category, status: "pending",
+        items, total_naira: effectivePrice ? effectivePrice * quantity : null,
       }]);
       if (error) { setFormStatus("error"); setFormError("Something went wrong. Try again."); return; }
     }
@@ -219,11 +288,9 @@ export default function ProductDetailPage() {
     }
     setFormError("");
     setPayLoading(true);
-
     const orderTotal = effectivePrice * quantity;
     const PaystackPop = (await import("@paystack/inline-js")).default;
     const handler = new PaystackPop();
-
     handler.newTransaction({
       key: process.env.NEXT_PUBLIC_PAYSTACK_KEY!,
       email: authEmail ?? orderForm.email,
@@ -238,19 +305,18 @@ export default function ProductDetailPage() {
       },
       onSuccess: async (transaction: { reference: string }) => {
         try {
-          const orderData = {
-            name: orderForm.name,
-            email: authEmail ?? orderForm.email,
-            phone: orderForm.phone,
-            message: orderForm.message || null,
-            setup_type: product.category,
-            items: [{ name: product.name, quantity, price: effectivePrice, variant: variantSummary || undefined }],
-            total_naira: orderTotal,
-          };
           const res = await fetch("/api/verify-payment", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ reference: transaction.reference, orderData }),
+            body: JSON.stringify({
+              reference: transaction.reference,
+              orderData: {
+                name: orderForm.name, email: authEmail ?? orderForm.email, phone: orderForm.phone,
+                message: orderForm.message || null, setup_type: product.category,
+                items: [{ name: product.name, quantity, price: effectivePrice, variant: variantSummary || undefined }],
+                total_naira: orderTotal,
+              },
+            }),
           });
           const data = await res.json();
           if (!res.ok) { setFormError(data.error ?? "Payment verified but order failed. Contact us."); setPayLoading(false); return; }
@@ -260,12 +326,31 @@ export default function ProductDetailPage() {
           setPayLoading(false);
         }
       },
-      onCancel: () => {
-        setFormError("Payment cancelled.");
-        setPayLoading(false);
-      },
+      onCancel: () => { setFormError("Payment cancelled."); setPayLoading(false); },
     });
   };
+
+  const submitReview = async () => {
+    if (!reviewRating) { setReviewError("Please select a star rating."); return; }
+    if (!reviewBody.trim()) { setReviewError("Please write a review."); return; }
+    if (!authUserId || !product) return;
+    setReviewStatus("loading");
+    setReviewError("");
+    const { error } = await supabase!.from("reviews").insert([{
+      product_id: product.id,
+      user_id: authUserId,
+      rating: reviewRating,
+      body: reviewBody.trim(),
+      status: "pending",
+    }]);
+    if (error) { setReviewStatus("error"); setReviewError("Something went wrong. Try again."); return; }
+    setReviewStatus("success");
+    setAlreadyReviewed(true);
+  };
+
+  const avgRating = reviews.length
+    ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
+    : null;
 
   const waMessage = product
     ? encodeURIComponent(`Hi KaizenSetup! I'd like to order the ${product.name}${variantSummary ? ` (${variantSummary})` : ""}, Qty: ${quantity}. Please confirm price and availability.`)
@@ -327,7 +412,17 @@ export default function ProductDetailPage() {
           {/* Details */}
           <div className="flex flex-col justify-center">
             <span className="text-xs font-semibold tracking-widest uppercase text-blue-500 mb-2">{product.category}</span>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4">{product.name}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">{product.name}</h1>
+
+            {/* Avg rating inline */}
+            {avgRating && (
+              <div className="flex items-center gap-2 mb-4">
+                <StarDisplay rating={Math.round(Number(avgRating))} />
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{avgRating}</span>
+                <span className="text-xs text-gray-400">({reviews.length} review{reviews.length !== 1 ? "s" : ""})</span>
+              </div>
+            )}
+
             <p className="text-gray-500 dark:text-gray-400 leading-relaxed mb-6">{product.description}</p>
 
             {namedVariants.length > 0 && (
@@ -406,14 +501,12 @@ export default function ProductDetailPage() {
                 </button>
               )}
             </div>
-
-            {/* Share bar */}
             <ShareBar name={product.name} slug={product.slug} />
           </div>
         </div>
 
         {/* Order Form */}
-        <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl p-8">
+        <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl p-8 mb-10">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Place an Order Request</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Fill in your details and we'll get back to you within 24 hours.</p>
           {formStatus === "success" ? (
@@ -427,24 +520,100 @@ export default function ProductDetailPage() {
                 <input name="phone" value={orderForm.phone} onChange={handleInput} placeholder="Phone Number" className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors" />
               </div>
               <input name="email" value={authEmail ?? orderForm.email} onChange={e => !authEmail && handleInput(e)} placeholder="Email Address" type="email" readOnly={!!authEmail}
-                  className={`px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors ${authEmail ? "opacity-60 cursor-not-allowed" : ""}`} />
+                className={`px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors ${authEmail ? "opacity-60 cursor-not-allowed" : ""}`} />
               <textarea name="message" value={orderForm.message} onChange={handleInput} placeholder="Any specific requirements? (optional)" rows={3} className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors" />
               {formError && <p className="text-red-500 text-xs">{formError}</p>}
               {effectivePrice && (
-              <button onClick={handlePaystack} disabled={payLoading}
-                className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white py-3 rounded-lg font-semibold text-sm transition-colors">
-                {payLoading ? <Loader2 size={15} className="animate-spin" /> : <CreditCard size={15} />}
-                {payLoading ? "Processing..." : `Pay ₦${(effectivePrice * quantity).toLocaleString()}`}
-              </button>
+                <button onClick={handlePaystack} disabled={payLoading}
+                  className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white py-3 rounded-lg font-semibold text-sm transition-colors">
+                  {payLoading ? <Loader2 size={15} className="animate-spin" /> : <CreditCard size={15} />}
+                  {payLoading ? "Processing..." : `Pay ₦${(effectivePrice * quantity).toLocaleString()}`}
+                </button>
               )}
               <button onClick={submitOrder} disabled={formStatus === "loading"}
-              className="flex items-center justify-center gap-2 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 py-3 rounded-lg font-semibold text-sm transition-colors">
-              <ShoppingCart size={16} />
-              {formStatus === "loading" ? "Submitting..." : "Request Without Paying"}
-            </button>
+                className="flex items-center justify-center gap-2 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 py-3 rounded-lg font-semibold text-sm transition-colors">
+                <ShoppingCart size={16} />
+                {formStatus === "loading" ? "Submitting..." : "Request Without Paying"}
+              </button>
             </div>
           )}
         </div>
+
+        {/* Reviews Section */}
+        <div className="mb-10">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Customer Reviews</h2>
+              {avgRating && (
+                <div className="flex items-center gap-2 mt-1">
+                  <StarDisplay rating={Math.round(Number(avgRating))} />
+                  <span className="text-sm text-gray-500">{avgRating} out of 5 · {reviews.length} review{reviews.length !== 1 ? "s" : ""}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Write a review */}
+          {!authUserId ? (
+            <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl p-6 mb-6 text-center">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Sign in to leave a review</p>
+              <Link href="/auth" className="inline-block px-5 py-2 bg-blue-500 hover:bg-blue-400 text-white text-sm font-semibold rounded-lg transition-colors">
+                Sign In
+              </Link>
+            </div>
+          ) : !hasOrdered ? (
+            <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl p-6 mb-6 text-center">
+              <p className="text-sm text-gray-500 dark:text-gray-400">Only customers who have ordered this product can leave a review.</p>
+            </div>
+          ) : alreadyReviewed ? (
+            <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-2xl p-6 mb-6 text-center">
+              <p className="text-sm text-green-700 dark:text-green-400 font-medium">✓ You've already submitted a review for this product.</p>
+            </div>
+          ) : reviewStatus === "success" ? (
+            <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-2xl p-6 mb-6 text-center">
+              <p className="text-sm text-blue-700 dark:text-blue-400 font-medium">✓ Review submitted! It'll appear once approved.</p>
+            </div>
+          ) : (
+            <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl p-6 mb-6">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Write a Review</h3>
+              <div className="flex flex-col gap-4">
+                <div>
+                  <p className="text-xs text-gray-500 mb-2">Your rating</p>
+                  <StarInput value={reviewRating} onChange={setReviewRating} />
+                </div>
+                <textarea value={reviewBody} onChange={e => setReviewBody(e.target.value)}
+                  placeholder="Share your experience with this product..." rows={4}
+                  className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors resize-none" />
+                {reviewError && <p className="text-red-500 text-xs">{reviewError}</p>}
+                <button onClick={submitReview} disabled={reviewStatus === "loading"}
+                  className="self-start flex items-center gap-2 px-6 py-2.5 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors">
+                  {reviewStatus === "loading" ? <Loader2 size={14} className="animate-spin" /> : <Star size={14} />}
+                  {reviewStatus === "loading" ? "Submitting..." : "Submit Review"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Reviews list */}
+          {reviews.length === 0 ? (
+            <div className="text-center py-10 text-gray-400 text-sm">No reviews yet. Be the first to review this product.</div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {reviews.map(r => (
+                <div key={r.id} className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <StarDisplay rating={r.rating} />
+                    <span className="text-xs text-gray-400">
+                      {new Date(r.created_at).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{r.body}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
       </div>
     </main>
   );
