@@ -5,6 +5,7 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { ShoppingCart, X, Plus, Minus, Trash2, ArrowRight, ChevronDown, ChevronUp, Search, Heart } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 const CATEGORIES = ["All", "Desk & Seating", "Monitors & Lighting", "Accessories", "Cables & Hubs", "Smart Home", "Cleaning", "Bags", "Keyboards", "Mice", "Monitors"];
 
@@ -114,7 +115,9 @@ function FlyAnimation({ items, cartRef }: { items: FlyItem[]; cartRef: React.Ref
               ["--endX" as string]: `${endX - item.startX}px`,
               ["--endY" as string]: `${endY - item.startY}px`,
             }}>
-            <img src={item.src} alt="" className="w-full h-full object-contain rounded-lg border border-gray-200 bg-white p-1 shadow-lg" />
+            <div className="relative w-full h-full">
+              <Image src={item.src} alt="" fill className="object-contain rounded-lg border border-gray-200 bg-white p-1 shadow-lg" />
+            </div>
           </div>
         );
       })}
@@ -162,6 +165,7 @@ function QuickAddDrawer({ product, onClose, onAdded }: {
   };
 
   const namedVariants = product.variants?.filter(v => v.name && v.options) ?? [];
+  const imgSrc = product.image_url ?? "/images/products/placeholder.jpg";
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -169,12 +173,12 @@ function QuickAddDrawer({ product, onClose, onAdded }: {
       <div className="relative w-full max-w-sm bg-white dark:bg-[#111] h-full flex flex-col shadow-2xl animate-slide-in">
         <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-800">
           <h2 className="font-bold text-gray-900 dark:text-white">Quick Add</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"><X size={20} /></button>
+          <button onClick={onClose} aria-label="Close drawer" className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"><X size={20} /></button>
         </div>
         <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-5">
           <div className="flex gap-4">
-            <div className="w-20 h-20 bg-gray-50 dark:bg-[#1a1a1a] rounded-xl flex items-center justify-center flex-shrink-0 border border-gray-200 dark:border-gray-800">
-              <img src={product.image_url ?? "/images/products/placeholder.jpg"} alt={product.name} className="max-h-full max-w-full object-contain p-1" />
+            <div className="relative w-20 h-20 bg-gray-50 dark:bg-[#1a1a1a] rounded-xl flex-shrink-0 border border-gray-200 dark:border-gray-800 overflow-hidden">
+              <Image src={imgSrc} alt={product.name} fill className="object-contain p-1" />
             </div>
             <div>
               <p className="text-xs font-semibold text-blue-500 mb-1">{product.category}</p>
@@ -222,9 +226,9 @@ function QuickAddDrawer({ product, onClose, onAdded }: {
           <div className="flex items-center gap-3">
             <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Quantity</p>
             <div className="flex items-center border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
-              <button onClick={() => setQty(q => Math.max(1, q - 1))} className="px-3 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"><Minus size={14} /></button>
+              <button onClick={() => setQty(q => Math.max(1, q - 1))} aria-label="Decrease quantity" className="px-3 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"><Minus size={14} /></button>
               <span className="px-4 py-2 text-sm font-semibold text-gray-900 dark:text-white border-x border-gray-300 dark:border-gray-700">{qty}</span>
-              <button onClick={() => setQty(q => q + 1)} className="px-3 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"><Plus size={14} /></button>
+              <button onClick={() => setQty(q => q + 1)} aria-label="Increase quantity" className="px-3 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"><Plus size={14} /></button>
             </div>
           </div>
           <Link href={`/shop/${product.slug}`} onClick={onClose} className="text-sm text-blue-500 hover:underline flex items-center gap-1">
@@ -290,7 +294,7 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
       <div className="relative w-full max-w-sm bg-white dark:bg-[#111] h-full flex flex-col shadow-2xl">
         <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-800">
           <h2 className="font-bold text-gray-900 dark:text-white">Your Cart ({cart.reduce((s, i) => s + i.quantity, 0)})</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"><X size={20} /></button>
+          <button onClick={onClose} aria-label="Close cart" className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"><X size={20} /></button>
         </div>
         <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
           {cart.length === 0 ? (
@@ -301,8 +305,8 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
           ) : cart.map(item => (
             <div key={item.id} className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl p-3">
               <div className="flex gap-3">
-                <div className="w-14 h-14 bg-white dark:bg-[#111] rounded-lg flex items-center justify-center flex-shrink-0 border border-gray-100 dark:border-gray-800">
-                  <img src={item.image_url ?? "/images/products/placeholder.jpg"} alt={item.name} className="max-h-full max-w-full object-contain p-1" />
+                <div className="relative w-14 h-14 bg-white dark:bg-[#111] rounded-lg flex-shrink-0 border border-gray-100 dark:border-gray-800 overflow-hidden">
+                  <Image src={item.image_url ?? "/images/products/placeholder.jpg"} alt={item.name} fill className="object-contain p-1" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-xs text-gray-900 dark:text-white truncate">{item.name}</p>
@@ -311,7 +315,7 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
                   )}
                   {item.price_naira && <p className="text-xs font-bold text-gray-900 dark:text-white mt-1">₦{(item.price_naira * item.quantity).toLocaleString()}</p>}
                 </div>
-                <button onClick={() => remove(item.id)} className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"><Trash2 size={14} /></button>
+                <button onClick={() => remove(item.id)} aria-label={`Remove ${item.name}`} className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"><Trash2 size={14} /></button>
               </div>
               {editingId === item.id && (
                 <div className="mt-3 flex flex-col gap-2 border-t border-gray-200 dark:border-gray-700 pt-3">
@@ -331,9 +335,9 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
               )}
               <div className="flex items-center justify-between mt-3">
                 <div className="flex items-center border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
-                  <button onClick={() => updateQty(item.id, -1)} className="px-2 py-1 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"><Minus size={11} /></button>
+                  <button onClick={() => updateQty(item.id, -1)} aria-label="Decrease quantity" className="px-2 py-1 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"><Minus size={11} /></button>
                   <span className="px-3 py-1 text-xs font-semibold text-gray-900 dark:text-white border-x border-gray-300 dark:border-gray-700">{item.quantity}</span>
-                  <button onClick={() => updateQty(item.id, 1)} className="px-2 py-1 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"><Plus size={11} /></button>
+                  <button onClick={() => updateQty(item.id, 1)} aria-label="Increase quantity" className="px-2 py-1 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"><Plus size={11} /></button>
                 </div>
                 {Object.keys(item.variants).length > 0 && (
                   <button onClick={() => editingId === item.id ? setEditingId(null) : startEdit(item)} className="text-xs text-blue-500 hover:underline">
@@ -360,7 +364,6 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
   );
 }
 
-// ── Wishlist Heart Button ──────────────────────────────────────────────────────
 function WishlistButton({ productId, wishlisted, onToggle }: {
   productId: string;
   wishlisted: boolean;
@@ -369,6 +372,7 @@ function WishlistButton({ productId, wishlisted, onToggle }: {
   return (
     <button
       onClick={e => { e.preventDefault(); e.stopPropagation(); onToggle(productId); }}
+      aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
       className={`w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm border ${
         wishlisted
           ? "bg-red-50 border-red-200 dark:bg-red-950/40 dark:border-red-800 text-red-500"
@@ -379,7 +383,6 @@ function WishlistButton({ productId, wishlisted, onToggle }: {
   );
 }
 
-// ── Shop Page ──────────────────────────────────────────────────────────────────
 export default function ShopPage() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
@@ -393,7 +396,7 @@ export default function ShopPage() {
   const [flyItems, setFlyItems] = useState<FlyItem[]>([]);
   const [cartCount, setCartCount] = useState(0);
   const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
-  const [wishlistMap, setWishlistMap] = useState<Record<string, string>>({}); // productId → wishlist row id
+  const [wishlistMap, setWishlistMap] = useState<Record<string, string>>({});
   const [userId, setUserId] = useState<string | null>(null);
   const cartBtnRef = useRef<HTMLButtonElement>(null);
   const flyId = useRef(0);
@@ -417,16 +420,12 @@ export default function ShopPage() {
     return () => window.removeEventListener("cart_updated", update);
   }, []);
 
-  // Load user + wishlist
   useEffect(() => {
     if (!supabase) return;
     supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) return;
       setUserId(data.user.id);
-      const { data: wl } = await supabase!
-        .from("wishlists")
-        .select("id, product_id")
-        .eq("user_id", data.user.id);
+      const { data: wl } = await supabase!.from("wishlists").select("id, product_id").eq("user_id", data.user.id);
       if (wl) {
         setWishlistIds(new Set(wl.map(w => w.product_id)));
         const map: Record<string, string> = {};
@@ -439,15 +438,11 @@ export default function ShopPage() {
   const toggleWishlist = async (productId: string) => {
     if (!supabase) return;
     if (!userId) { router.push("/auth?next=/shop"); return; }
-
     if (wishlistIds.has(productId)) {
-      // Remove
-      const wishlistRowId = wishlistMap[productId];
-      await supabase.from("wishlists").delete().eq("id", wishlistRowId);
+      await supabase.from("wishlists").delete().eq("id", wishlistMap[productId]);
       setWishlistIds(prev => { const s = new Set(prev); s.delete(productId); return s; });
       setWishlistMap(prev => { const m = { ...prev }; delete m[productId]; return m; });
     } else {
-      // Add
       const { data } = await supabase.from("wishlists").insert({ user_id: userId, product_id: productId }).select().single();
       if (data) {
         setWishlistIds(prev => new Set([...prev, productId]));
@@ -494,7 +489,7 @@ export default function ShopPage() {
       )}
       {cartOpen && !quickAdd && <CartDrawer onClose={() => { setCartOpen(false); closeDrawer(); }} />}
 
-      <button ref={cartBtnRef} onClick={() => { setCartOpen(true); openDrawer(); }}
+      <button ref={cartBtnRef} onClick={() => { setCartOpen(true); openDrawer(); }} aria-label="Open cart"
         className={`fixed bottom-6 left-6 z-40 flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 py-3 rounded-full shadow-xl hover:scale-105 transition-transform font-semibold text-sm ${cartOpen || quickAdd ? "opacity-0 pointer-events-none" : ""}`}>
         <ShoppingCart size={18} />
         Cart
@@ -518,7 +513,7 @@ export default function ShopPage() {
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search products..."
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1a1a1a] text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors" />
           {search && (
-            <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+            <button onClick={() => setSearch("")} aria-label="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
               <X size={14} />
             </button>
           )}
@@ -551,15 +546,17 @@ export default function ShopPage() {
               const perOptionMin = !combo && p.variants?.some(v => v.prices?.length)
                 ? Math.min(...(p.variants.flatMap(v => v.prices ?? []))) : null;
               const wishlisted = wishlistIds.has(p.id);
+              const imgSrc = p.image_url ?? "/images/products/placeholder.jpg";
 
               return (
                 <div key={p.id} className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden hover:border-blue-500 transition-colors flex flex-col">
                   <Link href={`/shop/${p.slug}`} className="block relative">
-                    <div className="bg-white dark:bg-[#111] h-52 flex items-center justify-center p-4 overflow-hidden">
-                      <img src={p.image_url ?? "/images/products/placeholder.jpg"} alt={p.name}
-                        className="max-h-full max-w-full object-contain transition-transform duration-300 ease-in-out hover:scale-110" />
+                    <div className="relative bg-white dark:bg-[#111] h-52 overflow-hidden">
+                      <Image src={imgSrc} alt={p.name} fill
+                        className="object-contain p-4 transition-transform duration-300 ease-in-out hover:scale-110"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      />
                     </div>
-                    {/* Wishlist button overlay */}
                     <div className="absolute top-3 right-3">
                       <WishlistButton productId={p.id} wishlisted={wishlisted} onToggle={toggleWishlist} />
                     </div>
