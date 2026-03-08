@@ -97,8 +97,8 @@ export default function Navbar() {
 
         {/* Desktop right actions */}
         <div className="hidden md:flex items-center gap-2">
-          <Link href="/cart" className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
-            <ShoppingCart size={20} />
+        <Link href="/cart" aria-label="View cart" className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
+          <ShoppingCart size={20} />
             {cartCount > 0 && (
               <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                 {cartCount}
@@ -106,7 +106,7 @@ export default function Navbar() {
             )}
           </Link>
 
-          <button onClick={toggleDark}
+          <button onClick={toggleDark} aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
             className="p-2 rounded-full border border-gray-200 dark:border-gray-700 hover:border-gray-900 dark:hover:border-white transition-colors text-gray-600 dark:text-gray-300">
             {mounted ? (dark ? <Sun size={16} /> : <Moon size={16} />) : <Moon size={16} />}
           </button>
@@ -150,13 +150,13 @@ export default function Navbar() {
               </span>
             )}
           </Link>
-          <button onClick={toggleDark}
-            className="p-2 rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300">
+          <button onClick={toggleDark} aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+            className="p-2 rounded-full border border-gray-200 dark:border-gray-700 hover:border-gray-900 dark:hover:border-white transition-colors text-gray-600 dark:text-gray-300">
             {mounted ? (dark ? <Sun size={16} /> : <Moon size={16} />) : <Moon size={16} />}
           </button>
-          <button onClick={() => setMenuOpen(!menuOpen)}
-            className="p-2 text-gray-700 dark:text-gray-300">
-            {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          <button onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? "Close menu" : "Open menu"}
+          className="p-2 text-gray-700 dark:text-gray-300">
+          {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </div>
