@@ -48,8 +48,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex">
-      {/* Sidebar */}
-      <aside className="w-56 flex-shrink-0 border-r border-white/[0.06] flex flex-col bg-[#0f0f0f]">
+
+      {/* ── Desktop Sidebar ── */}
+      <aside className="hidden md:flex w-56 flex-shrink-0 border-r border-white/[0.06] flex-col bg-[#0f0f0f]">
         {/* Brand */}
         <div className="p-5 border-b border-white/[0.06]">
           <div className="flex items-center gap-2">
@@ -63,7 +64,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </div>
 
-        {/* Nav */}
+        {/* Nav links */}
         <nav className="flex-1 p-3 flex flex-col gap-0.5">
           {NAV.map(({ label, href, icon: Icon }) => {
             const active = pathname === href || (href !== "/admin" && pathname.startsWith(href));
@@ -92,19 +93,53 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      {/* Main */}
+      {/* ── Main content ── */}
       <div className="flex-1 flex flex-col overflow-hidden">
+
         {/* Top bar */}
-        <header className="h-14 border-b border-white/[0.06] flex items-center justify-between px-8 flex-shrink-0 bg-[#0f0f0f]/50 backdrop-blur">
-          <h1 className="text-sm font-semibold text-white">{pageTitle}</h1>
-          <p className="text-xs text-gray-500">{today}</p>
+        <header className="h-14 border-b border-white/[0.06] flex items-center justify-between px-4 md:px-8 flex-shrink-0 bg-[#0f0f0f]/50 backdrop-blur">
+          {/* Mobile brand */}
+          <div className="flex items-center gap-2 md:hidden">
+            <div className="w-6 h-6 rounded-md bg-blue-500 flex items-center justify-center">
+              <Zap size={12} className="text-white" fill="white" />
+            </div>
+            <p className="font-bold text-white text-sm">KaizenSetup</p>
+          </div>
+          {/* Desktop title */}
+          <h1 className="hidden md:block text-sm font-semibold text-white">{pageTitle}</h1>
+          <div className="flex items-center gap-3">
+            <p className="text-xs text-gray-500 hidden sm:block">{today}</p>
+            {/* Mobile sign out */}
+            <button
+              onClick={async () => { await signOut(); router.replace("/admin/login"); }}
+              className="md:hidden p-2 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/[0.06] transition-all">
+              <LogOut size={16} />
+            </button>
+          </div>
         </header>
 
-        {/* Page content */}
-        <main className="flex-1 overflow-auto">
+        {/* Page content — extra bottom padding on mobile for tab bar */}
+        <main className="flex-1 overflow-auto pb-20 md:pb-0">
           {children}
         </main>
       </div>
+
+      {/* ── Mobile Bottom Tab Bar ── */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0f0f0f] border-t border-white/[0.06] flex items-center justify-around px-2 py-2 safe-area-pb">
+        {NAV.map(({ label, href, icon: Icon }) => {
+          const active = pathname === href || (href !== "/admin" && pathname.startsWith(href));
+          return (
+            <Link key={href} href={href}
+              className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all ${
+                active ? "text-blue-400" : "text-gray-600 hover:text-gray-400"
+              }`}>
+              <Icon size={20} strokeWidth={active ? 2.5 : 1.8} />
+              <span className="text-[10px] font-medium leading-none">{label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
     </div>
   );
 }
