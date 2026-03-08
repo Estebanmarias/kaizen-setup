@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
+const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
@@ -14,30 +14,47 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing reference or order data" }, { status: 400 });
     }
 
-    // Verify with Paystack
-    const res = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
-      headers: {
-        Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-        "Content-Type": "application/json",
-      },
-    });
+    // ── Resolve user_id server-side from the session token ─────────────────
+    // Never trust user_id from the client body — resolve it here instead.
+    let resolvedUserId: string | null = null;
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.slice(7);
+      const { data: { user } } = await supabaseAdmin.auth.getUser(token);
+      resolvedUserId = user?.id ?? null;
+    }
 
-    const data = await res.json();
+    // ── Verify with Paystack ────────────────────────────────────────────────
+    const paystackRes = await fetch(
+      `https://api.paystack.co/transaction/verify/${reference}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-    if (!data.status || data.data.status !== "success") {
+    const paystackData = await paystackRes.json();
+
+    if (!paystackData.status || paystackData.data.status !== "success") {
       return NextResponse.json({ error: "Payment verification failed" }, { status: 400 });
     }
 
-    // Confirm amount matches (in kobo)
-    const paidKobo = data.data.amount;
+    // ── Confirm amount matches (kobo) ───────────────────────────────────────
+    const paidKobo = paystackData.data.amount;
     const expectedKobo = orderData.total_naira * 100;
     if (paidKobo < expectedKobo) {
       return NextResponse.json({ error: "Payment amount mismatch" }, { status: 400 });
     }
 
-    // Save order to Supabase
-    const { error: insertErr } = await supabase.from("consultation_requests").insert({
-      ...orderData,
+    // ── Save order ──────────────────────────────────────────────────────────
+    // Strip any client-supplied user_id; use the server-resolved one only.
+    const { user_id: _ignored, ...safeOrderData } = orderData;
+
+    const { error: insertErr } = await supabaseAdmin.from("consultation_requests").insert({
+      ...safeOrderData,
+      user_id: resolvedUserId,
       payment_status: "paid",
       payment_ref: reference,
       status: "pending",

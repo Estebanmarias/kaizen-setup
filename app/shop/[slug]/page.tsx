@@ -144,6 +144,7 @@ export default function ProductDetailPage() {
   const [formError, setFormError] = useState("");
   const [authEmail, setAuthEmail] = useState<string | null>(null);
   const [authUserId, setAuthUserId] = useState<string | null>(null);
+  const [authToken, setAuthToken] = useState<string | null>(null);
   const [payLoading, setPayLoading] = useState(false);
 
   // Reviews state
@@ -155,11 +156,12 @@ export default function ProductDetailPage() {
   const [reviewStatus, setReviewStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [reviewError, setReviewError] = useState("");
 
-  useEffect(() => {
-    supabase?.auth.getUser().then(({ data }) => {
-      if (data.user) {
-        setAuthEmail(data.user.email ?? null);
-        setAuthUserId(data.user.id);
+ useEffect(() => {
+    supabase?.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        setAuthEmail(data.session.user.email ?? null);
+        setAuthUserId(data.session.user.id);
+        setAuthToken(data.session.access_token);
       }
     });
   }, []);
@@ -271,6 +273,7 @@ export default function ProductDetailPage() {
         name: orderForm.name, email: authEmail ?? orderForm.email, phone: orderForm.phone,
         message: orderForm.message || null, setup_type: product.category, status: "pending",
         items, total_naira: effectivePrice ? effectivePrice * quantity : null,
+        user_id: authUserId ?? null,
       }]);
       if (error) { setFormStatus("error"); setFormError("Something went wrong. Try again."); return; }
     }
@@ -307,7 +310,10 @@ export default function ProductDetailPage() {
         try {
           const res = await fetch("/api/verify-payment", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+            },
             body: JSON.stringify({
               reference: transaction.reference,
               orderData: {

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { Trash2, Plus, Minus, ShoppingCart, ArrowLeft, MessageCircle, CreditCard, Loader2 } from "lucide-react";
 
-
 type CartItem = {
   id: string;
   name: string;
@@ -21,6 +20,7 @@ export default function CartPage() {
   const [mounted, setMounted] = useState(false);
   const [orderForm, setOrderForm] = useState({ name: "", email: "", phone: "", note: "" });
   const [authEmail, setAuthEmail] = useState<string | null>(null);
+  const [authToken, setAuthToken] = useState<string | null>(null);
   const [formError, setFormError] = useState("");
   const [payLoading, setPayLoading] = useState(false);
   const [formStatus, setFormStatus] = useState<"idle" | "success">("idle");
@@ -28,8 +28,11 @@ export default function CartPage() {
   useEffect(() => {
     setMounted(true);
     setCart(JSON.parse(localStorage.getItem("kaizen_cart") ?? "[]"));
-    supabase?.auth.getUser().then(({ data }) => {
-      if (data.user) setAuthEmail(data.user.email ?? null);
+    supabase?.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        setAuthEmail(data.session.user.email ?? null);
+        setAuthToken(data.session.access_token);
+      }
     });
   }, []);
 
@@ -93,7 +96,7 @@ export default function CartPage() {
     handler.newTransaction({
       key: process.env.NEXT_PUBLIC_PAYSTACK_KEY!,
       email: authEmail ?? orderForm.email,
-      amount: total * 100, // kobo
+      amount: total * 100,
       currency: "NGN",
       metadata: {
         custom_fields: [
@@ -105,11 +108,18 @@ export default function CartPage() {
         try {
           const res = await fetch("/api/verify-payment", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+            },
             body: JSON.stringify({ reference: transaction.reference, orderData: buildOrderData() }),
           });
           const data = await res.json();
-          if (!res.ok) { setFormError(data.error ?? "Payment verified but order failed. Contact us."); setPayLoading(false); return; }
+          if (!res.ok) {
+            setFormError(data.error ?? "Payment verified but order failed. Contact us.");
+            setPayLoading(false);
+            return;
+          }
           setFormStatus("success");
           clearCart();
         } catch {
@@ -249,7 +259,6 @@ export default function CartPage() {
 
                 {formError && <p className="text-red-500 text-xs">{formError}</p>}
 
-                {/* Pay Now */}
                 {hasAllPrices && total > 0 && (
                   <button onClick={handlePaystack} disabled={payLoading}
                     className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white py-3 rounded-lg font-semibold text-sm transition-colors">
@@ -258,7 +267,6 @@ export default function CartPage() {
                   </button>
                 )}
 
-                {/* WhatsApp fallback */}
                 <a href={`https://wa.me/2347035378462?text=${waMessage}`} target="_blank" rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 border border-gray-900 dark:border-white text-gray-900 dark:text-white hover:bg-gray-900 hover:text-white dark:hover:bg-white dark:hover:text-gray-900 py-3 rounded-lg font-semibold text-sm transition-colors">
                   <MessageCircle size={16} />
