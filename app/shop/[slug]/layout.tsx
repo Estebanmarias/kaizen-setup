@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: `${product.name} | KaizenSetup`,
       description: product.description,
-      url: `https://kaizen-setup.vercel.app/shop/${slug}`,
+      url: `https://www.kaizensetup.name.ng/shop/${slug}`,
       images: [{ url: image, alt: product.name }],
     },
     twitter: {

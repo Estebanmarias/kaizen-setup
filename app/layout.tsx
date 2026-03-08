@@ -11,7 +11,7 @@ const inter = Inter({ subsets: ["latin"] });
 const OG_IMAGE = "https://tyegjxrlfblojnimzkzp.supabase.co/storage/v1/object/public/product-images/kaizenSetup.jpg";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://kaizensetup.name.ng"),
+  metadataBase: new URL("https://www.kaizensetup.name.ng"),
   title: {
     default: "KaizenSetup — Smart & Affordable Tech Setups in Nigeria",
     template: "%s | KaizenSetup",
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     title: "KaizenSetup — Smart & Affordable Tech Setups in Nigeria",
     description:
       "Honest tech setup consultancy based in Ibadan, Nigeria. Real testing, budget-first thinking, zero corporate fluff.",
-    url: "https://kaizen-setup.vercel.app",
+    url: "https://www.kaizensetup.name.ng",
     siteName: "KaizenSetup",
     locale: "en_NG",
     type: "website",
@@ -83,6 +83,7 @@ export default function RootLayout({
           }}
         />
       </head>
+      <meta name="google-site-verification" content="XsRO80HnYnkyv27i2zLuFojZuK8peF_njoNOIET5z3c" />
       <body className={inter.className} suppressHydrationWarning>
         <NavbarWrapper />
         {children}

@@ -43,10 +43,15 @@ export async function POST(req: NextRequest) {
 
     // ── Confirm amount matches (kobo) ───────────────────────────────────────
     const paidKobo = paystackData.data.amount;
-    const expectedKobo = orderData.total_naira * 100;
-    if (paidKobo < expectedKobo) {
-      return NextResponse.json({ error: "Payment amount mismatch" }, { status: 400 });
-    }
+
+      if (!orderData.total_naira || orderData.total_naira <= 0) {
+        return NextResponse.json({ error: "Invalid order total" }, { status: 400 });
+      }
+
+    const expectedKobo = Math.round(orderData.total_naira * 100);
+      if (paidKobo < expectedKobo) {
+        return NextResponse.json({ error: "Payment amount mismatch" }, { status: 400 });
+      }
 
     // ── Save order ──────────────────────────────────────────────────────────
     // Strip any client-supplied user_id; use the server-resolved one only.

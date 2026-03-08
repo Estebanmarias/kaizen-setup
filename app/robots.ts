@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/admin", "/admin/", "/api/"],
       },
     ],
-    sitemap: "https://kaizen-setup.vercel.app/sitemap.xml",
+    sitemap: "https://www.kaizensetup.name.ng/sitemap.xml",
   };
 }

@@ -98,7 +98,7 @@ function StarDisplay({ rating }: { rating: number }) {
 // ── Share Bar ──────────────────────────────────────────────────────────────────
 function ShareBar({ name, slug }: { name: string; slug: string }) {
   const [copied, setCopied] = useState(false);
-  const url = `https://kaizen-setup.vercel.app/shop/${slug}`;
+  const url = `https://www.kaizensetup.name.ng/shop/${slug}`;
   const text = `Check out ${name} on KaizenSetup!`;
 
   const copyLink = async () => {

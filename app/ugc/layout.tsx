@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Creator Reviews | KaizenSetup",
     description: "Real unboxings, reviews, and tutorials from creators who've used KaizenSetup products.",
-    url: "https://kaizen-setup.vercel.app/ugc",
+    url: "https://www.kaizensetup.name.ng/ugc",
   },
   twitter: {
     title: "Creator Reviews | KaizenSetup",
