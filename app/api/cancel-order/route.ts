@@ -193,9 +193,10 @@ export async function POST(req: NextRequest) {
     .update({ status: newStatus })
     .eq("id", orderId);
 
-  if (updateErr) {
-    return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
-  }
+ if (updateErr) {
+  console.log("Update error:", JSON.stringify(updateErr));
+  return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
+}
 
   // Email customer
   await sendEmail(
