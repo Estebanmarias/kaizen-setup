@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import { ShoppingCart, X, Plus, Minus, Trash2, ArrowRight, ChevronDown, ChevronUp, Search } from "lucide-react";
+import { ShoppingCart, X, Plus, Minus, Trash2, ArrowRight, ChevronDown, ChevronUp, Search, Heart } from "lucide-react";
 import Link from "next/link";
 
 const CATEGORIES = ["All", "Desk & Seating", "Monitors & Lighting", "Accessories", "Cables & Hubs", "Smart Home", "Cleaning", "Bags", "Keyboards", "Mice", "Monitors"];
@@ -98,7 +98,6 @@ function ComboPriceTable({ variants }: { variants: Variant[] }) {
   );
 }
 
-// ── Fly-to-cart animation ──────────────────────────────────────────────────────
 function FlyAnimation({ items, cartRef }: { items: FlyItem[]; cartRef: React.RefObject<HTMLButtonElement | null> }) {
   return (
     <>
@@ -119,12 +118,10 @@ function FlyAnimation({ items, cartRef }: { items: FlyItem[]; cartRef: React.Ref
           </div>
         );
       })}
-
     </>
   );
 }
 
-// ── Quick Add Drawer ───────────────────────────────────────────────────────────
 function QuickAddDrawer({ product, onClose, onAdded }: {
   product: Product;
   onClose: () => void;
@@ -363,8 +360,28 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
   );
 }
 
+// ── Wishlist Heart Button ──────────────────────────────────────────────────────
+function WishlistButton({ productId, wishlisted, onToggle }: {
+  productId: string;
+  wishlisted: boolean;
+  onToggle: (productId: string) => void;
+}) {
+  return (
+    <button
+      onClick={e => { e.preventDefault(); e.stopPropagation(); onToggle(productId); }}
+      className={`w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm border ${
+        wishlisted
+          ? "bg-red-50 border-red-200 dark:bg-red-950/40 dark:border-red-800 text-red-500"
+          : "bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-gray-700 text-gray-400 hover:text-red-500 hover:border-red-300"
+      }`}>
+      <Heart size={14} className={wishlisted ? "fill-red-500" : ""} />
+    </button>
+  );
+}
+
 // ── Shop Page ──────────────────────────────────────────────────────────────────
 export default function ShopPage() {
+  const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [filtered, setFiltered] = useState<Product[]>([]);
   const [active, setActive] = useState("All");
@@ -375,6 +392,9 @@ export default function ShopPage() {
   const [expandedPrices, setExpandedPrices] = useState<Record<string, boolean>>({});
   const [flyItems, setFlyItems] = useState<FlyItem[]>([]);
   const [cartCount, setCartCount] = useState(0);
+  const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
+  const [wishlistMap, setWishlistMap] = useState<Record<string, string>>({}); // productId → wishlist row id
+  const [userId, setUserId] = useState<string | null>(null);
   const cartBtnRef = useRef<HTMLButtonElement>(null);
   const flyId = useRef(0);
 
@@ -397,31 +417,67 @@ export default function ShopPage() {
     return () => window.removeEventListener("cart_updated", update);
   }, []);
 
-  const filter = (cat: string) => {
-    setActive(cat);
-    setSearch("");
+  // Load user + wishlist
+  useEffect(() => {
+    if (!supabase) return;
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!data.user) return;
+      setUserId(data.user.id);
+      const { data: wl } = await supabase!
+        .from("wishlists")
+        .select("id, product_id")
+        .eq("user_id", data.user.id);
+      if (wl) {
+        setWishlistIds(new Set(wl.map(w => w.product_id)));
+        const map: Record<string, string> = {};
+        wl.forEach(w => { map[w.product_id] = w.id; });
+        setWishlistMap(map);
+      }
+    });
+  }, []);
+
+  const toggleWishlist = async (productId: string) => {
+    if (!supabase) return;
+    if (!userId) { router.push("/auth?next=/shop"); return; }
+
+    if (wishlistIds.has(productId)) {
+      // Remove
+      const wishlistRowId = wishlistMap[productId];
+      await supabase.from("wishlists").delete().eq("id", wishlistRowId);
+      setWishlistIds(prev => { const s = new Set(prev); s.delete(productId); return s; });
+      setWishlistMap(prev => { const m = { ...prev }; delete m[productId]; return m; });
+    } else {
+      // Add
+      const { data } = await supabase.from("wishlists").insert({ user_id: userId, product_id: productId }).select().single();
+      if (data) {
+        setWishlistIds(prev => new Set([...prev, productId]));
+        setWishlistMap(prev => ({ ...prev, [productId]: data.id }));
+      }
+    }
   };
 
+  useEffect(() => {
+    if (active === "All") { setFiltered(products); return; }
+    setFiltered(products.filter(p => p.category === active));
+  }, [active, products]);
+
+  const filter = (cat: string) => { setActive(cat); setSearch(""); };
   const displayProducts = search.trim()
     ? products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.description.toLowerCase().includes(search.toLowerCase()))
     : filtered;
 
   const togglePrices = (id: string) => setExpandedPrices(prev => ({ ...prev, [id]: !prev[id] }));
-
   const openDrawer = () => window.dispatchEvent(new Event("drawer_opened"));
   const closeDrawer = () => window.dispatchEvent(new Event("drawer_closed"));
 
   const handleAdded = (imgSrc: string) => {
     const cartEl = cartBtnRef.current;
     if (!cartEl || !imgSrc) return;
-    const rect = cartEl.getBoundingClientRect();
-    // Start from center of screen (approximate Quick Add drawer image position)
     const startX = window.innerWidth / 2 - 80;
     const startY = window.innerHeight / 2 - 100;
     const id = flyId.current++;
     setFlyItems(prev => [...prev, { src: imgSrc, startX, startY, id }]);
     setTimeout(() => setFlyItems(prev => prev.filter(f => f.id !== id)), 800);
-    // Open cart drawer after animation
     setTimeout(() => { setQuickAdd(null); setCartOpen(true); }, 700);
   };
 
@@ -438,7 +494,6 @@ export default function ShopPage() {
       )}
       {cartOpen && !quickAdd && <CartDrawer onClose={() => { setCartOpen(false); closeDrawer(); }} />}
 
-      {/* Floating cart button — hidden when drawer is open */}
       <button ref={cartBtnRef} onClick={() => { setCartOpen(true); openDrawer(); }}
         className={`fixed bottom-6 left-6 z-40 flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 py-3 rounded-full shadow-xl hover:scale-105 transition-transform font-semibold text-sm ${cartOpen || quickAdd ? "opacity-0 pointer-events-none" : ""}`}>
         <ShoppingCart size={18} />
@@ -458,15 +513,10 @@ export default function ShopPage() {
           Tested and recommended gear. Every product on this page has been used or reviewed by KaizenSetup.
         </p>
 
-        {/* Search */}
         <div className="relative mb-6">
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search products..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1a1a1a] text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors"
-          />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search products..."
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1a1a1a] text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors" />
           {search && (
             <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
               <X size={14} />
@@ -500,13 +550,18 @@ export default function ShopPage() {
               const comboMin = combo ? getComboMin(p.variants) : null;
               const perOptionMin = !combo && p.variants?.some(v => v.prices?.length)
                 ? Math.min(...(p.variants.flatMap(v => v.prices ?? []))) : null;
+              const wishlisted = wishlistIds.has(p.id);
 
               return (
                 <div key={p.id} className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden hover:border-blue-500 transition-colors flex flex-col">
-                  <Link href={`/shop/${p.slug}`} className="block">
+                  <Link href={`/shop/${p.slug}`} className="block relative">
                     <div className="bg-white dark:bg-[#111] h-52 flex items-center justify-center p-4 overflow-hidden">
                       <img src={p.image_url ?? "/images/products/placeholder.jpg"} alt={p.name}
                         className="max-h-full max-w-full object-contain transition-transform duration-300 ease-in-out hover:scale-110" />
+                    </div>
+                    {/* Wishlist button overlay */}
+                    <div className="absolute top-3 right-3">
+                      <WishlistButton productId={p.id} wishlisted={wishlisted} onToggle={toggleWishlist} />
                     </div>
                   </Link>
                   <div className="p-5 flex flex-col flex-1">
