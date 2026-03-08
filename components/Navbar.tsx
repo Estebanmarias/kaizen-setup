@@ -19,19 +19,19 @@ const NAV_LINKS = [
 ];
 
 export default function Navbar() {
-  const router = useRouter()
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [dark, setDark] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [user, setUser] = useState<SupabaseUser | null>(null)
-  const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [cartCount, setCartCount] = useState(0)
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
 
   const updateCartCount = () => {
-    const cart = JSON.parse(localStorage.getItem("kaizen_cart") ?? "[]")
-    setCartCount(cart.reduce((s: number, i: { quantity: number }) => s + i.quantity, 0))
-  }
+    const cart = JSON.parse(localStorage.getItem("kaizen_cart") ?? "[]");
+    setCartCount(cart.reduce((s: number, i: { quantity: number }) => s + i.quantity, 0));
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -39,19 +39,19 @@ export default function Navbar() {
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", onScroll);
 
-    supabase?.auth.getUser().then(({ data }) => setUser(data.user ?? null))
+    supabase?.auth.getUser().then(({ data }) => setUser(data.user ?? null));
     const { data: listener } = supabase?.auth.onAuthStateChange((_e, session) => {
-      setUser(session?.user ?? null)
-    }) ?? { data: null }
+      setUser(session?.user ?? null);
+    }) ?? { data: null };
 
-    updateCartCount()
-    window.addEventListener("cart_updated", updateCartCount)
+    updateCartCount();
+    window.addEventListener("cart_updated", updateCartCount);
 
     return () => {
-      window.removeEventListener("scroll", onScroll)
-      window.removeEventListener("cart_updated", updateCartCount)
-      listener?.subscription.unsubscribe()
-    }
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("cart_updated", updateCartCount);
+      listener?.subscription.unsubscribe();
+    };
   }, []);
 
   const toggleDark = () => {
@@ -61,14 +61,16 @@ export default function Navbar() {
   };
 
   const signOut = async () => {
-    await supabase?.auth.signOut()
-    setUserMenuOpen(false)
-    router.push('/')
-  }
+    await supabase?.auth.signOut();
+    setUserMenuOpen(false);
+    setMenuOpen(false);
+    router.push("/");
+  };
 
-  const displayName = user?.user_metadata?.full_name ?? user?.email?.split('@')[0]
-  const avatarUrl = user?.user_metadata?.avatar_url
-    ?? `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(displayName ?? 'U')}`
+  const displayName = user?.user_metadata?.full_name ?? user?.email?.split("@")[0];
+  const avatarUrl =
+    user?.user_metadata?.avatar_url ??
+    `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(displayName ?? "U")}`;
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
@@ -76,19 +78,25 @@ export default function Navbar() {
         ? "bg-white/95 dark:bg-[#0f0f0f]/95 backdrop-blur border-gray-200 dark:border-gray-800"
         : "bg-transparent border-transparent"
     }`}>
-      <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="font-bold text-xl tracking-tight text-gray-900 dark:text-white">
+      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-2">
+
+        {/* Logo */}
+        <Link href="/" className="font-bold text-lg sm:text-xl tracking-tight text-gray-900 dark:text-white flex-shrink-0">
           Kaizen<span className="text-gray-500">Setup</span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-8">
+        {/* Desktop nav */}
+        <div className="hidden md:flex items-center gap-6 lg:gap-8">
           {NAV_LINKS.map((l) => (
             <Link key={l.label} href={l.href}
-              className="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+              className="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors whitespace-nowrap">
               {l.label}
             </Link>
           ))}
+        </div>
 
+        {/* Desktop right actions */}
+        <div className="hidden md:flex items-center gap-2">
           <Link href="/cart" className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
             <ShoppingCart size={20} />
             {cartCount > 0 && (
@@ -107,11 +115,10 @@ export default function Navbar() {
             <div className="relative">
               <button onClick={() => setUserMenuOpen(v => !v)}
                 className="flex items-center gap-2 border border-gray-200 dark:border-gray-700 rounded-full pl-1 pr-3 py-1 hover:border-blue-500 transition-colors">
-                <img src={avatarUrl} alt={displayName ?? ''} className="w-7 h-7 rounded-full object-cover bg-blue-500" />
+                <img src={avatarUrl} alt={displayName ?? ""} className="w-7 h-7 rounded-full object-cover bg-blue-500" />
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300 max-w-[100px] truncate">{displayName}</span>
                 <ChevronDown size={14} className="text-gray-400" />
               </button>
-
               {userMenuOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden">
                   <Link href="/account" onClick={() => setUserMenuOpen(false)}
@@ -127,48 +134,66 @@ export default function Navbar() {
             </div>
           ) : (
             <Link href="/auth"
-              className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
+              className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap">
               Sign In
             </Link>
           )}
         </div>
 
-        <div className="md:hidden flex items-center gap-3">
+        {/* Mobile right actions */}
+        <div className="md:hidden flex items-center gap-1 flex-shrink-0">
+          <Link href="/cart" className="relative p-2 text-gray-600 dark:text-gray-300">
+            <ShoppingCart size={20} />
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                {cartCount}
+              </span>
+            )}
+          </Link>
           <button onClick={toggleDark}
             className="p-2 rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300">
             {mounted ? (dark ? <Sun size={16} /> : <Moon size={16} />) : <Moon size={16} />}
           </button>
-          <button onClick={() => setMenuOpen(!menuOpen)} className="text-gray-700 dark:text-gray-300">
+          <button onClick={() => setMenuOpen(!menuOpen)}
+            className="p-2 text-gray-700 dark:text-gray-300">
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </div>
 
+      {/* Mobile menu dropdown */}
       {menuOpen && (
-        <div className="md:hidden bg-white dark:bg-[#0f0f0f] px-6 pb-6 flex flex-col gap-4 border-t border-gray-100 dark:border-gray-800">
+        <div className="md:hidden bg-white dark:bg-[#0f0f0f] border-t border-gray-100 dark:border-gray-800 px-4 py-4 flex flex-col gap-1">
           {NAV_LINKS.map((l) => (
             <Link key={l.label} href={l.href} onClick={() => setMenuOpen(false)}
-              className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+              className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white px-3 py-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-white/[0.04] transition-colors">
               {l.label}
             </Link>
           ))}
-          {user ? (
-            <>
-              <Link href="/account" onClick={() => setMenuOpen(false)}
-                className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-                My Account
+
+          <div className="border-t border-gray-100 dark:border-gray-800 mt-2 pt-2">
+            {user ? (
+              <>
+                <div className="flex items-center gap-3 px-3 py-2 mb-1">
+                  <img src={avatarUrl} alt={displayName ?? ""} className="w-8 h-8 rounded-full object-cover bg-blue-500 flex-shrink-0" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{displayName}</span>
+                </div>
+                <Link href="/account" onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-white/[0.04] transition-colors">
+                  <User size={15} /> My Account
+                </Link>
+                <button onClick={signOut}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/[0.06] transition-colors">
+                  <LogOut size={15} /> Sign Out
+                </button>
+              </>
+            ) : (
+              <Link href="/auth" onClick={() => setMenuOpen(false)}
+                className="block bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold px-4 py-2.5 rounded-lg text-center transition-colors">
+                Sign In
               </Link>
-              <button onClick={signOut}
-                className="text-left text-sm font-medium text-red-500">
-                Sign Out
-              </button>
-            </>
-          ) : (
-            <Link href="/auth" onClick={() => setMenuOpen(false)}
-              className="bg-blue-500 text-white text-sm font-semibold px-4 py-2 rounded-lg text-center transition-colors">
-              Sign In
-            </Link>
-          )}
+            )}
+          </div>
         </div>
       )}
     </nav>
