@@ -5,7 +5,7 @@ export async function GET(
   { params }: { params: Promise<{ code: string }> }
 ) {
   const { code } = await params;
-  const res = NextResponse.redirect(new URL("/", req.url));
+  const res = NextResponse.redirect(new URL("/auth?ref=" + code, req.url));
 
   res.cookies.set("ref_code", code, {
     path: "/",
