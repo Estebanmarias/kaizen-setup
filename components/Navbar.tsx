@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Menu, X, Sun, Moon, User, LogOut, ChevronDown, ShoppingCart } from "lucide-react";
+import { Menu, X, Sun, Moon, User, LogOut, ChevronDown, ShoppingCart, Search } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
@@ -27,6 +27,8 @@ export default function Navbar() {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const updateCartCount = () => {
     const cart = JSON.parse(localStorage.getItem("kaizen_cart") ?? "[]");
@@ -67,6 +69,16 @@ export default function Navbar() {
     router.push("/");
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    setMobileSearchOpen(false);
+    setMenuOpen(false);
+    const q = searchQuery.trim();
+    setSearchQuery("");
+    router.push(`/search?q=${encodeURIComponent(q)}`);
+  };
+
   const displayName = user?.user_metadata?.full_name ?? user?.email?.split("@")[0];
   const avatarUrl =
     user?.user_metadata?.avatar_url ??
@@ -97,8 +109,21 @@ export default function Navbar() {
 
         {/* Desktop right actions */}
         <div className="hidden md:flex items-center gap-2">
-        <Link href="/cart" aria-label="View cart" className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
-          <ShoppingCart size={20} />
+
+          {/* Desktop search */}
+          <form onSubmit={handleSearch} className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-1.5">
+            <Search size={14} className="text-gray-400 shrink-0" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search..."
+              className="bg-transparent text-sm text-gray-700 dark:text-gray-200 placeholder-gray-400 outline-none w-32 focus:w-44 transition-all duration-200"
+            />
+          </form>
+
+          <Link href="/cart" aria-label="View cart" className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
+            <ShoppingCart size={20} />
             {cartCount > 0 && (
               <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                 {cartCount}
@@ -142,6 +167,13 @@ export default function Navbar() {
 
         {/* Mobile right actions */}
         <div className="md:hidden flex items-center gap-1 flex-shrink-0">
+          <button
+            onClick={() => { setMobileSearchOpen(v => !v); setMenuOpen(false); }}
+            aria-label="Search"
+            className="p-2 text-gray-600 dark:text-gray-300"
+          >
+            <Search size={20} />
+          </button>
           <Link href="/cart" className="relative p-2 text-gray-600 dark:text-gray-300">
             <ShoppingCart size={20} />
             {cartCount > 0 && (
@@ -154,12 +186,31 @@ export default function Navbar() {
             className="p-2 rounded-full border border-gray-200 dark:border-gray-700 hover:border-gray-900 dark:hover:border-white transition-colors text-gray-600 dark:text-gray-300">
             {mounted ? (dark ? <Sun size={16} /> : <Moon size={16} />) : <Moon size={16} />}
           </button>
-          <button onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? "Close menu" : "Open menu"}
-          className="p-2 text-gray-700 dark:text-gray-300">
-          {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          <button onClick={() => { setMenuOpen(!menuOpen); setMobileSearchOpen(false); }} aria-label={menuOpen ? "Close menu" : "Open menu"}
+            className="p-2 text-gray-700 dark:text-gray-300">
+            {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </div>
+
+      {/* Mobile search bar */}
+      {mobileSearchOpen && (
+        <div className="md:hidden bg-white dark:bg-[#0f0f0f] border-t border-gray-100 dark:border-gray-800 px-4 py-3">
+          <form onSubmit={handleSearch} className="flex gap-2">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search products, blog posts..."
+              autoFocus
+              className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium">
+              Go
+            </button>
+          </form>
+        </div>
+      )}
 
       {/* Mobile menu dropdown */}
       {menuOpen && (

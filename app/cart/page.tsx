@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { Trash2, Plus, Minus, ShoppingCart, ArrowLeft, MessageCircle, CreditCard, Loader2 } from "lucide-react";
+import PromoCodeInput from "@/components/PromoCodeInput";
 
 type CartItem = {
   id: string;
@@ -24,6 +25,11 @@ export default function CartPage() {
   const [formError, setFormError] = useState("");
   const [payLoading, setPayLoading] = useState(false);
   const [formStatus, setFormStatus] = useState<"idle" | "success">("idle");
+
+  // Promo state
+  const [promoApplied, setPromoApplied] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [discountAmount, setDiscountAmount] = useState(0);
 
   useEffect(() => {
     setMounted(true);
@@ -47,8 +53,21 @@ export default function CartPage() {
   const remove = (id: string) => save(cart.filter(i => i.id !== id));
   const clearCart = () => save([]);
 
-  const total = cart.reduce((sum, i) => sum + (i.price_naira ?? 0) * i.quantity, 0);
+  const subtotal = cart.reduce((sum, i) => sum + (i.price_naira ?? 0) * i.quantity, 0);
+  const total = Math.max(0, subtotal - discountAmount);
   const hasAllPrices = cart.every(i => i.price_naira !== null);
+
+  const handlePromoApply = (discount: number, code: string) => {
+    setDiscountAmount(discount);
+    setPromoCode(code);
+    setPromoApplied(true);
+  };
+
+  const handlePromoRemove = () => {
+    setDiscountAmount(0);
+    setPromoCode("");
+    setPromoApplied(false);
+  };
 
   const waMessage = encodeURIComponent(
     `Hi KaizenSetup! I'd like to place an order:\n${cart.map(i => {
@@ -79,6 +98,8 @@ export default function CartPage() {
       variant: Object.entries(i.variants).map(([k, v]) => `${k}: ${v}`).join(", ") || undefined,
     })),
     total_naira: hasAllPrices ? total : null,
+    promo_code: promoApplied ? promoCode : null,
+    discount_naira: promoApplied ? discountAmount : 0,
   });
 
   const handlePaystack = async () => {
@@ -96,12 +117,13 @@ export default function CartPage() {
     handler.newTransaction({
       key: process.env.NEXT_PUBLIC_PAYSTACK_KEY!,
       email: authEmail ?? orderForm.email,
-      amount: total * 100,
+      amount: Math.round(total * 100), // discounted total in kobo
       currency: "NGN",
       metadata: {
         custom_fields: [
           { display_name: "Customer Name", variable_name: "name", value: orderForm.name },
           { display_name: "Phone", variable_name: "phone", value: orderForm.phone },
+          ...(promoApplied ? [{ display_name: "Promo Code", variable_name: "promo_code", value: promoCode }] : []),
         ],
       },
       onSuccess: async (transaction: { reference: string }) => {
@@ -225,12 +247,41 @@ export default function CartPage() {
                   </div>
                 ))}
               </div>
-              {hasAllPrices ? (
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-3 flex justify-between font-bold">
-                  <span className="text-gray-900 dark:text-white">Total</span>
-                  <span className="text-blue-500">₦{total.toLocaleString()}</span>
-                </div>
-              ) : (
+
+              {hasAllPrices && (
+                <>
+                  {/* Promo code input */}
+                  <PromoCodeInput
+                    totalNaira={subtotal}
+                    onApply={handlePromoApply}
+                    onRemove={handlePromoRemove}
+                    applied={promoApplied}
+                    appliedCode={promoCode}
+                    discountAmount={discountAmount}
+                  />
+
+                  <div className="pt-3 flex flex-col gap-1.5">
+                    {promoApplied && (
+                      <>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500 dark:text-gray-400">Subtotal</span>
+                          <span className="text-gray-900 dark:text-white">₦{subtotal.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-green-500">Discount ({promoCode})</span>
+                          <span className="text-green-500">−₦{discountAmount.toLocaleString()}</span>
+                        </div>
+                      </>
+                    )}
+                    <div className="flex justify-between font-bold border-t border-gray-200 dark:border-gray-700 pt-2 mt-1">
+                      <span className="text-gray-900 dark:text-white">Total</span>
+                      <span className="text-blue-500">₦{total.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {!hasAllPrices && (
                 <p className="text-xs text-gray-400 border-t border-gray-200 dark:border-gray-700 pt-3">
                   Some items don't have fixed prices. We'll confirm the total when we contact you.
                 </p>
