@@ -12,7 +12,7 @@ export default function ReferralTab({ referralCode, referralCount }: Props) {
   const [copied, setCopied] = useState(false);
 
   const referralLink = referralCode
-    ? `https://www.kaizensetup.name.ng/ref/${referralCode}`
+    ? `https://www.kaizensetup.name.ng/api/ref/${referralCode}`
     : null;
 
   const copy = () => {
