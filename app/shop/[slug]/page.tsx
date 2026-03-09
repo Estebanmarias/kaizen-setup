@@ -62,7 +62,6 @@ function allComboSelected(variants: Variant[] | null, selected: Record<string, s
   return variants?.filter(v => v.name && v.options).every(g => !!selected[g.name!]) ?? true;
 }
 
-// ── Star Rating Input ──────────────────────────────────────────────────────────
 function StarInput({ value, onChange }: { value: number; onChange: (n: number) => void }) {
   const [hovered, setHovered] = useState(0);
   return (
@@ -82,7 +81,6 @@ function StarInput({ value, onChange }: { value: number; onChange: (n: number) =
   );
 }
 
-// ── Star Display ───────────────────────────────────────────────────────────────
 function StarDisplay({ rating }: { rating: number }) {
   return (
     <div className="flex gap-0.5">
@@ -95,7 +93,6 @@ function StarDisplay({ rating }: { rating: number }) {
   );
 }
 
-// ── Share Bar ──────────────────────────────────────────────────────────────────
 function ShareBar({ name, slug }: { name: string; slug: string }) {
   const [copied, setCopied] = useState(false);
   const url = `https://www.kaizensetup.name.ng/shop/${slug}`;
@@ -147,7 +144,6 @@ export default function ProductDetailPage() {
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [payLoading, setPayLoading] = useState(false);
 
-  // Reviews state
   const [reviews, setReviews] = useState<Review[]>([]);
   const [hasOrdered, setHasOrdered] = useState(false);
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
@@ -156,7 +152,7 @@ export default function ProductDetailPage() {
   const [reviewStatus, setReviewStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [reviewError, setReviewError] = useState("");
 
- useEffect(() => {
+  useEffect(() => {
     supabase?.auth.getSession().then(({ data }) => {
       if (data.session) {
         setAuthEmail(data.session.user.email ?? null);
@@ -182,7 +178,6 @@ export default function ProductDetailPage() {
       });
   }, [slug]);
 
-  // Fetch approved reviews
   useEffect(() => {
     if (!supabase || !product) return;
     supabase.from("reviews")
@@ -193,11 +188,8 @@ export default function ProductDetailPage() {
       .then(({ data }) => setReviews(data ?? []));
   }, [product]);
 
-  // Check if user has ordered this product + already reviewed
   useEffect(() => {
     if (!supabase || !product || !authUserId || !authEmail) return;
-
-    // Check ordered
     supabase.from("consultation_requests")
       .select("id, items")
       .eq("email", authEmail)
@@ -207,8 +199,6 @@ export default function ProductDetailPage() {
         );
         setHasOrdered(ordered);
       });
-
-    // Check already reviewed
     supabase.from("reviews")
       .select("id")
       .eq("product_id", product.id)
@@ -358,6 +348,37 @@ export default function ProductDetailPage() {
     ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
     : null;
 
+  // ── JSON-LD structured data ──────────────────────────────────────────────────
+  const jsonLd = product ? {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": product.name,
+    "description": product.description,
+    "image": images[0] ?? undefined,
+    "sku": product.slug,
+    "brand": { "@type": "Brand", "name": "KaizenSetup" },
+    "offers": {
+      "@type": "Offer",
+      "priceCurrency": "NGN",
+      "price": effectivePrice ?? minVariantPrice ?? comboMin ?? undefined,
+      "availability": product.in_stock
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+      "url": `https://www.kaizensetup.name.ng/shop/${product.slug}`,
+      "seller": { "@type": "Organization", "name": "KaizenSetup" }
+    },
+    ...(reviews.length > 0 && {
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1),
+        "reviewCount": reviews.length,
+        "bestRating": 5,
+        "worstRating": 1
+      }
+    })
+  } : null;
+  // ────────────────────────────────────────────────────────────────────────────
+
   const waMessage = product
     ? encodeURIComponent(`Hi KaizenSetup! I'd like to order the ${product.name}${variantSummary ? ` (${variantSummary})` : ""}, Qty: ${quantity}. Please confirm price and availability.`)
     : "";
@@ -392,6 +413,14 @@ export default function ProductDetailPage() {
 
   return (
     <main className="min-h-screen bg-white dark:bg-[#0f0f0f] pt-24 pb-20 px-6">
+      {/* JSON-LD structured data for Google */}
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
+
       <div className="max-w-4xl mx-auto">
         <Link href="/shop" className="inline-flex items-center gap-2 text-sm text-blue-500 hover:underline mb-8">
           <ArrowLeft size={14} /> Back to Shop
@@ -400,7 +429,7 @@ export default function ProductDetailPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-16">
           {/* Image Gallery */}
           <div className="flex flex-col gap-3">
-           <div className="bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-2xl h-80 flex items-center justify-center p-6 overflow-hidden">
+            <div className="bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-2xl h-80 flex items-center justify-center p-6 overflow-hidden">
               <img src={images[activeImg]} alt={product.name} className="max-h-full max-w-full object-contain transition-opacity duration-200" />
             </div>
             {images.length > 1 && (
@@ -420,7 +449,6 @@ export default function ProductDetailPage() {
             <span className="text-xs font-semibold tracking-widest uppercase text-blue-500 mb-2">{product.category}</span>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">{product.name}</h1>
 
-            {/* Avg rating inline */}
             {avgRating && (
               <div className="flex items-center gap-2 mb-4">
                 <StarDisplay rating={Math.round(Number(avgRating))} />
@@ -559,7 +587,6 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          {/* Write a review */}
           {!authUserId ? (
             <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl p-6 mb-6 text-center">
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Sign in to leave a review</p>
@@ -600,7 +627,6 @@ export default function ProductDetailPage() {
             </div>
           )}
 
-          {/* Reviews list */}
           {reviews.length === 0 ? (
             <div className="text-center py-10 text-gray-400 text-sm">No reviews yet. Be the first to review this product.</div>
           ) : (
