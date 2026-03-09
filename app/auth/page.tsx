@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, Suspense, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -10,8 +10,9 @@ function AuthForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const next = searchParams.get('next') ?? '/'
+  const ref = searchParams.get('ref')
 
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin')
+  const [mode, setMode] = useState<'signin' | 'signup'>('signup')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
@@ -20,6 +21,13 @@ function AuthForm() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+
+  // Persist ref code in cookie so it survives email confirmation redirect
+  useEffect(() => {
+    if (ref) {
+      document.cookie = `ref_code=${ref}; path=/; max-age=${60 * 60 * 24 * 30}; samesite=lax`;
+    }
+  }, [ref])
 
   const handleSubmit = async () => {
     if (!supabase) return

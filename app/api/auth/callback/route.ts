@@ -24,8 +24,8 @@ export async function GET(req: NextRequest) {
           .upsert({ email: user.email }, { onConflict: 'email', ignoreDuplicates: true })
       }
 
-      // Record referral if ref_code cookie is present
-      const refCode = req.cookies.get('ref_code')?.value
+      // Record referral — check cookie first, fallback to query param
+      const refCode = req.cookies.get('ref_code')?.value ?? searchParams.get('ref') ?? null;
       if (refCode) {
         await fetch(`${origin}/api/record-referral`, {
           method: 'POST',
