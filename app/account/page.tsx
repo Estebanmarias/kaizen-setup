@@ -6,9 +6,10 @@ import { supabase } from "@/lib/supabase";
 import {
   User, Package, LogOut, Clock, ShoppingBag,
   ChevronDown, ChevronUp, ChevronRight, Camera, Check,
-  Loader2, Heart, X, ShoppingCart
+  Loader2, Heart, X, ShoppingCart, Users
 } from "lucide-react";
 import Link from "next/link";
+import ReferralTab from "@/components/ReferralTab";
 
 type Profile = {
   id: string;
@@ -16,6 +17,7 @@ type Profile = {
   full_name: string | null;
   avatar_url: string | null;
   created_at: string;
+  referral_code: string | null;
 };
 
 type OrderItem = {
@@ -142,7 +144,6 @@ function OrderCard({ order, userId, onCancelled }: {
         </div>
       </div>
 
-      {/* Cancel confirm */}
       {confirmOpen && (
         <div className="border-t border-gray-200 dark:border-gray-800 bg-red-50 dark:bg-red-950/30 px-4 py-4">
           <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Cancel this order?</p>
@@ -166,7 +167,6 @@ function OrderCard({ order, userId, onCancelled }: {
         </div>
       )}
 
-      {/* Expanded items */}
       {expanded && items.length > 0 && (
         <div className="border-t border-gray-200 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800/60">
           {items.map((item, i) => (
@@ -200,8 +200,9 @@ export default function AccountPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
+  const [referralCount, setReferralCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"orders" | "wishlist" | "profile">("orders");
+  const [tab, setTab] = useState<"orders" | "wishlist" | "referrals" | "profile">("orders");
   const [userId, setUserId] = useState<string>("");
 
   const [fullName, setFullName] = useState("");
@@ -222,16 +223,18 @@ export default function AccountPage() {
       if (!data.user) { router.push("/auth?next=/account"); return; }
       setUserId(data.user.id);
 
-      const [{ data: prof }, { data: ords }, { data: wl }] = await Promise.all([
+      const [{ data: prof }, { data: ords }, { data: wl }, { count: refCount }] = await Promise.all([
         supabase!.from("profiles").select("*").eq("id", data.user.id).single(),
         supabase!.from("consultation_requests").select("*").eq("email", data.user.email).order("created_at", { ascending: false }),
         supabase!.from("wishlists").select("*, products(id, name, slug, image_url, price_naira, in_stock)").eq("user_id", data.user.id).order("created_at", { ascending: false }),
+        supabase!.from("referrals").select("*", { count: "exact", head: true }).eq("referrer_id", data.user.id).eq("status", "signed_up"),
       ]);
 
       setProfile(prof);
       setFullName(prof?.full_name ?? "");
       setOrders(ords ?? []);
       setWishlist(wl ?? []);
+      setReferralCount(refCount ?? 0);
       setLoading(false);
     });
   }, [router]);
@@ -353,22 +356,30 @@ export default function AccountPage() {
         )}
 
         {/* Tabs */}
-        <div className="flex bg-gray-100 dark:bg-[#1a1a1a] rounded-xl p-1 mb-6">
+        <div className="flex bg-gray-100 dark:bg-[#1a1a1a] rounded-xl p-1 mb-6 gap-1">
           {([
-            { key: "orders",   label: "My Orders", icon: Package },
-            { key: "wishlist", label: "Wishlist",  icon: Heart },
-            { key: "profile",  label: "Profile",   icon: User },
+            { key: "orders",    label: "Orders",   icon: Package },
+            { key: "wishlist",  label: "Wishlist", icon: Heart },
+            { key: "referrals", label: "Referrals", icon: Users },
+            { key: "profile",   label: "Profile",  icon: User },
           ] as const).map(({ key, label, icon: Icon }) => (
             <button key={key} onClick={() => setTab(key)}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
+              className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-semibold transition-colors ${
                 tab === key
                   ? "bg-white dark:bg-[#111] text-gray-900 dark:text-white shadow-sm"
                   : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
               }`}>
-              <Icon size={13} />{label}
+              <Icon size={12} />
+              <span className="hidden sm:inline">{label}</span>
+              <span className="sm:hidden">{label.slice(0, 3)}</span>
               {key === "wishlist" && wishlist.length > 0 && (
-                <span className="ml-0.5 bg-blue-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0">
+                <span className="bg-blue-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0">
                   {wishlist.length}
+                </span>
+              )}
+              {key === "referrals" && referralCount > 0 && (
+                <span className="bg-blue-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0">
+                  {referralCount}
                 </span>
               )}
             </button>
@@ -433,6 +444,16 @@ export default function AccountPage() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Referrals tab */}
+        {tab === "referrals" && (
+          <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+            <ReferralTab
+              referralCode={profile?.referral_code ?? null}
+              referralCount={referralCount}
+            />
           </div>
         )}
 

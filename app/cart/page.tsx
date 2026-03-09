@@ -111,7 +111,14 @@ export default function CartPage() {
 
     setPayLoading(true);
 
-    const PaystackPop = (await import("@paystack/inline-js")).default;
+    let PaystackPop: any;
+    try {
+      PaystackPop = (await import("@paystack/inline-js")).default;
+    } catch {
+      setFormError("Payment provider failed to load. Please refresh and try again.");
+      setPayLoading(false);
+      return;
+    }
     const handler = new PaystackPop();
 
     handler.newTransaction({
