@@ -488,11 +488,6 @@ export default function ShopPage() {
     }
   };
 
- const filtered = useMemo(() => {
-  if (active === "All") return products;
-  return products.filter(p => p.category === active);
-}, [active, products]);
-
   const filter = (cat: string) => { setActive(cat); setSearch(""); };
   const displayProducts = search.trim()
     ? products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.description.toLowerCase().includes(search.toLowerCase()))
