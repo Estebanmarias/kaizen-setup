@@ -38,7 +38,7 @@ export async function GET(req: Request) {
         "api-key": process.env.BREVO_API_KEY!,
       },
       body: JSON.stringify({
-        templateId: 6, // ← set this to your Brevo template ID after creating it
+        templateId: 7, // ← set this to your Brevo template ID after creating it
         to: [{ email: cart.email }],
         params: {
           items: items.map(i => ({
