@@ -151,6 +151,8 @@ export default function ProductDetailPage() {
   const [reviewBody, setReviewBody] = useState("");
   const [reviewStatus, setReviewStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [reviewError, setReviewError] = useState("");
+  const [notifyEmail, setNotifyEmail] = useState("");
+  const [notifyStatus, setNotifyStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
   useEffect(() => {
     supabase?.auth.getSession().then(({ data }) => {
@@ -334,6 +336,18 @@ export default function ProductDetailPage() {
       },
       onCancel: () => { setFormError("Payment cancelled."); setPayLoading(false); },
     });
+  };
+
+  
+  const submitNotify = async () => {
+    const email = authEmail ?? notifyEmail.trim();
+    if (!email) { setNotifyStatus("error"); return; }
+    setNotifyStatus("loading");
+    const { error } = await supabase!.from("back_in_stock_requests").insert({
+      product_id: product!.id,
+      email,
+    });
+    setNotifyStatus(error ? "error" : "success");
   };
 
   const submitReview = async () => {
@@ -540,9 +554,34 @@ export default function ProductDetailPage() {
                   </a>
                 </>
               ) : (
-                <button disabled className="flex items-center justify-center gap-2 bg-gray-200 dark:bg-gray-800 text-gray-400 py-3 rounded-lg font-semibold text-sm cursor-not-allowed">
-                  Out of Stock
-                </button>
+                <div className="flex flex-col gap-3">
+                  <button disabled className="flex items-center justify-center gap-2 bg-gray-200 dark:bg-gray-800 text-gray-400 py-3 rounded-lg font-semibold text-sm cursor-not-allowed">
+                    Out of Stock
+                  </button>
+                  {notifyStatus === "success" ? (
+                    <p className="text-center text-sm text-green-500 font-medium">✓ We'll notify you when it's back!</p>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      <p className="text-xs text-gray-400 text-center">Get notified when this is back in stock</p>
+                      {!authEmail && (
+                        <input
+                          type="email"
+                          value={notifyEmail}
+                          onChange={e => setNotifyEmail(e.target.value)}
+                          placeholder="Your email address"
+                          className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors"
+                        />
+                      )}
+                      <button
+                        onClick={submitNotify}
+                        disabled={notifyStatus === "loading"}
+                        className="flex items-center justify-center gap-2 border border-blue-500/50 text-blue-400 hover:bg-blue-500/10 py-2.5 rounded-lg font-semibold text-sm transition-colors disabled:opacity-50">
+                        {notifyStatus === "loading" ? "Saving..." : "Notify Me"}
+                      </button>
+                      {notifyStatus === "error" && <p className="text-xs text-red-400 text-center">Something went wrong. Try again.</p>}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
             <ShareBar name={product.name} slug={product.slug} />
@@ -555,8 +594,7 @@ export default function ProductDetailPage() {
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Fill in your details and we'll get back to you within 24 hours.</p>
           {formStatus === "success" ? (
             <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-xl p-4 text-blue-700 dark:text-blue-400 text-sm font-medium">
-              ✓ Order request received! We'll contact you shortly.
-            </div>
+              ✓ Order request received! We'll contact you shortly.</div>
           ) : (
             <div className="flex flex-col gap-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -611,7 +649,7 @@ export default function ProductDetailPage() {
           ) : alreadyReviewed ? (
             <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-2xl p-6 mb-6 text-center">
               <p className="text-sm text-green-700 dark:text-green-400 font-medium">✓ You've already submitted a review for this product.</p>
-            </div>
+              </div>
           ) : reviewStatus === "success" ? (
             <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-2xl p-6 mb-6 text-center">
               <p className="text-sm text-blue-700 dark:text-blue-400 font-medium">✓ Review submitted! It'll appear once approved.</p>

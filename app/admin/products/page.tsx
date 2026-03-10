@@ -46,11 +46,23 @@ export default function AdminProducts() {
     setTimeout(() => setSaved(null), 2000);
   };
 
-  const toggleStock = async (id: string, current: boolean) => {
-    if (!supabase) return;
-    await supabase.from("products").update({ in_stock: !current }).eq("id", id);
-    setProducts(prev => prev.map(p => p.id === id ? { ...p, in_stock: !current } : p));
-  };
+  
+const toggleStock = async (id: string, current: boolean) => {
+  if (!supabase) return;
+  const newStock = !current;
+  await supabase.from("products").update({ in_stock: newStock }).eq("id", id);
+  setProducts(prev => prev.map(p => p.id === id ? { ...p, in_stock: newStock } : p));
+
+  // If toggling back IN stock, trigger notification emails
+  if (newStock) {
+    await fetch("/api/notify-back-in-stock", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ product_id: id }),
+    });
+  }
+};
+
 
   const categories = [...new Set(products.map(p => p.category))].sort();
 
