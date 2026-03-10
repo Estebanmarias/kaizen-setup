@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { label: "Blog", href: "/blog" },
   { label: "Contact", href: "#contact" },
 ];
+  <Link href="/track">Track Order</Link>
 
 const SOCIALS = [
   {
