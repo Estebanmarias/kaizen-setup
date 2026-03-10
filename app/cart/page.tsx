@@ -43,18 +43,48 @@ export default function CartPage() {
     setMounted(true);
     setCart(JSON.parse(localStorage.getItem("kaizen_cart") ?? "[]"));
     supabase?.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        setAuthEmail(data.session.user.email ?? null);
-        setAuthToken(data.session.access_token);
-      }
-    });
+  if (data.session) {
+    setAuthEmail(data.session.user.email ?? null);
+    setAuthToken(data.session.access_token);
+    // Sync existing cart on load
+    const existingCart = JSON.parse(localStorage.getItem("kaizen_cart") ?? "[]");
+    if (existingCart.length > 0) {
+      supabase?.from("abandoned_carts").upsert({
+        user_id: data.session.user.id,
+        email: data.session.user.email,
+        items: existingCart,
+        updated_at: new Date().toISOString(),
+        emailed_at: null,
+      }, { onConflict: "user_id" });
+    }
+  }
+});
   }, []);
 
   const save = (updated: CartItem[]) => {
-    setCart(updated);
-    localStorage.setItem("kaizen_cart", JSON.stringify(updated));
-    window.dispatchEvent(new Event("cart_updated"));
-  };
+  setCart(updated);
+  localStorage.setItem("kaizen_cart", JSON.stringify(updated));
+  window.dispatchEvent(new Event("cart_updated"));
+  syncCartToSupabase(updated);
+};
+
+  const syncCartToSupabase = async (items: CartItem[]) => {
+  if (!supabase) return;
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return;
+  if (items.length === 0) {
+    // Cart emptied — delete the record
+    await supabase.from("abandoned_carts").delete().eq("user_id", session.user.id);
+    return;
+  }
+  await supabase.from("abandoned_carts").upsert({
+    user_id: session.user.id,
+    email: session.user.email,
+    items,
+    updated_at: new Date().toISOString(),
+    emailed_at: null,
+  }, { onConflict: "user_id" });
+}; 
 
   const updateQty = (id: string, delta: number) =>
     save(cart.map(i => i.id === id ? { ...i, quantity: Math.max(1, i.quantity + delta) } : i));
@@ -159,6 +189,13 @@ export default function CartPage() {
           }
           setFormStatus("success");
           clearCart();
+          if (authToken) {
+            supabase?.auth.getSession().then(({ data }) => {
+           if (data.session) {
+                supabase?.from("abandoned_carts").delete().eq("user_id", data.session.user.id);
+              }
+            });
+          }
         } catch {
           setFormError("Order saving failed. Please contact us with your payment reference.");
           setPayLoading(false);
@@ -301,9 +338,7 @@ export default function CartPage() {
               )}
 
               {!hasAllPrices && (
-                <p className="text-xs text-gray-400 border-t border-gray-200 dark:border-gray-700 pt-3">
-                  Some items don't have fixed prices. We'll confirm the total when we contact you.
-                </p>
+                <p className="text-xs text-gray-400 border-t border-gray-200 dark:border-gray-700 pt-3">Some items don't have fixed prices. We'll confirm the total when we contact you.</p>
               )}
             </div>
 
