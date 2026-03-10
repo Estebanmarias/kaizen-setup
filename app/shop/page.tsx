@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { ShoppingCart, X, Plus, Minus, Trash2, ArrowRight, ChevronDown, ChevronUp, Search, Heart, Star } from "lucide-react";
 import Link from "next/link";
@@ -27,8 +27,10 @@ type Product = {
   in_stock: boolean;
   image_url: string | null;
   slug: string;
+  low_stock_count: number | null;
   variants: Variant[] | null;
 };
+
 
 type CartItem = {
   id: string;
@@ -118,28 +120,22 @@ function ComboPriceTable({ variants }: { variants: Variant[] }) {
   );
 }
 
-function FlyAnimation({ items, cartRef }: { items: FlyItem[]; cartRef: React.RefObject<HTMLButtonElement | null> }) {
+function FlyAnimation({ items, endX, endY }: { items: FlyItem[]; endX: number; endY: number }) {
   return (
     <>
-      {items.map(item => {
-        const cartEl = cartRef.current;
-        const cartRect = cartEl?.getBoundingClientRect();
-        const endX = cartRect ? cartRect.left + cartRect.width / 2 : window.innerWidth - 60;
-        const endY = cartRect ? cartRect.top + cartRect.height / 2 : 60;
-        return (
-          <div key={item.id} className="pointer-events-none fixed z-[999]"
-            style={{
-              left: item.startX, top: item.startY, width: 48, height: 48,
-              animation: "flyToCart 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards",
-              ["--endX" as string]: `${endX - item.startX}px`,
-              ["--endY" as string]: `${endY - item.startY}px`,
-            }}>
-            <div className="relative w-full h-full">
-              <Image src={item.src} alt="" fill className="object-contain rounded-lg border border-gray-200 bg-white p-1 shadow-lg" />
-            </div>
+      {items.map(item => (
+        <div key={item.id} className="pointer-events-none fixed z-[999]"
+          style={{
+            left: item.startX, top: item.startY, width: 48, height: 48,
+            animation: "flyToCart 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards",
+            ["--endX" as string]: `${endX - item.startX}px`,
+            ["--endY" as string]: `${endY - item.startY}px`,
+          }}>
+          <div className="relative w-full h-full">
+            <Image src={item.src} alt="" fill className="object-contain rounded-lg border border-gray-200 bg-white p-1 shadow-lg" />
           </div>
-        );
-      })}
+        </div>
+      ))}
     </>
   );
 }
@@ -405,7 +401,6 @@ function WishlistButton({ productId, wishlisted, onToggle }: {
 export default function ShopPage() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
-  const [filtered, setFiltered] = useState<Product[]>([]);
   const [active, setActive] = useState("All");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -420,7 +415,9 @@ export default function ShopPage() {
   const [reviewMap, setReviewMap] = useState<Record<string, ReviewSummary>>({});
   const [recentlyViewed, setRecentlyViewed] = useState<RecentProduct[]>([]);
   const cartBtnRef = useRef<HTMLButtonElement>(null);
-  const flyId = useRef(0);
+  const flyId = useRef(0);  
+  const [cartEndX, setCartEndX] = useState(0);
+  const [cartEndY, setCartEndY] = useState(0);
 
   useEffect(() => {
     if (!supabase) { setLoading(false); return; }
@@ -429,7 +426,6 @@ export default function ShopPage() {
       supabase.from("reviews").select("product_id, rating").eq("status", "approved"),
     ]).then(([{ data: prods }, { data: revs }]) => {
       setProducts(prods ?? []);
-      setFiltered(prods ?? []);
 
       // Build review summary map keyed by product_id
       const map: Record<string, ReviewSummary> = {};
@@ -451,11 +447,15 @@ export default function ShopPage() {
       const cart: CartItem[] = JSON.parse(localStorage.getItem("kaizen_cart") ?? "[]");
       setCartCount(cart.reduce((s, i) => s + i.quantity, 0));
     };
-    setRecentlyViewed(getRecentlyViewed());
     update();
     window.addEventListener("cart_updated", update);
     return () => window.removeEventListener("cart_updated", update);
   }, []);
+
+  const filtered = useMemo(() => {
+  if (active === "All") return products;
+  return products.filter(p => p.category === active);
+}, [active, products]);;
 
   useEffect(() => {
     if (!supabase) return;
@@ -488,10 +488,10 @@ export default function ShopPage() {
     }
   };
 
-  useEffect(() => {
-    if (active === "All") { setFiltered(products); return; }
-    setFiltered(products.filter(p => p.category === active));
-  }, [active, products]);
+ const filtered = useMemo(() => {
+  if (active === "All") return products;
+  return products.filter(p => p.category === active);
+}, [active, products]);
 
   const filter = (cat: string) => { setActive(cat); setSearch(""); };
   const displayProducts = search.trim()
@@ -502,21 +502,26 @@ export default function ShopPage() {
   const openDrawer = () => window.dispatchEvent(new Event("drawer_opened"));
   const closeDrawer = () => window.dispatchEvent(new Event("drawer_closed"));
 
-  const handleAdded = (imgSrc: string) => {
-    const cartEl = cartBtnRef.current;
-    if (!cartEl || !imgSrc) return;
-    const startX = window.innerWidth / 2 - 80;
-    const startY = window.innerHeight / 2 - 100;
-    const id = flyId.current++;
-    setFlyItems(prev => [...prev, { src: imgSrc, startX, startY, id }]);
-    setTimeout(() => setFlyItems(prev => prev.filter(f => f.id !== id)), 800);
-    setTimeout(() => { setQuickAdd(null); setCartOpen(true); }, 700);
-  };
+  
+const handleAdded = (imgSrc: string) => {
+  const cartEl = cartBtnRef.current;
+  const cartRect = cartEl?.getBoundingClientRect();
+  const endX = cartRect ? cartRect.left + cartRect.width / 2 : window.innerWidth - 60;
+  const endY = cartRect ? cartRect.top + cartRect.height / 2 : 60;
+  setCartEndX(endX);
+  setCartEndY(endY);
+  if (!imgSrc) return;
+  const startX = window.innerWidth / 2 - 80;
+  const startY = window.innerHeight / 2 - 100;
+  const id = flyId.current++;
+  setFlyItems(prev => [...prev, { src: imgSrc, startX, startY, id }]);
+  setTimeout(() => setFlyItems(prev => prev.filter(f => f.id !== id)), 800);
+  setTimeout(() => { setQuickAdd(null); setCartOpen(true); }, 700);
+};
 
   return (
     <main className="min-h-screen bg-white dark:bg-[#0f0f0f] pt-24 pb-20 px-6">
-      <FlyAnimation items={flyItems} cartRef={cartBtnRef} />
-
+      <FlyAnimation items={flyItems} endX={cartEndX} endY={cartEndY} />
       {quickAdd && (
         <QuickAddDrawer
           product={quickAdd}
@@ -618,6 +623,13 @@ export default function ShopPage() {
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       />
                     </div>
+                    {p.low_stock_count && p.low_stock_count > 0 && (
+                      <div className="absolute top-3 left-3">
+                        <span className="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                          Only {p.low_stock_count} left
+                        </span>
+                      </div>
+                    )}
                     <div className="absolute top-3 right-3">
                       <WishlistButton productId={p.id} wishlisted={wishlisted} onToggle={toggleWishlist} />
                     </div>

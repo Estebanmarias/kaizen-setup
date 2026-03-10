@@ -86,6 +86,7 @@ export default function EditProductPage() {
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [partner, setPartner] = useState("");
   const [inStock, setInStock] = useState(true);
+  const [lowStockCount, setLowStockCount] = useState<string>("");
 
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
@@ -112,6 +113,7 @@ export default function EditProductPage() {
       setCategoryInput(data.category ?? "");
       setPartner(data.partner ?? "");
       setInStock(data.in_stock ?? true);
+      setLowStockCount(data.low_stock_count?.toString() ?? "");
       setExistingImages(data.images ?? (data.image_url ? [data.image_url] : []));
       const { groups, comboPrices } = parseVariants(data.variants ?? []);
       setGroups(groups);
@@ -210,6 +212,7 @@ export default function EditProductPage() {
         category: category.trim(),
         partner: partner.trim() || null,
         in_stock: inStock,
+        low_stock_count: lowStockCount ? parseInt(lowStockCount) : null,
         image_url: allImages[0],
         images: allImages,
         variants: variantsJson,
@@ -304,6 +307,17 @@ export default function EditProductPage() {
               </button>
             </div>
           </Section>
+
+          <Field label="Low Stock Count" hint="Set a number to show 'Only X left' label. Leave blank to hide.">
+            <input
+              className={inp}
+              type="number"
+              min="0"
+              value={lowStockCount}
+              onChange={e => setLowStockCount(e.target.value)}
+              placeholder="e.g. 3"
+            />
+          </Field>
 
           {/* Images */}
           <Section title={`Images (${totalImages}/5)`} hint="First image is used as thumbnail. Remove or reorder existing images.">

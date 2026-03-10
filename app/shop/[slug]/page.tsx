@@ -26,6 +26,7 @@ type Product = {
   images: string[] | null;
   slug: string;
   variants: Variant[] | null;
+  low_stock_count: number | null;
 };
 
 export type CartItem = {
@@ -493,7 +494,11 @@ export default function ProductDetailPage() {
                 <span className="text-xs text-gray-400">({reviews.length} review{reviews.length !== 1 ? "s" : ""})</span>
               </div>
             )}
-
+            {product.low_stock_count && product.low_stock_count > 0 && (
+              <div className="inline-flex items-center gap-1.5 bg-orange-500/10 border border-orange-500/20 text-orange-500 text-xs font-semibold px-3 py-1.5 rounded-full mb-4">
+                🔥 Only {product.low_stock_count} left in stock
+              </div>
+            )}
             <p className="text-gray-500 dark:text-gray-400 leading-relaxed mb-6">{product.description}</p>
 
             {namedVariants.length > 0 && (
