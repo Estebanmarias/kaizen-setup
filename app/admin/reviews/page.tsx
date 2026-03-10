@@ -47,31 +47,35 @@ export default function AdminReviewsPage() {
   }, []);
 
   const fetchReviews = async () => {
-    // Fetch reviews with product names via join
-    const { data: reviewData } = await supabase
-      .from("reviews")
-      .select("*, products(name)")
-      .order("created_at", { ascending: false });
+  const { data: reviewData, error: reviewError } = await supabase
+    .from("reviews")
+    .select("*, products(name)")
+    .order("created_at", { ascending: false });
 
-    if (!reviewData) { setLoading(false); return; }
+  console.log("reviewData:", reviewData);
+  console.log("reviewError:", reviewError);
 
-    // Fetch user emails from profiles or auth
-    const userIds = [...new Set(reviewData.map(r => r.user_id))];
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, full_name, email")
-      .in("id", userIds);
+  if (!reviewData) { setLoading(false); return; }
 
-    const profileMap: Record<string, string> = {};
-    (profiles ?? []).forEach(p => { profileMap[p.id] = p.email ?? p.full_name ?? "Unknown"; });
+  const userIds = [...new Set(reviewData.map(r => r.user_id))];
+  const { data: profiles, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, full_name, email")
+    .in("id", userIds);
 
-    setReviews(reviewData.map(r => ({
-      ...r,
-      product_name: r.products?.name ?? "Unknown product",
-      user_email: profileMap[r.user_id] ?? "Unknown user",
-    })));
-    setLoading(false);
-  };
+  console.log("profiles:", profiles);
+  console.log("profileError:", profileError);
+
+  const profileMap: Record<string, string> = {};
+  (profiles ?? []).forEach(p => { profileMap[p.id] = p.email ?? p.full_name ?? "Unknown"; });
+
+  setReviews(reviewData.map(r => ({
+    ...r,
+    product_name: r.products?.name ?? "Unknown product",
+    user_email: profileMap[r.user_id] ?? "Unknown user",
+  })));
+  setLoading(false);
+};
 
   const updateStatus = async (id: string, status: string) => {
     await supabase.from("reviews").update({ status }).eq("id", id);
