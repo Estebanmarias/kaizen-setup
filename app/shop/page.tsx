@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { ShoppingCart, X, Plus, Minus, Trash2, ArrowRight, ChevronDown, ChevronUp, Search, Heart, Star } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { getRecentlyViewed, type RecentProduct } from "@/lib/recentlyViewed";
 
 const CATEGORIES = ["All", "Desk & Seating", "Monitors & Lighting", "Accessories", "Cables & Hubs", "Smart Home", "Cleaning", "Bags", "Keyboards", "Mice", "Monitors"];
 
@@ -417,6 +418,7 @@ export default function ShopPage() {
   const [wishlistMap, setWishlistMap] = useState<Record<string, string>>({});
   const [userId, setUserId] = useState<string | null>(null);
   const [reviewMap, setReviewMap] = useState<Record<string, ReviewSummary>>({});
+  const [recentlyViewed, setRecentlyViewed] = useState<RecentProduct[]>([]);
   const cartBtnRef = useRef<HTMLButtonElement>(null);
   const flyId = useRef(0);
 
@@ -449,6 +451,7 @@ export default function ShopPage() {
       const cart: CartItem[] = JSON.parse(localStorage.getItem("kaizen_cart") ?? "[]");
       setCartCount(cart.reduce((s, i) => s + i.quantity, 0));
     };
+    setRecentlyViewed(getRecentlyViewed());
     update();
     window.addEventListener("cart_updated", update);
     return () => window.removeEventListener("cart_updated", update);
@@ -541,7 +544,30 @@ export default function ShopPage() {
         <p className="text-gray-500 dark:text-gray-400 mb-10 max-w-xl">
           Tested and recommended gear. Every product on this page has been used or reviewed by KaizenSetup.
         </p>
-
+        {recentlyViewed.length > 0 && (
+          <div className="mb-10">
+            <h2 className="text-sm font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-4">Recently Viewed</h2>
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {recentlyViewed.map(p => (
+                <Link key={p.id} href={`/shop/${p.slug}`}
+                  className="group flex-shrink-0 w-36 rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden hover:border-blue-500 transition-colors">
+                  <div className="aspect-square bg-gray-50 dark:bg-[#111] flex items-center justify-center p-2">
+                    {p.image_url
+                      ? <img src={p.image_url} alt={p.name} className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" />
+                      : <span className="text-2xl">📦</span>
+                    }
+                  </div>
+                  <div className="p-2">
+                    <p className="text-xs font-medium text-gray-900 dark:text-white line-clamp-2 leading-snug">{p.name}</p>
+                    {p.price_naira && (
+                      <p className="text-xs font-semibold text-blue-500 mt-1">₦{p.price_naira.toLocaleString()}</p>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="relative mb-6">
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search products..."

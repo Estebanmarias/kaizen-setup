@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { MessageCircle, ShoppingCart, ArrowLeft, Plus, Minus, Check, Share2, Copy, CheckCheck, CreditCard, Loader2, Star } from "lucide-react";
 import Link from "next/link";
+import { addRecentlyViewed, getRecentlyViewed, type RecentProduct } from "@/lib/recentlyViewed";
 
 type Variant = {
   name?: string;
@@ -153,6 +154,7 @@ export default function ProductDetailPage() {
   const [reviewError, setReviewError] = useState("");
   const [notifyEmail, setNotifyEmail] = useState("");
   const [notifyStatus, setNotifyStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [recentlyViewed, setRecentlyViewed] = useState<RecentProduct[]>([]);
 
   useEffect(() => {
     supabase?.auth.getSession().then(({ data }) => {
@@ -170,6 +172,17 @@ export default function ProductDetailPage() {
     .then(({ data }) => {
       setProduct(data);
       setLoading(false);
+      if (data) {
+      addRecentlyViewed({
+        id: data.id,
+        name: data.name,
+        slug: data.slug,
+        image_url: data.image_url,
+        price_naira: data.price_naira,
+        category: data.category,
+      });
+      setRecentlyViewed(getRecentlyViewed().filter(p => p.id !== data.id));
+    }
       if (data) {
         supabase?.auth.getSession().then(({ data: sessionData }) => {
           supabase?.from("product_views").insert({
@@ -593,8 +606,7 @@ export default function ProductDetailPage() {
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Place an Order Request</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Fill in your details and we'll get back to you within 24 hours.</p>
           {formStatus === "success" ? (
-            <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-xl p-4 text-blue-700 dark:text-blue-400 text-sm font-medium">
-              ✓ Order request received! We'll contact you shortly.</div>
+            <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-xl p-4 text-blue-700 dark:text-blue-400 text-sm font-medium"> ✓ Order request received! We'll contact you shortly.</div>
           ) : (
             <div className="flex flex-col gap-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -695,6 +707,30 @@ export default function ProductDetailPage() {
         </div>
 
       </div>
+      {recentlyViewed.length > 0 && (
+        <div className="mt-4 mb-10">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Recently Viewed</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+            {recentlyViewed.map(p => (
+              <Link key={p.id} href={`/shop/${p.slug}`}
+                className="group rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden hover:border-blue-500 transition-colors">
+                <div className="aspect-square bg-gray-50 dark:bg-[#111] flex items-center justify-center p-2">
+                  {p.image_url
+                    ? <img src={p.image_url} alt={p.name} className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" />
+                    : <span className="text-2xl">📦</span>
+                  }
+                </div>
+                <div className="p-2">
+                  <p className="text-xs font-medium text-gray-900 dark:text-white line-clamp-2 leading-snug">{p.name}</p>
+                  {p.price_naira && (
+                    <p className="text-xs font-semibold text-blue-500 mt-1">₦{p.price_naira.toLocaleString()}</p>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </main>
   );
 }
