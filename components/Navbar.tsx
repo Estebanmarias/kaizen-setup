@@ -9,13 +9,13 @@ import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
-  { label: "Services", href: "#services" },
-  { label: "Reviews", href: "#reviews" },
+  { label: "Services", href: "/#services" },
+  { label: "Reviews", href: "/#reviews" },
   { label: "Shop", href: "/shop" },
   { label: "Creators", href: "/ugc" },
   { label: "Blog", href: "/blog" },
   { label: "About", href: "/about" },
-  { label: "Contact", href: "#contact" },
+  { label: "Contact", href: "/#contact" },
 ];
 
 export default function Navbar() {
