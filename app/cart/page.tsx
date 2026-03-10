@@ -16,6 +16,14 @@ type CartItem = {
   variants: Record<string, string>;
 };
 
+  function getDeliveryWindow() {
+  const now = new Date();
+  const from = new Date(now); from.setDate(now.getDate() + 14);
+  const to = new Date(now); to.setDate(now.getDate() + 21);
+  const fmt = (d: Date) => d.toLocaleDateString("en-NG", { day: "numeric", month: "short" });
+  return `${fmt(from)} – ${fmt(to)}`;
+}
+
 export default function CartPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [mounted, setMounted] = useState(false);
@@ -171,7 +179,7 @@ export default function CartPage() {
         <div className="text-center">
           <p className="text-5xl mb-4">✅</p>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Order Confirmed!</h1>
-          <p className="text-gray-400 mb-2">Payment received. We'll contact you shortly to arrange delivery.</p>
+          <p className="text-gray-400 mb-2"> Payment received. Estimated delivery: <span className="text-white font-medium">{getDeliveryWindow()}</span>. We'll contact you shortly to confirm.</p>
           <Link href="/account" className="text-blue-500 text-sm hover:underline block mb-4">View order in your account →</Link>
           <Link href="/shop" className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-400 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-colors">
             Continue Shopping
@@ -284,6 +292,10 @@ export default function CartPage() {
                       <span className="text-gray-900 dark:text-white">Total</span>
                       <span className="text-blue-500">₦{total.toLocaleString()}</span>
                     </div>
+                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex items-start gap-2 text-xs text-gray-400">
+                    <span>🚚</span>
+                    <span>Estimated delivery <span className="text-gray-600 dark:text-gray-300 font-medium">{getDeliveryWindow()}</span> — 2–3 weeks after order is placed.</span>
+                  </div>
                   </div>
                 </>
               )}

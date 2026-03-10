@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   ShoppingBag, TrendingUp, Clock, XCircle,
-  Check, X, ArrowUpRight, ArrowDownRight
+  Check, X, ArrowUpRight, ArrowDownRight, Download
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -92,6 +92,8 @@ export default function AdminDashboard() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
+  const [exportFrom, setExportFrom] = useState("");
+  const [exportTo, setExportTo] = useState("");
 
   useEffect(() => {
     if (!supabase) return;
@@ -117,6 +119,42 @@ export default function AdminDashboard() {
   } else {
     console.error("Failed to update order status");
   }
+};
+
+const handleExportCSV = () => {
+  const from = exportFrom ? new Date(exportFrom) : null;
+  const to = exportTo ? new Date(exportTo) : null;
+  if (to) to.setHours(23, 59, 59, 999);
+
+  const rows = orders.filter(o => {
+    const d = new Date(o.created_at);
+    if (from && d < from) return false;
+    if (to && d > to) return false;
+    return true;
+  });
+
+  const headers = ["Date", "Name", "Email", "Phone", "Status", "Items", "Total (₦)", "Payment Status", "Promo Code", "Discount (₦)"];
+  const lines = rows.map(o => [
+    new Date(o.created_at).toLocaleDateString("en-NG"),
+    o.name,
+    o.email,
+    o.phone,
+    o.status,
+    (o.items ?? []).map(i => `${i.name} x${i.quantity}${i.variant ? ` (${i.variant})` : ""}`).join(" | "),
+    o.total_naira ?? "",
+    (o as any).payment_status ?? "",
+    (o as any).promo_code ?? "",
+    (o as any).discount_naira ?? "",
+  ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(","));
+
+  const csv = [headers.join(","), ...lines].join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `kaizen-orders-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 };
 
   const pending   = orders.filter(o => o.status === "pending");
@@ -295,19 +333,34 @@ export default function AdminDashboard() {
 
       {/* Orders table */}
       <div className="bg-[#141414] border border-white/[0.06] rounded-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
-          <p className="text-sm font-semibold text-white">Orders</p>
-          <div className="flex gap-1.5">
-           {["all", "pending", "cancellation_requested", "fulfilled", "cancelled"].map(s => (
-           <button key={s} onClick={() => setFilter(s)}
-           className={`px-3 py-1 rounded-lg text-xs font-medium capitalize transition-all ${
-            filter === s ? "bg-blue-500 text-white" : "bg-white/[0.04] text-gray-500 hover:text-white"
-             }`}>
-            {s === "cancellation_requested" ? `Cancel Req (${orders.filter(o => o.status === "cancellation_requested").length})` : `${s}${s !== "all" ? ` (${orders.filter(o => o.status === s).length})` : ""}`}
-           </button>
-          ))}
-          </div>
-        </div>
+        <div className="flex flex-col gap-3 px-6 py-4 border-b border-white/[0.06]">
+  <div className="flex items-center justify-between gap-3 flex-wrap">
+    <p className="text-sm font-semibold text-white">Orders</p>
+    <div className="flex items-center gap-2 flex-wrap">
+      <input type="date" value={exportFrom} onChange={e => setExportFrom(e.target.value)}
+        className="bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-gray-400 focus:outline-none focus:border-blue-500" />
+      <span className="text-xs text-gray-600">to</span>
+      <input type="date" value={exportTo} onChange={e => setExportTo(e.target.value)}
+        className="bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-gray-400 focus:outline-none focus:border-blue-500" />
+      <button onClick={handleExportCSV}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium transition-colors">
+        <Download size={12} /> Export CSV
+      </button>
+    </div>
+  </div>
+  <div className="flex gap-1.5 flex-wrap">
+    {["all", "pending", "cancellation_requested", "fulfilled", "cancelled"].map(s => (
+      <button key={s} onClick={() => setFilter(s)}
+        className={`px-3 py-1 rounded-lg text-xs font-medium capitalize transition-all ${
+          filter === s ? "bg-blue-500 text-white" : "bg-white/[0.04] text-gray-500 hover:text-white"
+        }`}>
+        {s === "cancellation_requested"
+          ? `Cancel Req (${orders.filter(o => o.status === "cancellation_requested").length})`
+          : `${s}${s !== "all" ? ` (${orders.filter(o => o.status === s).length})` : ""}`}
+      </button>
+    ))}
+  </div>
+</div>
 
         {filtered.length === 0 ? (
           <div className="py-16 text-center text-gray-600 text-sm">No orders found.</div>
