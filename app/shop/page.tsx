@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import { ShoppingCart, X, Plus, Minus, Trash2, ArrowRight, ChevronDown, ChevronUp, Search, Heart } from "lucide-react";
+import { ShoppingCart, X, Plus, Minus, Trash2, ArrowRight, ChevronDown, ChevronUp, Search, Heart, Star } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -41,6 +41,8 @@ type CartItem = {
 
 type FlyItem = { src: string; startX: number; startY: number; id: number };
 
+type ReviewSummary = { avg: number; count: number };
+
 const colorMap: Record<string, { bg: string; text: string }> = {
   Yellow: { bg: "#FACC15", text: "#000000" },
   Green:  { bg: "#22C55E", text: "#ffffff" },
@@ -69,6 +71,22 @@ function getDefaultCombo(v: Variant[] | null): Record<string, string> {
 }
 function allComboSelected(v: Variant[] | null, sel: Record<string, string>) {
   return v?.filter(x => x.name && x.options).every(g => !!sel[g.name!]) ?? true;
+}
+
+// ── Mini star display for grid cards ────────────────────────────────────────
+function MiniStars({ avg, count }: { avg: number; count: number }) {
+  return (
+    <div className="flex items-center gap-1 mb-2">
+      <div className="flex gap-0.5">
+        {[1, 2, 3, 4, 5].map(n => (
+          <Star key={n} size={11}
+            className={n <= Math.round(avg) ? "fill-yellow-400 text-yellow-400" : "text-gray-300 dark:text-gray-700"}
+          />
+        ))}
+      </div>
+      <span className="text-xs text-gray-400">({count})</span>
+    </div>
+  );
 }
 
 function ComboPriceTable({ variants }: { variants: Variant[] }) {
@@ -398,14 +416,30 @@ export default function ShopPage() {
   const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
   const [wishlistMap, setWishlistMap] = useState<Record<string, string>>({});
   const [userId, setUserId] = useState<string | null>(null);
+  const [reviewMap, setReviewMap] = useState<Record<string, ReviewSummary>>({});
   const cartBtnRef = useRef<HTMLButtonElement>(null);
   const flyId = useRef(0);
 
   useEffect(() => {
     if (!supabase) { setLoading(false); return; }
-    supabase.from("products").select("*").then(({ data }) => {
-      setProducts(data ?? []);
-      setFiltered(data ?? []);
+    Promise.all([
+      supabase.from("products").select("*"),
+      supabase.from("reviews").select("product_id, rating").eq("status", "approved"),
+    ]).then(([{ data: prods }, { data: revs }]) => {
+      setProducts(prods ?? []);
+      setFiltered(prods ?? []);
+
+      // Build review summary map keyed by product_id
+      const map: Record<string, ReviewSummary> = {};
+      (revs ?? []).forEach(r => {
+        if (!map[r.product_id]) map[r.product_id] = { avg: 0, count: 0 };
+        map[r.product_id].count += 1;
+        map[r.product_id].avg += r.rating;
+      });
+      Object.keys(map).forEach(id => {
+        map[id].avg = map[id].avg / map[id].count;
+      });
+      setReviewMap(map);
       setLoading(false);
     });
   }, []);
@@ -547,6 +581,7 @@ export default function ShopPage() {
                 ? Math.min(...(p.variants.flatMap(v => v.prices ?? []))) : null;
               const wishlisted = wishlistIds.has(p.id);
               const imgSrc = p.image_url ?? "/images/products/placeholder.jpg";
+              const review = reviewMap[p.id];
 
               return (
                 <div key={p.id} className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden hover:border-blue-500 transition-colors flex flex-col">
@@ -564,8 +599,14 @@ export default function ShopPage() {
                   <div className="p-5 flex flex-col flex-1">
                     <span className="text-xs font-semibold text-blue-500 mb-1">{p.category}</span>
                     <Link href={`/shop/${p.slug}`}>
-                      <h2 className="font-semibold text-base text-gray-900 dark:text-white mb-2 hover:text-blue-500 transition-colors">{p.name}</h2>
+                      <h2 className="font-semibold text-base text-gray-900 dark:text-white mb-1 hover:text-blue-500 transition-colors">{p.name}</h2>
                     </Link>
+
+                    {/* Review stars */}
+                    {review && review.count > 0 && (
+                      <MiniStars avg={review.avg} count={review.count} />
+                    )}
+
                     <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed flex-1 mb-3">{p.description}</p>
 
                     {p.price_naira ? (
