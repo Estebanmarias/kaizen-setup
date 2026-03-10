@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { getSession, signOut } from "@/lib/admin-auth";
-import { ShoppingBag, Package, Mail, MessageSquare, LogOut, Zap, Star, Tag } from "lucide-react";
+import { ShoppingBag, Package, Mail, MessageSquare, LogOut, Zap, Star, Tag, BarChart2 } from "lucide-react";
 
 const NAV = [
   { label: "Dashboard", href: "/admin", icon: ShoppingBag },
   { label: "Products", href: "/admin/products", icon: Package },
   { label: "Reviews", href: "/admin/reviews", icon: Star },
   { label: "Promo", href: "/admin/promo", icon: Tag },
+  { label: "Analytics", href: "/admin/analytics", icon: BarChart2 },
   { label: "Newsletter", href: "/admin/newsletter", icon: Mail },
   { label: "Contacts", href: "/admin/contacts", icon: MessageSquare },
 ];
@@ -24,6 +25,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/reviews": "Reviews",
   "/admin/promo": "Promo Codes",
   "/admin/products/[slug]/edit": "Edit Product",
+  "/admin/analytics": "Analytics",
 };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

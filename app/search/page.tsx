@@ -39,6 +39,14 @@ export default function SearchPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const logSearch = async (term: string, count: number) => {
+  const { data: { session } } = await supabase!.auth.getSession();
+  await supabase!.from("search_logs").insert({
+    query: term.trim(),
+    results_count: count,
+    user_id: session?.user.id ?? null,
+  });
+};
 
   const runSearch = useCallback(async (term: string) => {
     if (!term.trim()) return;
@@ -64,9 +72,11 @@ export default function SearchPage() {
     const productData = productRes?.data;
     const blogData = blogRes?.data;
 
+    const total = (productData?.length ?? 0) + (blogData?.length ?? 0);
     setProducts(productData || []);
     setPosts(blogData || []);
     setLoading(false);
+    logSearch(term, total);
   }, []);
 
   useEffect(() => {

@@ -162,12 +162,21 @@ export default function ProductDetailPage() {
     });
   }, []);
 
-  useEffect(() => {
-    if (!supabase || !slug) return;
-    supabase.from("products").select("*").eq("slug", slug).single()
-      .then(({ data }) => {
-        setProduct(data);
-        setLoading(false);
+ useEffect(() => {
+  if (!supabase || !slug) return;
+  supabase.from("products").select("*").eq("slug", slug).single()
+    .then(({ data }) => {
+      setProduct(data);
+      setLoading(false);
+      if (data) {
+        supabase?.auth.getSession().then(({ data: sessionData }) => {
+          supabase?.from("product_views").insert({
+            product_id: data.id,
+            product_name: data.name,
+            slug: data.slug,
+            user_id: sessionData.session?.user.id ?? null,
+          });
+        });
         if (data?.variants) {
           const defaults: Record<string, string> = {};
           data.variants.filter((v: Variant) => v.name && v.options).forEach((v: Variant) => {
@@ -175,8 +184,9 @@ export default function ProductDetailPage() {
           });
           setSelectedVariants(defaults);
         }
-      });
-  }, [slug]);
+      }
+    });
+}, [slug]);
 
   useEffect(() => {
     if (!supabase || !product) return;
