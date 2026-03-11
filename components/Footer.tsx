@@ -3,15 +3,14 @@ import { Youtube, Instagram } from "lucide-react";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
-  { label: "Services", href: "#services" },
-  { label: "Reviews", href: "#reviews" },
+  { label: "Services", href: "/#services" },
+  { label: "Reviews", href: "/#reviews" },
   { label: "Shop", href: "/shop" },
   { label: "Creators", href: "/ugc" },
   { label: "Blog", href: "/blog" },
-  { label: "Contact", href: "#contact" },
+  { label: "Contact", href: "/#contact" },
+  { label: "Track Order", href: "/track" },
 ];
-  <Link href="/track">Track Order</Link>
-
 const SOCIALS = [
   {
     label: "Instagram",

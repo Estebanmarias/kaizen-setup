@@ -85,6 +85,8 @@ export async function POST(req: NextRequest) {
           first_name: firstName,
           items_html: buildItemsHtml(items),
           total,
+          order_id: order.id,
+          track_url: `https://www.kaizensetup.name.ng/track`,
         },
       }),
     });
