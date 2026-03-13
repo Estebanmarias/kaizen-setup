@@ -176,7 +176,7 @@ export default function ProductDetailPage() {
      if (data && supabase) {
   supabase
     .from("products")
-    .select("id, name, slug, image_url, price_naira, category, in_stock, variants")
+    .select("*")
     .eq("category", data.category)
     .neq("id", data.id)
     .limit(4)
