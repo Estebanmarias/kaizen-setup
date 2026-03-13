@@ -156,6 +156,7 @@ export default function ProductDetailPage() {
   const [notifyEmail, setNotifyEmail] = useState("");
   const [notifyStatus, setNotifyStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [recentlyViewed, setRecentlyViewed] = useState<RecentProduct[]>([]);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     supabase?.auth.getSession().then(({ data }) => {
@@ -172,6 +173,15 @@ export default function ProductDetailPage() {
   supabase.from("products").select("*").eq("slug", slug).single()
     .then(({ data }) => {
       setProduct(data);
+      if (data) {
+  supabase
+    .from("products")
+    .select("id, name, slug, image_url, price_naira, category, in_stock, variants")
+    .eq("category", data.category)
+    .neq("id", data.id)
+    .limit(4)
+    .then(({ data: related }) => setRelatedProducts(related ?? []));
+}
       setLoading(false);
       if (data) {
       addRecentlyViewed({
@@ -710,7 +720,48 @@ export default function ProductDetailPage() {
             </div>
           )}
         </div>
-
+           {/* Related Products */}
+      {relatedProducts.length > 0 && (
+        <div className="max-w-4xl mx-auto mt-4 mb-10">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">You Might Also Like</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {relatedProducts.map(p => {
+              const relatedPrice = p.price_naira
+                ?? (p.variants?.flatMap((v: Variant) => v.prices ?? []).sort((a: number, b: number) => a - b)[0] ?? null)
+                ?? (p.variants?.find((v: Variant) => v.combo_prices)
+                    ? Math.min(...Object.values(p.variants!.find((v: Variant) => v.combo_prices)!.combo_prices!))
+                    : null);
+              return (
+                <Link key={p.id} href={`/shop/${p.slug}`}
+                  className="group rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden hover:border-blue-500 transition-colors bg-gray-50 dark:bg-[#1a1a1a]">
+                  <div className="aspect-square bg-white dark:bg-[#111] flex items-center justify-center p-3 relative">
+                    {p.image_url
+                      ? <img src={p.image_url} alt={p.name}
+                          className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" />
+                      : <span className="text-2xl">📦</span>
+                    }
+                    {!p.in_stock && (
+                      <span className="absolute top-2 left-2 text-[10px] font-bold bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">
+                        Out of stock
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-3">
+                    <p className="text-xs font-medium text-gray-900 dark:text-white line-clamp-2 leading-snug mb-1">{p.name}</p>
+                    {relatedPrice ? (
+                      <p className="text-xs font-bold text-blue-500">
+                        {p.price_naira ? "" : "from "}₦{relatedPrice.toLocaleString()}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-gray-400">Price on request</p>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
       </div>
       {recentlyViewed.length > 0 && (
         <div className="mt-4 mb-10">

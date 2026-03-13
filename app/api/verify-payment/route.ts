@@ -15,7 +15,6 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Resolve user_id server-side from the session token ─────────────────
-    // Never trust user_id from the client body — resolve it here instead.
     let resolvedUserId: string | null = null;
     const authHeader = req.headers.get("Authorization");
     if (authHeader?.startsWith("Bearer ")) {
@@ -44,17 +43,16 @@ export async function POST(req: NextRequest) {
     // ── Confirm amount matches (kobo) ───────────────────────────────────────
     const paidKobo = paystackData.data.amount;
 
-      if (!orderData.total_naira || orderData.total_naira <= 0) {
-        return NextResponse.json({ error: "Invalid order total" }, { status: 400 });
-      }
+    if (!orderData.total_naira || orderData.total_naira <= 0) {
+      return NextResponse.json({ error: "Invalid order total" }, { status: 400 });
+    }
 
     const expectedKobo = Math.round(orderData.total_naira * 100);
-      if (paidKobo < expectedKobo) {
-        return NextResponse.json({ error: "Payment amount mismatch" }, { status: 400 });
-      }
+    if (paidKobo < expectedKobo) {
+      return NextResponse.json({ error: "Payment amount mismatch" }, { status: 400 });
+    }
 
     // ── Save order ──────────────────────────────────────────────────────────
-    // Strip any client-supplied user_id; use the server-resolved one only.
     const { user_id: _ignored, ...safeOrderData } = orderData;
 
     const { error: insertErr } = await supabaseAdmin.from("consultation_requests").insert({
@@ -68,6 +66,35 @@ export async function POST(req: NextRequest) {
     if (insertErr) {
       return NextResponse.json({ error: insertErr.message }, { status: 500 });
     }
+
+    // ── Deduct stock ────────────────────────────────────────────────────────
+    // For each item in the order, find the product by name and decrement
+    // low_stock_count. If it hits 0, flip in_stock to false.
+    const items: { name: string; quantity: number }[] = orderData.items ?? [];
+
+    await Promise.all(
+      items.map(async (item) => {
+        // Fetch current stock
+        const { data: product } = await supabaseAdmin
+          .from("products")
+          .select("id, low_stock_count, in_stock")
+          .eq("name", item.name)
+          .single();
+
+        if (!product || product.low_stock_count === null) return;
+
+        const newCount = Math.max(0, product.low_stock_count - item.quantity);
+
+        await supabaseAdmin
+          .from("products")
+          .update({
+            low_stock_count: newCount,
+            ...(newCount === 0 ? { in_stock: false } : {}),
+          })
+          .eq("id", product.id);
+      })
+    );
+    // ───────────────────────────────────────────────────────────────────────
 
     return NextResponse.json({ success: true });
   } catch (err) {
