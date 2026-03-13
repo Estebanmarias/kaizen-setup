@@ -15,22 +15,12 @@ function fmt(n: number) {
   return "₦" + n.toLocaleString("en-NG");
 }
 
-function buildItemsHtml(
+function buildItemsList(
   items: { name: string; quantity: number; variant?: string; price?: number }[]
 ) {
-  return items.map(i => `
-    <tr>
-      <td style="font-family:Inter,Arial,sans-serif;padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;">
-        ${i.name}${i.variant ? ` <span style="color:#6b7280;">(${i.variant})</span>` : ""}
-      </td>
-      <td style="font-family:Inter,Arial,sans-serif;padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;text-align:center;">
-        x${i.quantity}
-      </td>
-      <td style="font-family:Inter,Arial,sans-serif;padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;text-align:right;">
-        ${i.price ? fmt(i.price * i.quantity) : "—"}
-      </td>
-    </tr>
-  `).join("");
+  return items.map(i =>
+    `${i.name}${i.variant ? ` (${i.variant})` : ""} x${i.quantity}${i.price ? ` — ₦${(i.price * i.quantity).toLocaleString("en-NG")}` : ""}`
+  ).join("\n");
 }
 
 export async function POST(req: NextRequest) {
@@ -83,7 +73,7 @@ export async function POST(req: NextRequest) {
         to: [{ email: order.email, name: order.name }],
         params: {
           first_name: firstName,
-          items_html: buildItemsHtml(items),
+          items_list: buildItemsList(items),
           total,
           order_id: order.id,
           track_url: `https://www.kaizensetup.name.ng/track`,
