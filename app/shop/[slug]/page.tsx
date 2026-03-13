@@ -173,7 +173,7 @@ export default function ProductDetailPage() {
   supabase.from("products").select("*").eq("slug", slug).single()
     .then(({ data }) => {
       setProduct(data);
-      if (data) {
+     if (data && supabase) {
   supabase
     .from("products")
     .select("id, name, slug, image_url, price_naira, category, in_stock, variants")
