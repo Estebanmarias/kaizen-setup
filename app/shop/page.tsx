@@ -580,10 +580,10 @@ const handleAdded = (imgSrc: string) => {
           )}
         </div>
 
-        <div className="flex flex-wrap gap-3 mb-10">
+        <div className="flex gap-3 mb-10 overflow-x-auto pb-2 scrollbar-none">
           {CATEGORIES.map(cat => (
             <button key={cat} onClick={() => filter(cat)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${active === cat ? "bg-blue-500 text-white border-blue-500" : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-blue-500"}`}>
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border whitespace-nowrap ${active === cat ? "bg-blue-500 text-white border-blue-500" : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-blue-500"}`}>
               {cat}
             </button>
           ))}
