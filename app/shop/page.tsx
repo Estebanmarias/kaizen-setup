@@ -312,7 +312,7 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
           <h2 className="font-bold text-gray-900 dark:text-white">Your Cart ({cart.reduce((s, i) => s + i.quantity, 0)})</h2>
           <button onClick={onClose} aria-label="Close cart" className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"><X size={20} /></button>
         </div>
-        <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
+        <div className="overflow-y-auto p-5 flex flex-col gap-4">
           {cart.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
               <ShoppingCart size={40} className="text-gray-300 dark:text-gray-700 mb-3" />
