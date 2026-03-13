@@ -55,18 +55,17 @@ function AuthForm() {
     }
     router.push(next)
   }
-
   const handleGoogle = async () => {
-    if (!supabase) return
-    setGoogleLoading(true)
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/api/auth/callback?next=${next}`,
-      },
-    })
-  }
-
+          if (!supabase) return
+          setGoogleLoading(true)
+          const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.kaizensetup.name.ng'
+          await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+              redirectTo: `${BASE_URL}/api/auth/callback?next=${next}`,
+            },
+          })
+        }
   return (
     <main className="min-h-screen bg-white dark:bg-[#0f0f0f] flex items-center justify-center px-6 py-24">
       <div className="w-full max-w-md">
