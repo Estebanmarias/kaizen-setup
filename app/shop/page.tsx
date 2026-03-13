@@ -528,7 +528,7 @@ const handleAdded = (imgSrc: string) => {
       {cartOpen && !quickAdd && <CartDrawer onClose={() => { setCartOpen(false); closeDrawer(); }} />}
 
       <button ref={cartBtnRef} onClick={() => { setCartOpen(true); openDrawer(); }} aria-label="Open cart"
-        className={`fixed bottom-24 left-6 z-40 flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 py-3 rounded-full shadow-xl hover:scale-105 transition-transform font-semibold text-sm sm:bottom-6 ${cartOpen || quickAdd ? "opacity-0 pointer-events-none" : ""}`}>
+        className={`hidden sm:flex fixed bottom-6 left-6 z-40 items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 py-3 rounded-full shadow-xl hover:scale-105 transition-transform font-semibold text-sm ${cartOpen || quickAdd ? "opacity-0 pointer-events-none" : ""}`}>
         <ShoppingCart size={18} />
         Cart
         {cartCount > 0 && (
