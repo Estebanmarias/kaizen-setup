@@ -60,6 +60,7 @@ export default function NewProductPage() {
   const hasComboGroup = groups.some(g => g.mode === "combo_price");
   const comboGroups = groups.filter(g => g.mode === "combo_price");
   const comboEntries = comboGroups.length >= 2 ? buildCombos(comboGroups) : [];
+  const [lowStockCount, setLowStockCount] = useState("");
 
   function handleNameChange(v: string) {
     setName(v);
@@ -150,6 +151,7 @@ export default function NewProductPage() {
         price_naira: price ? Number(price) : null, category: category.trim(),
         partner: partner.trim() || null, in_stock: inStock,
         image_url: urls[0], images: urls, variants: variantsJson,
+        low_stock_count: lowStockCount ? parseInt(lowStockCount) : null,
       });
       if (insertErr) throw new Error(insertErr.message);
       router.push("/admin/products");
@@ -228,6 +230,16 @@ export default function NewProductPage() {
                 {inStock ? "In Stock" : "Out of Stock"}
               </button>
             </div>
+            <Field label="Low Stock Count" hint="Set a number to show 'Only X left' label. Leave blank to hide.">
+              <input
+                className={inp}
+                type="number"
+                min="0"
+                value={lowStockCount}
+                onChange={e => setLowStockCount(e.target.value)}
+                placeholder="e.g. 3"
+              />
+            </Field>
           </Section>
 
           {/* Images */}
