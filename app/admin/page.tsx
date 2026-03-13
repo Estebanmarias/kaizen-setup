@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import {
-  ShoppingBag, TrendingUp, Clock, XCircle,
+  ShoppingBag, TrendingUp, Clock, XCircle, CreditCard,
   Check, X, ArrowUpRight, ArrowDownRight, Download
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, BarChart, Bar, Cell
 } from "recharts";
+
 
 type Order = {
   id: string;
@@ -21,6 +22,7 @@ type Order = {
   status: string;
   created_at: string;
   total_naira: number | null;
+  payment_status: string | null; // "paid" | "unpaid" | null
   items: { name: string; quantity: number; price?: number; variant?: string }[] | null;
 };
 
@@ -118,6 +120,20 @@ export default function AdminDashboard() {
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
   } else {
     console.error("Failed to update order status");
+  }
+};
+
+  const markAsPaid = async (id: string) => {
+  if (!supabase) return;
+  const { error } = await supabase
+    .from("consultation_requests")
+    .update({ payment_status: "paid" })
+    .eq("id", id);
+
+  if (!error) {
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, payment_status: "paid" } : o));
+  } else {
+    console.error("Failed to mark as paid", error);
   }
 };
 
@@ -368,53 +384,69 @@ const handleExportCSV = () => {
           <div className="divide-y divide-white/[0.04]">
             {filtered.map(order => (
               <div key={order.id} className="px-6 py-4 flex items-center gap-4 hover:bg-white/[0.02] transition-colors">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <p className="text-sm font-medium text-white truncate">{order.name}</p>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full border capitalize flex-shrink-0 ${STATUS_STYLE[order.status] ?? STATUS_STYLE.pending}`}>
-                      {order.status}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-500 truncate">
-                    {order.email} · {order.phone}
-                    {order.total_naira ? ` · ${fmt(order.total_naira)}` : ""}
-                    {" · "}{new Date(order.created_at).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
-                  </p>
-                  {Array.isArray(order.items) && order.items.length > 0 && (
-                    <p className="text-xs text-gray-600 truncate mt-0.5">
-                      {order.items.map(i => `${i.name} x${i.quantity}`).join(", ")}
-                    </p>
-                  )}
-                </div>
-                <div className="flex gap-1.5 flex-shrink-0">
-                {order.status === "cancellation_requested" ? (<>
-                  <button onClick={() => updateStatus(order.id, "cancelled")} title="Approve cancellation"
-                    className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors">
-                    <Check size={13} />
-                  </button>
-                  <button onClick={() => updateStatus(order.id, "pending")} title="Reject cancellation"
-                    className="p-1.5 rounded-lg bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 transition-colors">
-                    <X size={13} />
-                  </button>
-                  </>
-                  ) : (
-                  <>
-                  <button onClick={() => updateStatus(order.id, "fulfilled")} title="Mark fulfilled"
-                    className="p-1.5 rounded-lg bg-green-500/10 hover:bg-green-500/20 text-green-400 transition-colors">
-                    <Check size={13} />
-                  </button>
-                  <button onClick={() => updateStatus(order.id, "pending")} title="Mark pending"
-                    className="p-1.5 rounded-lg bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 transition-colors">
-                    <Clock size={13} />
-                  </button>
-                  <button onClick={() => updateStatus(order.id, "cancelled")} title="Mark cancelled"
-                    className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors">
-                    <X size={13} />
-                  </button>
-                </>
-              )}
-            </div>
-            </div>
+  <div className="flex-1 min-w-0">
+    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+      <p className="text-sm font-medium text-white truncate">{order.name}</p>
+      <span className={`text-[10px] px-1.5 py-0.5 rounded-full border capitalize flex-shrink-0 ${STATUS_STYLE[order.status] ?? STATUS_STYLE.pending}`}>
+        {order.status}
+      </span>
+      {/* Payment badge */}
+      <span className={`text-[10px] px-1.5 py-0.5 rounded-full border flex-shrink-0 ${
+        order.payment_status === "paid"
+          ? "bg-green-500/10 border-green-500/20 text-green-400"
+          : "bg-gray-500/10 border-gray-500/20 text-gray-500"
+      }`}>
+        {order.payment_status === "paid" ? "paid" : "unpaid"}
+      </span>
+    </div>
+    <p className="text-xs text-gray-500 truncate">
+      {order.email} · {order.phone}
+      {order.total_naira ? ` · ${fmt(order.total_naira)}` : ""}
+      {" · "}{new Date(order.created_at).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
+    </p>
+    {Array.isArray(order.items) && order.items.length > 0 && (
+      <p className="text-xs text-gray-600 truncate mt-0.5">
+        {order.items.map(i => `${i.name} x${i.quantity}`).join(", ")}
+      </p>
+    )}
+  </div>
+  <div className="flex gap-1.5 flex-shrink-0 flex-wrap justify-end">
+    {/* Mark as Paid button — only show for unpaid orders */}
+    {order.payment_status !== "paid" && (
+      <button onClick={() => markAsPaid(order.id)} title="Mark as paid"
+        className="p-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 transition-colors">
+        <CreditCard size={13} />
+      </button>
+    )}
+    {order.status === "cancellation_requested" ? (
+      <>
+        <button onClick={() => updateStatus(order.id, "cancelled")} title="Approve cancellation"
+          className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors">
+          <Check size={13} />
+        </button>
+        <button onClick={() => updateStatus(order.id, "pending")} title="Reject cancellation"
+          className="p-1.5 rounded-lg bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 transition-colors">
+          <X size={13} />
+        </button>
+      </>
+    ) : (
+      <>
+        <button onClick={() => updateStatus(order.id, "fulfilled")} title="Mark fulfilled"
+          className="p-1.5 rounded-lg bg-green-500/10 hover:bg-green-500/20 text-green-400 transition-colors">
+          <Check size={13} />
+        </button>
+        <button onClick={() => updateStatus(order.id, "pending")} title="Mark pending"
+          className="p-1.5 rounded-lg bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 transition-colors">
+          <Clock size={13} />
+        </button>
+        <button onClick={() => updateStatus(order.id, "cancelled")} title="Mark cancelled"
+          className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors">
+          <X size={13} />
+        </button>
+      </>
+    )}
+  </div>
+</div>
               ))}
           </div>
         )}
