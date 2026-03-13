@@ -186,7 +186,7 @@ function QuickAddDrawer({ product, onClose, onAdded }: {
     <div className="fixed inset-0 z-50 flex items-end sm:justify-end">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full sm:max-w-sm bg-white dark:bg-[#111] flex flex-col shadow-2xl animate-slide-in
-        rounded-t-2xl sm:rounded-none sm:h-full max-h-[90vh] sm:max-h-full overflow-hidden">
+            rounded-t-2xl sm:rounded-none sm:h-full max-h-[85vh] sm:max-h-full overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-800">
           <h2 className="font-bold text-gray-900 dark:text-white">Quick Add</h2>
           <button onClick={onClose} aria-label="Close drawer" className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"><X size={20} /></button>
@@ -365,7 +365,7 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
           ))}
         </div>
         {cart.length > 0 && (
-          <div className="p-5 border-t border-gray-200 dark:border-gray-800 flex flex-col gap-3">
+        <div className="p-5 border-t border-gray-200 dark:border-gray-800 flex flex-col gap-3 sm:mt-auto">
             {total > 0 && (
               <div className="flex justify-between text-sm font-bold">
                 <span className="text-gray-900 dark:text-white">Total</span>

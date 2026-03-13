@@ -8,6 +8,15 @@
   100% { transform: translate(var(--endX), var(--endY)) scale(0.2); opacity: 0; }
 }
 
+@keyframes slideIn {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.25s ease-out;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
