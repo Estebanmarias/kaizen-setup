@@ -183,14 +183,15 @@ function QuickAddDrawer({ product, onClose, onAdded }: {
   const imgSrc = product.image_url ?? "/images/products/placeholder.jpg";
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <div className="fixed inset-0 z-50 flex items-end sm:justify-end">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-sm bg-white dark:bg-[#111] h-full flex flex-col shadow-2xl animate-slide-in">
+      <div className="relative w-full sm:max-w-sm bg-white dark:bg-[#111] flex flex-col shadow-2xl animate-slide-in
+        rounded-t-2xl sm:rounded-none sm:h-full max-h-[90vh] sm:max-h-full overflow-hidden">
         <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-800">
           <h2 className="font-bold text-gray-900 dark:text-white">Quick Add</h2>
           <button onClick={onClose} aria-label="Close drawer" className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"><X size={20} /></button>
         </div>
-        <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-5">
+        <div className="overflow-y-auto p-5 flex flex-col gap-5">
           <div className="flex gap-4">
             <div className="relative w-20 h-20 bg-gray-50 dark:bg-[#1a1a1a] rounded-xl flex-shrink-0 border border-gray-200 dark:border-gray-800 overflow-hidden">
               <Image src={imgSrc} alt={product.name} fill className="object-contain p-1" />
