@@ -528,7 +528,7 @@ const handleAdded = (imgSrc: string) => {
       {cartOpen && !quickAdd && <CartDrawer onClose={() => { setCartOpen(false); closeDrawer(); }} />}
 
       <button ref={cartBtnRef} onClick={() => { setCartOpen(true); openDrawer(); }} aria-label="Open cart"
-        className={`fixed bottom-6 left-6 z-40 flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 py-3 rounded-full shadow-xl hover:scale-105 transition-transform font-semibold text-sm ${cartOpen || quickAdd ? "opacity-0 pointer-events-none" : ""}`}>
+        className={`fixed bottom-24 left-6 z-40 flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 py-3 rounded-full shadow-xl hover:scale-105 transition-transform font-semibold text-sm sm:bottom-6 ${cartOpen || quickAdd ? "opacity-0 pointer-events-none" : ""}`}>
         <ShoppingCart size={18} />
         Cart
         {cartCount > 0 && (
@@ -613,7 +613,7 @@ const handleAdded = (imgSrc: string) => {
               return (
                 <div key={p.id} className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden hover:border-blue-500 transition-colors flex flex-col">
                   <Link href={`/shop/${p.slug}`} className="block relative">
-                    <div className="relative bg-white dark:bg-[#111] h-52 overflow-hidden">
+                    <div className="relative bg-white dark:bg-[#111] h-36 sm:h-52 overflow-hidden">
                       <Image src={imgSrc} alt={p.name} fill
                         className="object-contain p-4 transition-transform duration-300 ease-in-out hover:scale-110"
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
