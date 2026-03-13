@@ -265,7 +265,7 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="md:hidden bg-white dark:bg-[#0f0f0f] border-t border-gray-100 dark:border-gray-800 px-4 py-4 flex flex-col gap-1">
+        <div className="md:hidden fixed inset-0 top-[57px] bg-white dark:bg-[#0f0f0f] border-t border-gray-100 dark:border-gray-800 px-4 py-4 flex flex-col gap-1 overflow-y-auto z-40">
           {PRIMARY_LINKS.map((l) => (
             <Link key={l.label} href={l.href} onClick={() => setMenuOpen(false)}
               className={`text-sm font-medium px-3 py-2.5 rounded-lg transition-colors ${

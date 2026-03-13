@@ -29,7 +29,7 @@ export default function Hero() {
   return (
     <section
       id="home"
-      className="relative min-h-screen flex flex-col justify-center px-6 pt-24 pb-16 overflow-hidden bg-white dark:bg-[#0f0f0f]"
+      className="relative flex flex-col px-6 pt-24 pb-20 md:min-h-screen md:justify-center md:pt-40 md:pb-24 overflow-hidden bg-white dark:bg-[#0f0f0f]"
     >
       {/* Grid background */}
       <div
@@ -72,7 +72,7 @@ export default function Hero() {
           </a>
         </div>
 
-        <div className="mt-16 flex flex-wrap gap-6 text-sm text-gray-500 dark:text-gray-400">
+        <div className="mt-12 md:mt-16 flex flex-wrap gap-6 text-sm text-gray-500 dark:text-gray-400">
           {TRUST_SIGNALS.map((t) => (
             <span key={t} className="flex items-center gap-2">
               <span className="text-blue-500 font-bold">✓</span> {t}
