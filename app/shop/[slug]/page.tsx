@@ -157,6 +157,7 @@ export default function ProductDetailPage() {
   const [notifyStatus, setNotifyStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [recentlyViewed, setRecentlyViewed] = useState<RecentProduct[]>([]);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [submittedOrderId, setSubmittedOrderId] = useState<string | null>(null);
 
   useEffect(() => {
     supabase?.auth.getSession().then(({ data }) => {
@@ -287,24 +288,25 @@ export default function ProductDetailPage() {
   };
 
   const submitOrder = async () => {
-    if (!orderForm.name || !(authEmail ?? orderForm.email) || !orderForm.phone) {
-      setFormError("Please fill in name, email and phone.");
-      return;
-    }
-    setFormStatus("loading");
-    setFormError("");
-    if (supabase && product) {
-      const items = [{ name: product.name, quantity, price: effectivePrice ?? undefined, variant: variantSummary || undefined }];
-      const { error } = await supabase.from("consultation_requests").insert([{
-        name: orderForm.name, email: authEmail ?? orderForm.email, phone: orderForm.phone,
-        message: orderForm.message || null, setup_type: product.category, status: "pending",
-        items, total_naira: effectivePrice ? effectivePrice * quantity : null,
-        user_id: authUserId ?? null,
-      }]);
-      if (error) { setFormStatus("error"); setFormError("Something went wrong. Try again."); return; }
-    }
-    setFormStatus("success");
-  };
+  if (!orderForm.name || !(authEmail ?? orderForm.email) || !orderForm.phone) {
+    setFormError("Please fill in name, email and phone.");
+    return;
+  }
+  setFormStatus("loading");
+  setFormError("");
+  if (supabase && product) {
+    const items = [{ name: product.name, quantity, price: effectivePrice ?? undefined, variant: variantSummary || undefined }];
+    const { data, error } = await supabase.from("consultation_requests").insert([{
+      name: orderForm.name, email: authEmail ?? orderForm.email, phone: orderForm.phone,
+      message: orderForm.message || null, setup_type: product.category, status: "pending",
+      items, total_naira: effectivePrice ? effectivePrice * quantity : null,
+      user_id: authUserId ?? null,
+    }]).select("id").single();
+    if (error) { setFormStatus("error"); setFormError("Something went wrong. Try again."); return; }
+    if (data?.id) setSubmittedOrderId(data.id);
+  }
+  setFormStatus("success");
+};
 
   const handlePaystack = async () => {
     if (!orderForm.name || !(authEmail ?? orderForm.email) || !orderForm.phone) {
@@ -621,8 +623,20 @@ export default function ProductDetailPage() {
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Place an Order Request</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Fill in your details and we'll get back to you within 24 hours.</p>
           {formStatus === "success" ? (
-            <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-xl p-4 text-blue-700 dark:text-blue-400 text-sm font-medium"> ✓ Order request received! We'll contact you shortly.</div>
-          ) : (
+              <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-xl p-4 text-sm">
+                <p className="font-semibold text-blue-700 dark:text-blue-400 mb-2">✓ Order request received! We'll contact you shortly.</p>
+                  {submittedOrderId && (
+                    <>
+                      <p className="text-blue-600 dark:text-blue-500 text-xs mb-1">Your Order ID:</p>
+                      <p className="font-mono font-bold text-blue-700 dark:text-blue-300 text-xs mb-3 break-all">{submittedOrderId}</p>
+                      <a href={`/track?order=${submittedOrderId}&email=${encodeURIComponent(authEmail ?? orderForm.email)}`}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-500 hover:underline">
+                        Track your order →
+                      </a>
+                    </>
+                  )}
+              </div>
+              ) : (
             <div className="flex flex-col gap-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input name="name" value={orderForm.name} onChange={handleInput} placeholder="Your Name" className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors" />
