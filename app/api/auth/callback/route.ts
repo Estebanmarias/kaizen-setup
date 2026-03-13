@@ -6,8 +6,10 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.kaizensetup.name.ng'
+
 export async function GET(req: NextRequest) {
-  const { searchParams, origin } = new URL(req.url)
+  const { searchParams } = new URL(req.url)
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/'
 
@@ -17,17 +19,15 @@ export async function GET(req: NextRequest) {
     if (!error && data.user) {
       const { user } = data
 
-      // Auto-subscribe to newsletter
       if (user.email) {
         await supabase
           .from('newsletter_signups')
           .upsert({ email: user.email }, { onConflict: 'email', ignoreDuplicates: true })
       }
 
-      // Record referral — check cookie first, fallback to query param
-      const refCode = req.cookies.get('ref_code')?.value ?? searchParams.get('ref') ?? null;
+      const refCode = req.cookies.get('ref_code')?.value ?? searchParams.get('ref') ?? null
       if (refCode) {
-        await fetch(`${origin}/api/record-referral`, {
+        await fetch(`${BASE_URL}/api/record-referral`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -37,13 +37,12 @@ export async function GET(req: NextRequest) {
           }),
         })
 
-        // Clear the cookie after recording
-        const res = NextResponse.redirect(`${origin}${next}`)
+        const res = NextResponse.redirect(`${BASE_URL}${next}`)
         res.cookies.set('ref_code', '', { path: '/', maxAge: 0 })
         return res
       }
     }
   }
 
-  return NextResponse.redirect(`${origin}${next}`)
+  return NextResponse.redirect(`${BASE_URL}${next}`)
 }
