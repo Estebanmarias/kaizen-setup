@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 const ADMIN_EMAIL = "kaizensetup.ng@gmail.com";
+
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 function fmt(n: number) {
   return "₦" + n.toLocaleString("en-NG");
@@ -110,7 +112,7 @@ function customerEmail(type: "requested" | "approved" | "rejected", order: {
         </table>
       </td></tr>
       <tr><td align="center" style="background:#f9fafb;border-top:1px solid #f3f4f6;padding:20px 40px;">
-        <p style="font-size:12px;color:#9ca3af;margin:0;">© ${new Date().getFullYear()} KaizenSetup · Lagos, Nigeria</p>
+        <p style="font-size:12px;color:#9ca3af;margin:0;">© ${new Date().getFullYear()} KaizenSetup · Ibadan, Nigeria</p>
       </td></tr>
     </table>
   </td></tr>
@@ -145,7 +147,6 @@ function adminEmail(order: {
             <p style="font-size:14px;font-weight:600;color:#111827;margin:0;">${order.total_naira ? fmt(order.total_naira) : "—"} · <span style="color:${isPaid ? "#22c55e" : "#f59e0b"}">${isPaid ? "PAID — refund required" : "Unpaid"}</span></p>
           </td></tr>
         </table>
-        <p style="font-size:13px;color:#6b7280;margin:0 0 16px;">Go to your admin dashboard to approve or reject this request.</p>
         <table cellpadding="0" cellspacing="0"><tr><td style="background:#0f0f0f;border-radius:8px;">
           <a href="https://www.kaizensetup.name.ng/admin" style="display:inline-block;font-size:13px;font-weight:700;color:#fff;text-decoration:none;padding:10px 24px;">Go to Admin →</a>
         </td></tr></table>
@@ -157,13 +158,13 @@ function adminEmail(order: {
 }
 
 export async function POST(req: NextRequest) {
+  const supabase = getSupabase();
   const { orderId, userId } = await req.json();
 
   if (!orderId || !userId) {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
 
-  // Fetch order
   const { data: order, error: fetchErr } = await supabase
     .from("consultation_requests")
     .select("*")
@@ -174,12 +175,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Order not found" }, { status: 404 });
   }
 
-  // Security: ensure order belongs to this user
   if (order.user_id && order.user_id !== userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  // Only pending orders can be cancelled
   if (order.status !== "pending") {
     return NextResponse.json({ error: "Only pending orders can be cancelled" }, { status: 400 });
   }
@@ -187,25 +186,21 @@ export async function POST(req: NextRequest) {
   const isPaid = order.payment_status === "paid";
   const newStatus = isPaid ? "cancellation_requested" : "cancelled";
 
-  // Update status
   const { error: updateErr } = await supabase
     .from("consultation_requests")
     .update({ status: newStatus })
     .eq("id", orderId);
 
- if (updateErr) {
-  console.log("Update error:", JSON.stringify(updateErr));
-  return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
-}
+  if (updateErr) {
+    return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
+  }
 
-  // Email customer
   await sendEmail(
     { email: order.email, name: order.name },
     isPaid ? "Your cancellation request has been received" : "Your KaizenSetup order has been cancelled",
     customerEmail(isPaid ? "requested" : "approved", order)
   );
 
-  // Email admin
   await sendEmail(
     { email: ADMIN_EMAIL, name: "KaizenSetup Admin" },
     `Cancellation request — ${order.name}${isPaid ? " (PAID)" : ""}`,

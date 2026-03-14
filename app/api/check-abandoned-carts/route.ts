@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function GET(req: Request) {
-  // Secure the endpoint with a secret
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
   const { searchParams } = new URL(req.url);
   if (searchParams.get("secret") !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -15,7 +14,6 @@ export async function GET(req: Request) {
 
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-  // Find carts not updated in 24h, not yet emailed
   const { data: carts, error } = await supabase
     .from("abandoned_carts")
     .select("*")
@@ -30,7 +28,6 @@ export async function GET(req: Request) {
   for (const cart of carts) {
     const items = cart.items as { name: string; quantity: number; image_url?: string; price_naira?: number }[];
 
-    // Send via Brevo
     const res = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: {
@@ -38,7 +35,7 @@ export async function GET(req: Request) {
         "api-key": process.env.BREVO_API_KEY!,
       },
       body: JSON.stringify({
-        templateId: 7, // ← set this to your Brevo template ID after creating it
+        templateId: 7,
         to: [{ email: cart.email }],
         params: {
           items: items.map(i => ({
