@@ -169,6 +169,8 @@ export async function POST(req: NextRequest) {
       </div>
     `;
 
+    // hey admin, a new order just came in! (sent via Brevo's SMTP API)
+
     await sendBrevo({
       to: [{ email: ADMIN_EMAIL, name: "KaizenSetup Admin" }],
       sender: { email: "hello@kaizensetup.name.ng", name: "KaizenSetup" },
