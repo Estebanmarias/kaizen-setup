@@ -5,6 +5,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { Trash2, Plus, Minus, ShoppingCart, ArrowLeft, MessageCircle, CreditCard, Loader2 } from "lucide-react";
 import TrustBadges from "@/components/TrustBadges";
+import PromoCodeInput from "@/components/PromoCodeInput";
 
 type CartItem = {
   id: string;
