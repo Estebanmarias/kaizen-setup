@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { MessageCircle, ShoppingCart, ArrowLeft, Plus, Minus, Check, Share2, Copy, CheckCheck, CreditCard, Loader2, Star } from "lucide-react";
@@ -64,6 +64,8 @@ function allComboSelected(variants: Variant[] | null, selected: Record<string, s
   return variants?.filter(v => v.name && v.options).every(g => !!selected[g.name!]) ?? true;
 }
 
+const inputClass = "px-4 py-2.5 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:border-blue-500 transition-colors";
+
 function StarInput({ value, onChange }: { value: number; onChange: (n: number) => void }) {
   const [hovered, setHovered] = useState(0);
   return (
@@ -74,9 +76,7 @@ function StarInput({ value, onChange }: { value: number; onChange: (n: number) =
           onMouseEnter={() => setHovered(n)}
           onMouseLeave={() => setHovered(0)}
           className="transition-transform hover:scale-110">
-          <Star size={24}
-            className={n <= (hovered || value) ? "fill-yellow-400 text-yellow-400" : "text-gray-300 dark:text-gray-700"}
-          />
+          <Star size={24} className={n <= (hovered || value) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"} />
         </button>
       ))}
     </div>
@@ -87,9 +87,7 @@ function StarDisplay({ rating }: { rating: number }) {
   return (
     <div className="flex gap-0.5">
       {[1, 2, 3, 4, 5].map(n => (
-        <Star key={n} size={14}
-          className={n <= rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300 dark:text-gray-700"}
-        />
+        <Star key={n} size={14} className={n <= rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"} />
       ))}
     </div>
   );
@@ -105,7 +103,6 @@ function ShareBar({ name, slug }: { name: string; slug: string }) {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
   const shareWA = () => window.open(`https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`, "_blank");
   const shareX  = () => window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, "_blank");
 
@@ -113,17 +110,17 @@ function ShareBar({ name, slug }: { name: string; slug: string }) {
     <div className="flex items-center gap-2 mt-2">
       <span className="text-xs text-gray-400 font-medium flex items-center gap-1"><Share2 size={12} /> Share:</span>
       <button onClick={shareWA}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-green-500 hover:text-green-600 transition-colors">
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:border-green-500 hover:text-green-600 transition-colors">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.118 1.528 5.849L.057 23.428a.75.75 0 0 0 .916.916l5.579-1.471A11.943 11.943 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.695 9.695 0 0 1-4.945-1.355l-.355-.21-3.676.968.984-3.595-.229-.368A9.698 9.698 0 0 1 2.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg>
         WhatsApp
       </button>
       <button onClick={shareX}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-900 dark:hover:border-white hover:text-gray-900 dark:hover:text-white transition-colors">
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:border-gray-900 hover:text-gray-900 transition-colors">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
         X
       </button>
       <button onClick={copyLink}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-blue-500 hover:text-blue-500 transition-colors">
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:border-blue-500 hover:text-blue-500 transition-colors">
         {copied ? <><CheckCheck size={12} className="text-green-500" /> Copied!</> : <><Copy size={12} /> Copy link</>}
       </button>
     </div>
@@ -145,7 +142,6 @@ export default function ProductDetailPage() {
   const [authUserId, setAuthUserId] = useState<string | null>(null);
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [payLoading, setPayLoading] = useState(false);
-
   const [reviews, setReviews] = useState<Review[]>([]);
   const [hasOrdered, setHasOrdered] = useState(false);
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
@@ -159,6 +155,21 @@ export default function ProductDetailPage() {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [submittedOrderId, setSubmittedOrderId] = useState<string | null>(null);
 
+  // Sticky bar visibility
+  const addToCartRef = useRef<HTMLButtonElement>(null);
+  const [showStickyBar, setShowStickyBar] = useState(false);
+
+  useEffect(() => {
+    const el = addToCartRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowStickyBar(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [product]); // re-run once product loads and ref attaches
+
   useEffect(() => {
     supabase?.auth.getSession().then(({ data }) => {
       if (data.session) {
@@ -169,77 +180,45 @@ export default function ProductDetailPage() {
     });
   }, []);
 
- useEffect(() => {
-  if (!supabase || !slug) return;
-  supabase.from("products").select("*").eq("slug", slug).single()
-    .then(({ data }) => {
-      setProduct(data);
-     if (data && supabase) {
-  supabase
-    .from("products")
-    .select("*")
-    .eq("category", data.category)
-    .neq("id", data.id)
-    .limit(4)
-    .then(({ data: related }) => setRelatedProducts(related ?? []));
-}
-      setLoading(false);
-      if (data) {
-      addRecentlyViewed({
-        id: data.id,
-        name: data.name,
-        slug: data.slug,
-        image_url: data.image_url,
-        price_naira: data.price_naira,
-        category: data.category,
-      });
-      setRecentlyViewed(getRecentlyViewed().filter(p => p.id !== data.id));
-    }
-      if (data) {
-        supabase?.auth.getSession().then(({ data: sessionData }) => {
-          supabase?.from("product_views").insert({
-            product_id: data.id,
-            product_name: data.name,
-            slug: data.slug,
-            user_id: sessionData.session?.user.id ?? null,
-          });
-        });
-        if (data?.variants) {
-          const defaults: Record<string, string> = {};
-          data.variants.filter((v: Variant) => v.name && v.options).forEach((v: Variant) => {
-            defaults[v.name!] = v.options![0];
-          });
-          setSelectedVariants(defaults);
+  useEffect(() => {
+    if (!supabase || !slug) return;
+    supabase.from("products").select("*").eq("slug", slug).single()
+      .then(({ data }) => {
+        setProduct(data);
+        if (data && supabase) {
+          supabase.from("products").select("*").eq("category", data.category).neq("id", data.id).limit(4)
+            .then(({ data: related }) => setRelatedProducts(related ?? []));
         }
-      }
-    });
-}, [slug]);
+        setLoading(false);
+        if (data) {
+          addRecentlyViewed({ id: data.id, name: data.name, slug: data.slug, image_url: data.image_url, price_naira: data.price_naira, category: data.category });
+          setRecentlyViewed(getRecentlyViewed().filter(p => p.id !== data.id));
+          supabase?.auth.getSession().then(({ data: sessionData }) => {
+            supabase?.from("product_views").insert({ product_id: data.id, product_name: data.name, slug: data.slug, user_id: sessionData.session?.user.id ?? null });
+          });
+          if (data?.variants) {
+            const defaults: Record<string, string> = {};
+            data.variants.filter((v: Variant) => v.name && v.options).forEach((v: Variant) => { defaults[v.name!] = v.options![0]; });
+            setSelectedVariants(defaults);
+          }
+        }
+      });
+  }, [slug]);
 
   useEffect(() => {
     if (!supabase || !product) return;
-    supabase.from("reviews")
-      .select("id, rating, body, created_at, user_id")
-      .eq("product_id", product.id)
-      .eq("status", "approved")
-      .order("created_at", { ascending: false })
+    supabase.from("reviews").select("id, rating, body, created_at, user_id")
+      .eq("product_id", product.id).eq("status", "approved").order("created_at", { ascending: false })
       .then(({ data }) => setReviews(data ?? []));
   }, [product]);
 
   useEffect(() => {
     if (!supabase || !product || !authUserId || !authEmail) return;
-    supabase.from("consultation_requests")
-      .select("id, items")
-      .eq("email", authEmail)
+    supabase.from("consultation_requests").select("id, items").eq("email", authEmail)
       .then(({ data }) => {
-        const ordered = (data ?? []).some(order =>
-          (order.items ?? []).some((item: { name: string }) => item.name === product.name)
-        );
-        setHasOrdered(ordered);
+        setHasOrdered((data ?? []).some(order => (order.items ?? []).some((item: { name: string }) => item.name === product.name)));
       });
-    supabase.from("reviews")
-      .select("id")
-      .eq("product_id", product.id)
-      .eq("user_id", authUserId)
+    supabase.from("reviews").select("id").eq("product_id", product.id).eq("user_id", authUserId)
       .then(({ data }) => setAlreadyReviewed((data ?? []).length > 0));
   }, [product, authUserId, authEmail]);
 
@@ -270,9 +249,7 @@ export default function ProductDetailPage() {
 
   const effectivePrice = comboPrice ?? perOptionPrice ?? product?.price_naira ?? null;
   const hasVariantPricing = !isCombo && product?.variants?.some(v => v.prices?.length);
-  const minVariantPrice = hasVariantPricing
-    ? Math.min(...(product!.variants!.flatMap(v => v.prices ?? [])))
-    : null;
+  const minVariantPrice = hasVariantPricing ? Math.min(...(product!.variants!.flatMap(v => v.prices ?? []))) : null;
 
   const addToCart = () => {
     if (!product || !canAddToCart) return;
@@ -288,37 +265,29 @@ export default function ProductDetailPage() {
   };
 
   const submitOrder = async () => {
-  if (!orderForm.name || !(authEmail ?? orderForm.email) || !orderForm.phone) {
-    setFormError("Please fill in name, email and phone.");
-    return;
-  }
-  setFormStatus("loading");
-  setFormError("");
-  if (supabase && product) {
-    const items = [{ name: product.name, quantity, price: effectivePrice ?? undefined, variant: variantSummary || undefined }];
-    const { data, error } = await supabase.from("consultation_requests").insert([{
-      name: orderForm.name, email: authEmail ?? orderForm.email, phone: orderForm.phone,
-      message: orderForm.message || null, setup_type: product.category, status: "pending",
-      items, total_naira: effectivePrice ? effectivePrice * quantity : null,
-      user_id: authUserId ?? null,
-    }]).select("id").single();
-    if (error) { setFormStatus("error"); setFormError("Something went wrong. Try again."); return; }
-    if (data?.id) setSubmittedOrderId(data.id);
-  }
-  setFormStatus("success");
-};
+    if (!orderForm.name || !(authEmail ?? orderForm.email) || !orderForm.phone) {
+      setFormError("Please fill in name, email and phone."); return;
+    }
+    setFormStatus("loading"); setFormError("");
+    if (supabase && product) {
+      const items = [{ name: product.name, quantity, price: effectivePrice ?? undefined, variant: variantSummary || undefined }];
+      const { data, error } = await supabase.from("consultation_requests").insert([{
+        name: orderForm.name, email: authEmail ?? orderForm.email, phone: orderForm.phone,
+        message: orderForm.message || null, setup_type: product.category, status: "pending",
+        items, total_naira: effectivePrice ? effectivePrice * quantity : null, user_id: authUserId ?? null,
+      }]).select("id").single();
+      if (error) { setFormStatus("error"); setFormError("Something went wrong. Try again."); return; }
+      if (data?.id) setSubmittedOrderId(data.id);
+    }
+    setFormStatus("success");
+  };
 
   const handlePaystack = async () => {
     if (!orderForm.name || !(authEmail ?? orderForm.email) || !orderForm.phone) {
-      setFormError("Please fill in name, email and phone.");
-      return;
+      setFormError("Please fill in name, email and phone."); return;
     }
-    if (!effectivePrice || !product) {
-      setFormError("Price not available for payment. Use WhatsApp instead.");
-      return;
-    }
-    setFormError("");
-    setPayLoading(true);
+    if (!effectivePrice || !product) { setFormError("Price not available for payment. Use WhatsApp instead."); return; }
+    setFormError(""); setPayLoading(true);
     const orderTotal = effectivePrice * quantity;
     const PaystackPop = (await import("@paystack/inline-js")).default;
     const handler = new PaystackPop();
@@ -338,10 +307,7 @@ export default function ProductDetailPage() {
         try {
           const res = await fetch("/api/verify-payment", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-            },
+            headers: { "Content-Type": "application/json", ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) },
             body: JSON.stringify({
               reference: transaction.reference,
               orderData: {
@@ -364,15 +330,11 @@ export default function ProductDetailPage() {
     });
   };
 
-  
   const submitNotify = async () => {
     const email = authEmail ?? notifyEmail.trim();
     if (!email) { setNotifyStatus("error"); return; }
     setNotifyStatus("loading");
-    const { error } = await supabase!.from("back_in_stock_requests").insert({
-      product_id: product!.id,
-      email,
-    });
+    const { error } = await supabase!.from("back_in_stock_requests").insert({ product_id: product!.id, email });
     setNotifyStatus(error ? "error" : "success");
   };
 
@@ -380,40 +342,27 @@ export default function ProductDetailPage() {
     if (!reviewRating) { setReviewError("Please select a star rating."); return; }
     if (!reviewBody.trim()) { setReviewError("Please write a review."); return; }
     if (!authUserId || !product) return;
-    setReviewStatus("loading");
-    setReviewError("");
+    setReviewStatus("loading"); setReviewError("");
     const { error } = await supabase!.from("reviews").insert([{
-      product_id: product.id,
-      user_id: authUserId,
-      rating: reviewRating,
-      body: reviewBody.trim(),
-      status: "pending",
+      product_id: product.id, user_id: authUserId,
+      rating: reviewRating, body: reviewBody.trim(), status: "pending",
     }]);
     if (error) { setReviewStatus("error"); setReviewError("Something went wrong. Try again."); return; }
-    setReviewStatus("success");
-    setAlreadyReviewed(true);
+    setReviewStatus("success"); setAlreadyReviewed(true);
   };
 
   const avgRating = reviews.length
-    ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
-    : null;
+    ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : null;
 
-  // ── JSON-LD structured data ──────────────────────────────────────────────────
   const jsonLd = product ? {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    "name": product.name,
-    "description": product.description,
-    "image": images[0] ?? undefined,
-    "sku": product.slug,
+    "@context": "https://schema.org", "@type": "Product",
+    "name": product.name, "description": product.description,
+    "image": images[0] ?? undefined, "sku": product.slug,
     "brand": { "@type": "Brand", "name": "KaizenSetup" },
     "offers": {
-      "@type": "Offer",
-      "priceCurrency": "NGN",
+      "@type": "Offer", "priceCurrency": "NGN",
       "price": effectivePrice ?? minVariantPrice ?? comboMin ?? undefined,
-      "availability": product.in_stock
-        ? "https://schema.org/InStock"
-        : "https://schema.org/OutOfStock",
+      "availability": product.in_stock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       "url": `https://www.kaizensetup.name.ng/shop/${product.slug}`,
       "seller": { "@type": "Organization", "name": "KaizenSetup" }
     },
@@ -421,28 +370,25 @@ export default function ProductDetailPage() {
       "aggregateRating": {
         "@type": "AggregateRating",
         "ratingValue": (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1),
-        "reviewCount": reviews.length,
-        "bestRating": 5,
-        "worstRating": 1
+        "reviewCount": reviews.length, "bestRating": 5, "worstRating": 1
       }
     })
   } : null;
-  // ────────────────────────────────────────────────────────────────────────────
 
   const waMessage = product
     ? encodeURIComponent(`Hi KaizenSetup! I'd like to order the ${product.name}${variantSummary ? ` (${variantSummary})` : ""}, Qty: ${quantity}. Please confirm price and availability.`)
     : "";
 
   if (loading) return (
-    <main className="min-h-screen bg-white dark:bg-[#0f0f0f] pt-24 pb-20 px-6">
+    <main className="min-h-screen bg-white pt-24 pb-20 px-6">
       <div className="max-w-4xl mx-auto animate-pulse">
-        <div className="h-6 w-32 bg-gray-200 dark:bg-gray-800 rounded mb-8" />
+        <div className="h-6 w-32 bg-gray-200 rounded mb-8" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-          <div className="h-80 bg-gray-200 dark:bg-gray-800 rounded-2xl" />
+          <div className="h-80 bg-gray-200 rounded-2xl" />
           <div className="space-y-4">
-            <div className="h-4 w-20 bg-gray-200 dark:bg-gray-800 rounded" />
-            <div className="h-8 w-3/4 bg-gray-200 dark:bg-gray-800 rounded" />
-            <div className="h-4 w-full bg-gray-200 dark:bg-gray-800 rounded" />
+            <div className="h-4 w-20 bg-gray-200 rounded" />
+            <div className="h-8 w-3/4 bg-gray-200 rounded" />
+            <div className="h-4 w-full bg-gray-200 rounded" />
           </div>
         </div>
       </div>
@@ -450,10 +396,10 @@ export default function ProductDetailPage() {
   );
 
   if (!product) return (
-    <main className="min-h-screen bg-white dark:bg-[#0f0f0f] pt-24 pb-20 px-6 flex items-center justify-center">
+    <main className="min-h-screen bg-white pt-24 pb-20 px-6 flex items-center justify-center">
       <div className="text-center">
         <p className="text-4xl mb-4">🔍</p>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Product not found</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Product not found</h1>
         <Link href="/shop" className="text-blue-500 hover:underline text-sm">← Back to Shop</Link>
       </div>
     </main>
@@ -462,13 +408,26 @@ export default function ProductDetailPage() {
   const namedVariants = product.variants?.filter(v => v.name && v.options) ?? [];
 
   return (
-    <main className="min-h-screen bg-white dark:bg-[#0f0f0f] pt-24 pb-20 px-6">
-      {/* JSON-LD structured data for Google */}
-      {jsonLd && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
+    <main className="min-h-screen bg-white pt-24 pb-28 md:pb-20 px-6">
+      {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />}
+
+      {/* ── Sticky Add to Cart — mobile only ── */}
+      {product.in_stock && (
+        <div className={`md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 px-4 py-3 flex items-center gap-3 transition-transform duration-300 ${showStickyBar ? "translate-y-0" : "translate-y-full"}`}>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-gray-400 truncate">{product.name}</p>
+            {effectivePrice
+              ? <p className="text-sm font-bold text-gray-900">₦{effectivePrice.toLocaleString()}</p>
+              : <p className="text-xs text-gray-400">Select options</p>
+            }
+          </div>
+          <button onClick={addToCart} disabled={!canAddToCart}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-colors flex-shrink-0 ${
+              addedToCart ? "bg-green-500 text-white" : canAddToCart ? "bg-blue-500 hover:bg-blue-400 text-white" : "bg-gray-200 text-gray-400 cursor-not-allowed"
+            }`}>
+            {addedToCart ? <><Check size={15} /> Added</> : <><ShoppingCart size={15} /> Add to Cart</>}
+          </button>
+        </div>
       )}
 
       <div className="max-w-4xl mx-auto">
@@ -479,14 +438,14 @@ export default function ProductDetailPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-16">
           {/* Image Gallery */}
           <div className="flex flex-col gap-3">
-            <div className="bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-2xl h-80 flex items-center justify-center p-6 overflow-hidden">
+            <div className="bg-gray-50 border border-gray-200 rounded-2xl h-80 flex items-center justify-center p-6 overflow-hidden">
               <img src={images[activeImg]} alt={product.name} className="max-h-full max-w-full object-contain transition-opacity duration-200" />
             </div>
             {images.length > 1 && (
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {images.map((img, i) => (
                   <button key={i} onClick={() => setActiveImg(i)}
-                    className={`relative flex-shrink-0 w-16 h-16 rounded-lg border-2 overflow-hidden bg-white dark:bg-[#111] transition-colors ${activeImg === i ? "border-blue-500" : "border-gray-200 dark:border-gray-800 hover:border-gray-400"}`}>
+                    className={`relative flex-shrink-0 w-16 h-16 rounded-lg border-2 overflow-hidden bg-white transition-colors ${activeImg === i ? "border-blue-500" : "border-gray-200 hover:border-gray-400"}`}>
                     <Image src={img} alt={`${product.name} ${i + 1}`} fill className="object-contain p-1" />
                   </button>
                 ))}
@@ -497,12 +456,12 @@ export default function ProductDetailPage() {
           {/* Details */}
           <div className="flex flex-col justify-center">
             <span className="text-xs font-semibold tracking-widest uppercase text-blue-500 mb-2">{product.category}</span>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">{product.name}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
 
             {avgRating && (
               <div className="flex items-center gap-2 mb-4">
                 <StarDisplay rating={Math.round(Number(avgRating))} />
-                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{avgRating}</span>
+                <span className="text-sm font-semibold text-gray-700">{avgRating}</span>
                 <span className="text-xs text-gray-400">({reviews.length} review{reviews.length !== 1 ? "s" : ""})</span>
               </div>
             )}
@@ -511,13 +470,13 @@ export default function ProductDetailPage() {
                 🔥 Only {product.low_stock_count} left in stock
               </div>
             )}
-            <p className="text-gray-500 dark:text-gray-400 leading-relaxed mb-6">{product.description}</p>
+            <p className="text-gray-500 leading-relaxed mb-6">{product.description}</p>
 
             {namedVariants.length > 0 && (
               <div className="flex flex-col gap-4 mb-6">
                 {namedVariants.map(variant => (
                   <div key={variant.name}>
-                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <p className="text-sm font-semibold text-gray-700 mb-2">
                       {variant.name}{selectedVariants[variant.name!] && <span className="font-normal text-blue-500 ml-2">{selectedVariants[variant.name!]}</span>}
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -533,14 +492,14 @@ export default function ProductDetailPage() {
                             return (
                               <button key={opt} onClick={() => setSelectedVariants(p => ({ ...p, [variant.name!]: opt }))}
                                 style={isSelected ? { backgroundColor: colors?.bg, color: colors?.text } : {}}
-                                className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors ${isSelected ? "border-transparent" : "border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-blue-500"}`}>
+                                className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors ${isSelected ? "border-transparent" : "border-gray-300 text-gray-600 hover:border-blue-500"}`}>
                                 {opt}
                               </button>
                             );
                           })
                         : variant.options!.map(opt => (
                             <button key={opt} onClick={() => setSelectedVariants(p => ({ ...p, [variant.name!]: opt }))}
-                              className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors ${selectedVariants[variant.name!] === opt ? "bg-blue-500 text-white border-blue-500" : "border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-blue-500"}`}>
+                              className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors ${selectedVariants[variant.name!] === opt ? "bg-blue-500 text-white border-blue-500" : "border-gray-300 text-gray-600 hover:border-blue-500"}`}>
                               {opt}
                             </button>
                           ))}
@@ -552,21 +511,21 @@ export default function ProductDetailPage() {
 
             {isCombo ? (
               comboPrice
-                ? <p className="text-2xl font-bold text-gray-900 dark:text-white mb-4">₦{comboPrice.toLocaleString()}</p>
+                ? <p className="text-2xl font-bold text-gray-900 mb-4">₦{comboPrice.toLocaleString()}</p>
                 : <p className="text-sm text-gray-400 mb-4">{allComboSelected(product.variants, selectedVariants) ? "Price on request" : `from ₦${comboMin?.toLocaleString()} — select all options to see exact price`}</p>
             ) : effectivePrice
-              ? <p className="text-2xl font-bold text-gray-900 dark:text-white mb-4">₦{effectivePrice.toLocaleString()}</p>
+              ? <p className="text-2xl font-bold text-gray-900 mb-4">₦{effectivePrice.toLocaleString()}</p>
               : hasVariantPricing && minVariantPrice
-                ? <p className="text-2xl font-bold text-gray-900 dark:text-white mb-4">from ₦{minVariantPrice.toLocaleString()}</p>
+                ? <p className="text-2xl font-bold text-gray-900 mb-4">from ₦{minVariantPrice.toLocaleString()}</p>
                 : <p className="text-sm text-gray-400 mb-4">Price available on request</p>
             }
 
             <div className="flex items-center gap-3 mb-6">
-              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Quantity</p>
-              <div className="flex items-center border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
-                <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="px-3 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"><Minus size={14} /></button>
-                <span className="px-4 py-2 text-sm font-semibold text-gray-900 dark:text-white border-x border-gray-300 dark:border-gray-700">{quantity}</span>
-                <button onClick={() => setQuantity(q => q + 1)} className="px-3 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"><Plus size={14} /></button>
+              <p className="text-sm font-semibold text-gray-700">Quantity</p>
+              <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+                <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="px-3 py-2 text-gray-600 hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
+                <span className="px-4 py-2 text-sm font-semibold text-gray-900 border-x border-gray-300">{quantity}</span>
+                <button onClick={() => setQuantity(q => q + 1)} className="px-3 py-2 text-gray-600 hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
               </div>
             </div>
 
@@ -574,18 +533,18 @@ export default function ProductDetailPage() {
               {product.in_stock ? (
                 <>
                   {isCombo && !canAddToCart && <p className="text-xs text-gray-400 text-center">Select all options to add to cart</p>}
-                  <button onClick={addToCart} disabled={!canAddToCart}
-                    className={`flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm transition-colors ${addedToCart ? "bg-green-500 text-white" : canAddToCart ? "bg-blue-500 hover:bg-blue-400 text-white" : "bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed"}`}>
+                  <button ref={addToCartRef} onClick={addToCart} disabled={!canAddToCart}
+                    className={`flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm transition-colors ${addedToCart ? "bg-green-500 text-white" : canAddToCart ? "bg-blue-500 hover:bg-blue-400 text-white" : "bg-gray-200 text-gray-400 cursor-not-allowed"}`}>
                     {addedToCart ? <><Check size={16} /> Added to Cart</> : <><ShoppingCart size={16} /> Add to Cart</>}
                   </button>
                   <a href={`https://wa.me/2347035378462?text=${waMessage}`} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 border border-gray-900 dark:border-white text-gray-900 dark:text-white hover:bg-gray-900 hover:text-white dark:hover:bg-white dark:hover:text-gray-900 py-3 rounded-lg font-semibold text-sm transition-colors">
+                    className="flex items-center justify-center gap-2 border border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white py-3 rounded-lg font-semibold text-sm transition-colors">
                     <MessageCircle size={16} /> Order via WhatsApp
                   </a>
                 </>
               ) : (
                 <div className="flex flex-col gap-3">
-                  <button disabled className="flex items-center justify-center gap-2 bg-gray-200 dark:bg-gray-800 text-gray-400 py-3 rounded-lg font-semibold text-sm cursor-not-allowed">
+                  <button disabled className="flex items-center justify-center gap-2 bg-gray-200 text-gray-400 py-3 rounded-lg font-semibold text-sm cursor-not-allowed">
                     Out of Stock
                   </button>
                   {notifyStatus === "success" ? (
@@ -594,17 +553,10 @@ export default function ProductDetailPage() {
                     <div className="flex flex-col gap-2">
                       <p className="text-xs text-gray-400 text-center">Get notified when this is back in stock</p>
                       {!authEmail && (
-                        <input
-                          type="email"
-                          value={notifyEmail}
-                          onChange={e => setNotifyEmail(e.target.value)}
-                          placeholder="Your email address"
-                          className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors"
-                        />
+                        <input type="email" value={notifyEmail} onChange={e => setNotifyEmail(e.target.value)}
+                          placeholder="Your email address" className={inputClass + " w-full"} />
                       )}
-                      <button
-                        onClick={submitNotify}
-                        disabled={notifyStatus === "loading"}
+                      <button onClick={submitNotify} disabled={notifyStatus === "loading"}
                         className="flex items-center justify-center gap-2 border border-blue-500/50 text-blue-400 hover:bg-blue-500/10 py-2.5 rounded-lg font-semibold text-sm transition-colors disabled:opacity-50">
                         {notifyStatus === "loading" ? "Saving..." : "Notify Me"}
                       </button>
@@ -619,32 +571,35 @@ export default function ProductDetailPage() {
         </div>
 
         {/* Order Form */}
-        <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl p-8 mb-10">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Place an Order Request</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Fill in your details and we'll get back to you within 24 hours.</p>
+        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 mb-10">
+          <h2 className="text-xl font-bold text-gray-900 mb-1">Place an Order Request</h2>
+          <p className="text-sm text-gray-500 mb-6">Fill in your details and we'll get back to you within 24 hours.</p>
           {formStatus === "success" ? (
-              <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-xl p-4 text-sm">
-                <p className="font-semibold text-blue-700 dark:text-blue-400 mb-2">✓ Order request received! We'll contact you shortly.</p>
-                  {submittedOrderId && (
-                    <>
-                      <p className="text-blue-600 dark:text-blue-500 text-xs mb-1">Your Order ID:</p>
-                      <p className="font-mono font-bold text-blue-700 dark:text-blue-300 text-xs mb-3 break-all">{submittedOrderId}</p>
-                      <a href={`/track?order=${submittedOrderId}&email=${encodeURIComponent(authEmail ?? orderForm.email)}`}
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-500 hover:underline">
-                        Track your order →
-                      </a>
-                    </>
-                  )}
-              </div>
-              ) : (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm">
+              <p className="font-semibold text-blue-700 mb-2">✓ Order request received! We'll contact you shortly.</p>
+              {submittedOrderId && (
+                <>
+                  <p className="text-blue-600 text-xs mb-1">Your Order ID:</p>
+                  <p className="font-mono font-bold text-blue-700 text-xs mb-3 break-all">{submittedOrderId}</p>
+                  <a href={`/track?order=${submittedOrderId}&email=${encodeURIComponent(authEmail ?? orderForm.email)}`}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-500 hover:underline">
+                    Track your order →
+                  </a>
+                </>
+              )}
+            </div>
+          ) : (
             <div className="flex flex-col gap-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <input name="name" value={orderForm.name} onChange={handleInput} placeholder="Your Name" className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors" />
-                <input name="phone" value={orderForm.phone} onChange={handleInput} placeholder="Phone Number" className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors" />
+                <input name="name" value={orderForm.name} onChange={handleInput} placeholder="Your Name" className={inputClass} />
+                <input name="phone" value={orderForm.phone} onChange={handleInput} placeholder="Phone Number" className={inputClass} />
               </div>
-              <input name="email" value={authEmail ?? orderForm.email} onChange={e => !authEmail && handleInput(e)} placeholder="Email Address" type="email" readOnly={!!authEmail}
-                className={`px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors ${authEmail ? "opacity-60 cursor-not-allowed" : ""}`} />
-              <textarea name="message" value={orderForm.message} onChange={handleInput} placeholder="Any specific requirements? (optional)" rows={3} className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors" />
+              <input name="email" value={authEmail ?? orderForm.email} onChange={e => !authEmail && handleInput(e)}
+                placeholder="Email Address" type="email" readOnly={!!authEmail}
+                className={`${inputClass} w-full ${authEmail ? "opacity-60 cursor-not-allowed" : ""}`} />
+              <textarea name="message" value={orderForm.message} onChange={handleInput}
+                placeholder="Any specific requirements? (optional)" rows={3}
+                className={inputClass + " w-full"} />
               {formError && <p className="text-red-500 text-xs">{formError}</p>}
               {effectivePrice && (
                 <button onClick={handlePaystack} disabled={payLoading}
@@ -654,7 +609,7 @@ export default function ProductDetailPage() {
                 </button>
               )}
               <button onClick={submitOrder} disabled={formStatus === "loading"}
-                className="flex items-center justify-center gap-2 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 py-3 rounded-lg font-semibold text-sm transition-colors">
+                className="flex items-center justify-center gap-2 border border-gray-300 text-gray-700 hover:bg-gray-100 py-3 rounded-lg font-semibold text-sm transition-colors">
                 <ShoppingCart size={16} />
                 {formStatus === "loading" ? "Submitting..." : "Request Without Paying"}
               </button>
@@ -662,11 +617,11 @@ export default function ProductDetailPage() {
           )}
         </div>
 
-        {/* Reviews Section */}
+        {/* Reviews */}
         <div className="mb-10">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Customer Reviews</h2>
+              <h2 className="text-xl font-bold text-gray-900">Customer Reviews</h2>
               {avgRating && (
                 <div className="flex items-center gap-2 mt-1">
                   <StarDisplay rating={Math.round(Number(avgRating))} />
@@ -677,27 +632,25 @@ export default function ProductDetailPage() {
           </div>
 
           {!authUserId ? (
-            <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl p-6 mb-6 text-center">
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Sign in to leave a review</p>
-              <Link href="/auth" className="inline-block px-5 py-2 bg-blue-500 hover:bg-blue-400 text-white text-sm font-semibold rounded-lg transition-colors">
-                Sign In
-              </Link>
+            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 mb-6 text-center">
+              <p className="text-sm text-gray-500 mb-3">Sign in to leave a review</p>
+              <Link href="/auth" className="inline-block px-5 py-2 bg-blue-500 hover:bg-blue-400 text-white text-sm font-semibold rounded-lg transition-colors">Sign In</Link>
             </div>
           ) : !hasOrdered ? (
-            <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl p-6 mb-6 text-center">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Only customers who have ordered this product can leave a review.</p>
+            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 mb-6 text-center">
+              <p className="text-sm text-gray-500">Only customers who have ordered this product can leave a review.</p>
             </div>
           ) : alreadyReviewed ? (
-            <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-2xl p-6 mb-6 text-center">
-              <p className="text-sm text-green-700 dark:text-green-400 font-medium">✓ You've already submitted a review for this product.</p>
-              </div>
+            <div className="bg-green-50 border border-green-200 rounded-2xl p-6 mb-6 text-center">
+              <p className="text-sm text-green-700 font-medium">✓ You've already submitted a review for this product.</p>
+            </div>
           ) : reviewStatus === "success" ? (
-            <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-2xl p-6 mb-6 text-center">
-              <p className="text-sm text-blue-700 dark:text-blue-400 font-medium">✓ Review submitted! It'll appear once approved.</p>
+            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 mb-6 text-center">
+              <p className="text-sm text-blue-700 font-medium">✓ Review submitted! It'll appear once approved.</p>
             </div>
           ) : (
-            <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl p-6 mb-6">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Write a Review</h3>
+            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 mb-6">
+              <h3 className="text-sm font-semibold text-gray-900 mb-4">Write a Review</h3>
               <div className="flex flex-col gap-4">
                 <div>
                   <p className="text-xs text-gray-500 mb-2">Your rating</p>
@@ -705,7 +658,7 @@ export default function ProductDetailPage() {
                 </div>
                 <textarea value={reviewBody} onChange={e => setReviewBody(e.target.value)}
                   placeholder="Share your experience with this product..." rows={4}
-                  className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors resize-none" />
+                  className={inputClass + " w-full resize-none"} />
                 {reviewError && <p className="text-red-500 text-xs">{reviewError}</p>}
                 <button onClick={submitReview} disabled={reviewStatus === "loading"}
                   className="self-start flex items-center gap-2 px-6 py-2.5 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors">
@@ -721,80 +674,75 @@ export default function ProductDetailPage() {
           ) : (
             <div className="flex flex-col gap-4">
               {reviews.map(r => (
-                <div key={r.id} className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+                <div key={r.id} className="bg-gray-50 border border-gray-200 rounded-2xl p-6">
                   <div className="flex items-center justify-between mb-3">
                     <StarDisplay rating={r.rating} />
                     <span className="text-xs text-gray-400">
                       {new Date(r.created_at).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{r.body}</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{r.body}</p>
                 </div>
               ))}
             </div>
           )}
         </div>
-           {/* Related Products */}
-      {relatedProducts.length > 0 && (
-        <div className="max-w-4xl mx-auto mt-4 mb-10">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">You Might Also Like</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {relatedProducts.map(p => {
-              const relatedPrice = p.price_naira
-                ?? (p.variants?.flatMap((v: Variant) => v.prices ?? []).sort((a: number, b: number) => a - b)[0] ?? null)
-                ?? (p.variants?.find((v: Variant) => v.combo_prices)
-                    ? Math.min(...Object.values(p.variants!.find((v: Variant) => v.combo_prices)!.combo_prices!))
-                    : null);
-              return (
-                <Link key={p.id} href={`/shop/${p.slug}`}
-                  className="group rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden hover:border-blue-500 transition-colors bg-gray-50 dark:bg-[#1a1a1a]">
-                  <div className="aspect-square bg-white dark:bg-[#111] flex items-center justify-center p-3 relative">
-                    {p.image_url
-                      ? <img src={p.image_url} alt={p.name}
-                          className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" />
-                      : <span className="text-2xl">📦</span>
-                    }
-                    {!p.in_stock && (
-                      <span className="absolute top-2 left-2 text-[10px] font-bold bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">
-                        Out of stock
-                      </span>
-                    )}
-                  </div>
-                  <div className="p-3">
-                    <p className="text-xs font-medium text-gray-900 dark:text-white line-clamp-2 leading-snug mb-1">{p.name}</p>
-                    {relatedPrice ? (
-                      <p className="text-xs font-bold text-blue-500">
-                        {p.price_naira ? "" : "from "}₦{relatedPrice.toLocaleString()}
-                      </p>
-                    ) : (
-                      <p className="text-xs text-gray-400">Price on request</p>
-                    )}
-                  </div>
-                </Link>
-              );
-            })}
+
+        {/* Related Products */}
+        {relatedProducts.length > 0 && (
+          <div className="mt-4 mb-10">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">You Might Also Like</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {relatedProducts.map(p => {
+                const relatedPrice = p.price_naira
+                  ?? (p.variants?.flatMap((v: Variant) => v.prices ?? []).sort((a: number, b: number) => a - b)[0] ?? null)
+                  ?? (p.variants?.find((v: Variant) => v.combo_prices)
+                      ? Math.min(...Object.values(p.variants!.find((v: Variant) => v.combo_prices)!.combo_prices!))
+                      : null);
+                return (
+                  <Link key={p.id} href={`/shop/${p.slug}`}
+                    className="group rounded-xl border border-gray-200 overflow-hidden hover:border-blue-500 transition-colors bg-gray-50">
+                    <div className="aspect-square bg-white flex items-center justify-center p-3 relative">
+                      {p.image_url
+                        ? <img src={p.image_url} alt={p.name} className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" />
+                        : <span className="text-2xl">📦</span>
+                      }
+                      {!p.in_stock && (
+                        <span className="absolute top-2 left-2 text-[10px] font-bold bg-gray-200 text-gray-500 px-2 py-0.5 rounded-full">Out of stock</span>
+                      )}
+                    </div>
+                    <div className="p-3">
+                      <p className="text-xs font-medium text-gray-900 line-clamp-2 leading-snug mb-1">{p.name}</p>
+                      {relatedPrice
+                        ? <p className="text-xs font-bold text-blue-500">{p.price_naira ? "" : "from "}₦{relatedPrice.toLocaleString()}</p>
+                        : <p className="text-xs text-gray-400">Price on request</p>
+                      }
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        )}
       </div>
+
+      {/* Recently Viewed */}
       {recentlyViewed.length > 0 && (
-        <div className="mt-4 mb-10">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Recently Viewed</h2>
+        <div className="max-w-4xl mx-auto mt-4 mb-10">
+          <h2 className="text-xl font-bold text-gray-900 mb-6">Recently Viewed</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
             {recentlyViewed.map(p => (
               <Link key={p.id} href={`/shop/${p.slug}`}
-                className="group rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden hover:border-blue-500 transition-colors">
-                <div className="aspect-square bg-gray-50 dark:bg-[#111] flex items-center justify-center p-2">
+                className="group rounded-xl border border-gray-100 overflow-hidden hover:border-blue-500 transition-colors">
+                <div className="aspect-square bg-gray-50 flex items-center justify-center p-2">
                   {p.image_url
                     ? <img src={p.image_url} alt={p.name} className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" />
                     : <span className="text-2xl">📦</span>
                   }
                 </div>
                 <div className="p-2">
-                  <p className="text-xs font-medium text-gray-900 dark:text-white line-clamp-2 leading-snug">{p.name}</p>
-                  {p.price_naira && (
-                    <p className="text-xs font-semibold text-blue-500 mt-1">₦{p.price_naira.toLocaleString()}</p>
-                  )}
+                  <p className="text-xs font-medium text-gray-900 line-clamp-2 leading-snug">{p.name}</p>
+                  {p.price_naira && <p className="text-xs font-semibold text-blue-500 mt-1">₦{p.price_naira.toLocaleString()}</p>}
                 </div>
               </Link>
             ))}
