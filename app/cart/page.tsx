@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { Trash2, Plus, Minus, ShoppingCart, ArrowLeft, MessageCircle, CreditCard, Loader2 } from "lucide-react";
-import PromoCodeInput from "@/components/PromoCodeInput";
+import TrustBadges from "@/components/TrustBadges";
 
 type CartItem = {
   id: string;
@@ -331,6 +331,7 @@ export default function CartPage() {
                   className={inputClass + " w-full"} />
 
                 {formError && <p className="text-red-500 text-xs">{formError}</p>}
+                <TrustBadges />
 
                 {hasAllPrices && total > 0 && (
                   <button onClick={handlePaystack} disabled={payLoading}

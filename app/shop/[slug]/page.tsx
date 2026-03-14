@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { MessageCircle, ShoppingCart, ArrowLeft, Plus, Minus, Check, Share2, Copy, CheckCheck, CreditCard, Loader2, Star } from "lucide-react";
 import Link from "next/link";
-import { addRecentlyViewed, getRecentlyViewed, type RecentProduct } from "@/lib/recentlyViewed";
+import TrustBadges from "@/components/TrustBadges";
 
 type Variant = {
   name?: string;
@@ -567,6 +567,7 @@ export default function ProductDetailPage() {
               )}
             </div>
             <ShareBar name={product.name} slug={product.slug} />
+            <TrustBadges />
           </div>
         </div>
 
