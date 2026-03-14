@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function POST(req: NextRequest) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
   const { code, total_naira } = await req.json();
 
   if (!code || !total_naira) {
@@ -24,29 +24,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid or expired promo code." }, { status: 404 });
   }
 
-  // Expiry check
   if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
     return NextResponse.json({ error: "This promo code has expired." }, { status: 400 });
   }
 
-  // Usage limit check
   if (promo.max_uses !== null && promo.uses >= promo.max_uses) {
     return NextResponse.json({ error: "This promo code has reached its usage limit." }, { status: 400 });
   }
 
-  // Minimum order check
   if (promo.min_order_naira && total_naira < promo.min_order_naira) {
     return NextResponse.json({
       error: `Minimum order of ₦${promo.min_order_naira.toLocaleString()} required for this code.`
     }, { status: 400 });
   }
 
-  // Calculate discount
   let discount = 0;
   if (promo.type === "percent") {
     discount = Math.round((promo.value / 100) * total_naira);
   } else {
-    discount = Math.min(promo.value, total_naira); // fixed, can't exceed total
+    discount = Math.min(promo.value, total_naira);
   }
 
   return NextResponse.json({
