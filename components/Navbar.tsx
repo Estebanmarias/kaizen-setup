@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Menu, X, Sun, Moon, User, LogOut, ChevronDown, ShoppingCart, Search } from "lucide-react";
+import { Menu, X, User, LogOut, ChevronDown, ShoppingCart, Search } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
@@ -25,10 +25,6 @@ export default function Navbar() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [dark, setDark] = useState(() =>
-    typeof window !== "undefined" && document.documentElement.classList.contains("dark")
-  );
-  const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [exploreOpen, setExploreOpen] = useState(false);
@@ -44,7 +40,6 @@ export default function Navbar() {
   };
 
   useEffect(() => {
-    setMounted(true);
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", onScroll);
 
@@ -56,7 +51,6 @@ export default function Navbar() {
     updateCartCount();
     window.addEventListener("cart_updated", updateCartCount);
 
-    // Close dropdowns on outside click
     const onClickOutside = (e: MouseEvent) => {
       if (exploreRef.current && !exploreRef.current.contains(e.target as Node)) setExploreOpen(false);
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setUserMenuOpen(false);
@@ -70,12 +64,6 @@ export default function Navbar() {
       listener?.subscription.unsubscribe();
     };
   }, []);
-
-  const toggleDark = () => {
-    const isDark = document.documentElement.classList.toggle("dark");
-    localStorage.setItem("theme", isDark ? "dark" : "light");
-    setDark(isDark);
-  };
 
   const signOut = async () => {
     await supabase?.auth.signOut();
@@ -107,24 +95,24 @@ export default function Navbar() {
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
       scrolled
-        ? "bg-white/95 dark:bg-[#0f0f0f]/95 backdrop-blur border-gray-200 dark:border-gray-800"
+        ? "bg-white/95 backdrop-blur border-gray-200"
         : "bg-transparent border-transparent"
     }`}>
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
 
         {/* Logo */}
-        <Link href="/" className="font-semibold text-lg sm:text-xl tracking-tight text-gray-900 dark:text-white flex-shrink-0">
+        <Link href="/" className="font-semibold text-lg sm:text-xl tracking-tight text-gray-900 flex-shrink-0">
           Kaizen<span className="text-blue-500">Setup</span>
         </Link>
 
         {/* Desktop nav — pill container */}
-        <div className="hidden md:flex items-center gap-1 bg-gray-100 dark:bg-white/[0.06] border border-gray-300 dark:border-white/[0.08] rounded-full px-2 py-1.5">
+        <div className="hidden md:flex items-center gap-1 bg-gray-100 border border-gray-300 rounded-full px-2 py-1.5">
           {PRIMARY_LINKS.map((l) => (
             <Link key={l.label} href={l.href}
               className={`text-sm font-medium px-4 py-1.5 rounded-full transition-all whitespace-nowrap ${
                 isActive(l.href)
-                  ? "bg-white dark:bg-white/10 text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/[0.06]"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-900 hover:bg-white/60"
               }`}>
               {l.label}
             </Link>
@@ -136,19 +124,19 @@ export default function Navbar() {
               onClick={() => setExploreOpen(v => !v)}
               className={`flex items-center gap-1 text-sm font-medium px-4 py-1.5 rounded-full transition-all whitespace-nowrap ${
                 exploreOpen
-                  ? "bg-white dark:bg-white/10 text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/[0.06]"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-900 hover:bg-white/60"
               }`}>
               Explore
               <ChevronDown size={13} className={`transition-transform duration-200 ${exploreOpen ? "rotate-180" : ""}`} />
             </button>
             {exploreOpen && (
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-44 bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden">
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-44 bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden">
                 <div className="p-1.5">
                   {EXPLORE_LINKS.map((l) => (
                     <Link key={l.label} href={l.href}
                       onClick={() => setExploreOpen(false)}
-                      className="block px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/[0.04] rounded-xl transition-colors">
+                      className="block px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition-colors">
                       {l.label}
                     </Link>
                   ))}
@@ -162,19 +150,19 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-3 flex-shrink-0">
 
           {/* Search */}
-          <form onSubmit={handleSearch} className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5">
+          <form onSubmit={handleSearch} className="flex items-center gap-2 bg-gray-100 rounded-full px-3 py-1.5">
             <Search size={14} className="text-gray-400 shrink-0" />
             <input
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search..."
-              className="bg-transparent text-sm text-gray-700 dark:text-gray-200 placeholder-gray-400 outline-none w-28 focus:w-40 transition-all duration-200"
+              className="bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none w-28 focus:w-40 transition-all duration-200"
             />
           </form>
 
           {/* Cart */}
-          <Link href="/cart" aria-label="View cart" className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
+          <Link href="/cart" aria-label="View cart" className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors">
             <ShoppingCart size={20} />
             {cartCount > 0 && (
               <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
@@ -183,30 +171,24 @@ export default function Navbar() {
             )}
           </Link>
 
-          {/* Dark mode */}
-          <button onClick={toggleDark} aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-            className="p-2 rounded-full border border-gray-200 dark:border-gray-700 hover:border-gray-900 dark:hover:border-white transition-colors text-gray-600 dark:text-gray-300">
-            {mounted ? (dark ? <Sun size={16} /> : <Moon size={16} />) : <Moon size={16} />}
-          </button>
-
           {/* Auth */}
           {user ? (
             <div ref={userMenuRef} className="relative">
               <button onClick={() => setUserMenuOpen(v => !v)}
-                className="flex items-center gap-2 border border-gray-200 dark:border-gray-700 rounded-full pl-1 pr-3 py-1 hover:border-blue-500 transition-colors">
+                className="flex items-center gap-2 border border-gray-200 rounded-full pl-1 pr-3 py-1 hover:border-blue-500 transition-colors">
                 <img src={avatarUrl} alt={displayName ?? ""} className="w-7 h-7 rounded-full object-cover bg-blue-500" />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 max-w-[90px] truncate">{displayName}</span>
+                <span className="text-sm font-medium text-gray-700 max-w-[90px] truncate">{displayName}</span>
                 <ChevronDown size={14} className={`text-gray-400 transition-transform duration-200 ${userMenuOpen ? "rotate-180" : ""}`} />
               </button>
               {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden">
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden">
                   <div className="p-1.5">
                     <Link href="/account" onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/[0.04] rounded-xl transition-colors">
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-xl transition-colors">
                       <User size={14} /> My Account
                     </Link>
                     <button onClick={signOut}
-                      className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/[0.06] rounded-xl transition-colors">
+                      className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 rounded-xl transition-colors">
                       <LogOut size={14} /> Sign Out
                     </button>
                   </div>
@@ -224,10 +206,10 @@ export default function Navbar() {
         {/* Mobile right actions */}
         <div className="md:hidden flex items-center gap-1 flex-shrink-0">
           <button onClick={() => { setMobileSearchOpen(v => !v); setMenuOpen(false); }} aria-label="Search"
-            className="p-2 text-gray-600 dark:text-gray-300">
+            className="p-2 text-gray-600">
             <Search size={20} />
           </button>
-          <Link href="/cart" className="relative p-2 text-gray-600 dark:text-gray-300">
+          <Link href="/cart" className="relative p-2 text-gray-600">
             <ShoppingCart size={20} />
             {cartCount > 0 && (
               <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
@@ -235,12 +217,8 @@ export default function Navbar() {
               </span>
             )}
           </Link>
-          <button onClick={toggleDark} aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-            className="p-2 rounded-full border border-gray-200 dark:border-gray-700 transition-colors text-gray-600 dark:text-gray-300">
-            {mounted ? (dark ? <Sun size={16} /> : <Moon size={16} />) : <Moon size={16} />}
-          </button>
           <button onClick={() => { setMenuOpen(!menuOpen); setMobileSearchOpen(false); }} aria-label={menuOpen ? "Close menu" : "Open menu"}
-            className="p-2 text-gray-700 dark:text-gray-300">
+            className="p-2 text-gray-700">
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
@@ -248,7 +226,7 @@ export default function Navbar() {
 
       {/* Mobile search bar */}
       {mobileSearchOpen && (
-        <div className="md:hidden bg-white dark:bg-[#0f0f0f] border-t border-gray-100 dark:border-gray-800 px-4 py-3">
+        <div className="md:hidden bg-white border-t border-gray-100 px-4 py-3">
           <form onSubmit={handleSearch} className="flex gap-2">
             <input
               type="text"
@@ -256,7 +234,7 @@ export default function Navbar() {
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search products, blog posts..."
               autoFocus
-              className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium">Go</button>
           </form>
@@ -265,42 +243,41 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="md:hidden fixed inset-0 top-[57px] bg-white dark:bg-[#0f0f0f] border-t border-gray-100 dark:border-gray-800 px-4 py-4 flex flex-col gap-1 overflow-y-auto z-40">
+        <div className="md:hidden fixed inset-0 top-[57px] bg-white border-t border-gray-100 px-4 py-4 flex flex-col gap-1 overflow-y-auto z-40">
           {PRIMARY_LINKS.map((l) => (
             <Link key={l.label} href={l.href} onClick={() => setMenuOpen(false)}
               className={`text-sm font-medium px-3 py-2.5 rounded-lg transition-colors ${
                 isActive(l.href)
-                  ? "bg-blue-50 dark:bg-blue-500/10 text-blue-500"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/[0.04]"
+                  ? "bg-blue-50 text-blue-500"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
               }`}>
               {l.label}
             </Link>
           ))}
 
-          {/* Explore section in mobile */}
-          <div className="border-t border-gray-100 dark:border-gray-800 mt-1 pt-2">
+          <div className="border-t border-gray-100 mt-1 pt-2">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 py-1.5">Explore</p>
             {EXPLORE_LINKS.map((l) => (
               <Link key={l.label} href={l.href} onClick={() => setMenuOpen(false)}
-                className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white px-3 py-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-white/[0.04] transition-colors block">
+                className="text-sm font-medium text-gray-600 hover:text-gray-900 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors block">
                 {l.label}
               </Link>
             ))}
           </div>
 
-          <div className="border-t border-gray-100 dark:border-gray-800 mt-1 pt-2">
+          <div className="border-t border-gray-100 mt-1 pt-2">
             {user ? (
               <>
                 <div className="flex items-center gap-3 px-3 py-2 mb-1">
                   <img src={avatarUrl} alt={displayName ?? ""} className="w-8 h-8 rounded-full object-cover bg-blue-500 flex-shrink-0" />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{displayName}</span>
+                  <span className="text-sm font-medium text-gray-700 truncate">{displayName}</span>
                 </div>
                 <Link href="/account" onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-white/[0.04] transition-colors">
+                  className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-50 transition-colors">
                   <User size={15} /> My Account
                 </Link>
                 <button onClick={signOut}
-                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/[0.06] transition-colors">
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-red-500 rounded-lg hover:bg-red-50 transition-colors">
                   <LogOut size={15} /> Sign Out
                 </button>
               </>
