@@ -32,16 +32,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
   const [checking, setChecking] = useState(true);
+  const [authed, setAuthed] = useState(false);
 
   useEffect(() => {
+    if (pathname === "/admin/login") {
+      setChecking(false);
+      return;
+    }
     getSession().then(session => {
-      if (!session && pathname !== "/admin/login") router.replace("/admin/login");
+      if (!session) {
+        router.replace("/admin/login");
+      } else {
+        setAuthed(true);
+      }
       setChecking(false);
     });
   }, [pathname]);
 
+  // Always render login page immediately — no auth check needed
   if (pathname === "/admin/login") return <>{children}</>;
-  if (checking) return (
+
+  // Block ALL rendering until auth resolves
+  if (checking || !authed) return (
     <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
       <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
     </div>
@@ -55,7 +67,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* ── Desktop Sidebar ── */}
       <aside className="hidden md:flex w-56 flex-shrink-0 border-r border-white/[0.06] flex-col bg-[#0f0f0f]">
-        {/* Brand */}
         <div className="p-5 border-b border-white/[0.06]">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center flex-shrink-0">
@@ -68,7 +79,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </div>
 
-        {/* Nav links */}
         <nav className="flex-1 p-3 flex flex-col gap-0.5">
           {NAV.map(({ label, href, icon: Icon }) => {
             const active = pathname === href || (href !== "/admin" && pathname.startsWith(href));
@@ -86,7 +96,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </nav>
 
-        {/* Sign out */}
         <div className="p-3 border-t border-white/[0.06]">
           <button
             onClick={async () => { await signOut(); router.replace("/admin/login"); }}
@@ -99,21 +108,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* ── Main content ── */}
       <div className="flex-1 flex flex-col overflow-hidden">
-
-        {/* Top bar */}
         <header className="h-14 border-b border-white/[0.06] flex items-center justify-between px-4 md:px-8 flex-shrink-0 bg-[#0f0f0f]/50 backdrop-blur">
-          {/* Mobile brand */}
           <div className="flex items-center gap-2 md:hidden">
             <div className="w-6 h-6 rounded-md bg-blue-500 flex items-center justify-center">
               <Zap size={12} className="text-white" fill="white" />
             </div>
             <p className="font-bold text-white text-sm">KaizenSetup</p>
           </div>
-          {/* Desktop title */}
           <h1 className="hidden md:block text-sm font-semibold text-white">{pageTitle}</h1>
           <div className="flex items-center gap-3">
             <p className="text-xs text-gray-500 hidden sm:block">{today}</p>
-            {/* Mobile sign out */}
             <button
               onClick={async () => { await signOut(); router.replace("/admin/login"); }}
               className="md:hidden p-2 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/[0.06] transition-all">
@@ -122,7 +126,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </header>
 
-        {/* Page content — extra bottom padding on mobile for tab bar */}
         <main className="flex-1 overflow-auto pb-20 md:pb-0">
           {children}
         </main>
@@ -143,7 +146,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           );
         })}
       </nav>
-
     </div>
   );
 }
