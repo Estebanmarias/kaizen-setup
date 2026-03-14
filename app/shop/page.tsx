@@ -31,7 +31,6 @@ type Product = {
   variants: Variant[] | null;
 };
 
-
 type CartItem = {
   id: string;
   name: string;
@@ -43,7 +42,6 @@ type CartItem = {
 };
 
 type FlyItem = { src: string; startX: number; startY: number; id: number };
-
 type ReviewSummary = { avg: number; count: number };
 
 const colorMap: Record<string, { bg: string; text: string }> = {
@@ -76,15 +74,12 @@ function allComboSelected(v: Variant[] | null, sel: Record<string, string>) {
   return v?.filter(x => x.name && x.options).every(g => !!sel[g.name!]) ?? true;
 }
 
-// ── Mini star display for grid cards ────────────────────────────────────────
 function MiniStars({ avg, count }: { avg: number; count: number }) {
   return (
     <div className="flex items-center gap-1 mb-2">
       <div className="flex gap-0.5">
-        {[1, 2, 3, 4, 5].map(n => (
-          <Star key={n} size={11}
-            className={n <= Math.round(avg) ? "fill-yellow-400 text-yellow-400" : "text-gray-300 dark:text-gray-700"}
-          />
+        {[1,2,3,4,5].map(n => (
+          <Star key={n} size={11} className={n <= Math.round(avg) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"} />
         ))}
       </div>
       <span className="text-xs text-gray-400">({count})</span>
@@ -107,11 +102,11 @@ function ComboPriceTable({ variants }: { variants: Variant[] }) {
       </thead>
       <tbody>
         {rG.options!.map(row => (
-          <tr key={row} className="border-t border-gray-100 dark:border-gray-800">
-            <td className="py-1.5 text-gray-700 dark:text-gray-300 font-medium pr-3">{row}</td>
+          <tr key={row} className="border-t border-gray-100">
+            <td className="py-1.5 text-gray-700 font-medium pr-3">{row}</td>
             {cG.options!.map(col => {
               const price = cp[`${row}|${col}`];
-              return <td key={col} className="py-1.5 text-right text-gray-900 dark:text-white font-semibold">{price ? `₦${(price/1000).toFixed(0)}k` : "—"}</td>;
+              return <td key={col} className="py-1.5 text-right text-gray-900 font-semibold">{price ? `₦${(price/1000).toFixed(0)}k` : "—"}</td>;
             })}
           </tr>
         ))}
@@ -185,22 +180,21 @@ function QuickAddDrawer({ product, onClose, onAdded }: {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:justify-end">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full sm:max-w-sm bg-white dark:bg-[#111] flex flex-col shadow-2xl animate-slide-in
-            rounded-t-2xl sm:rounded-none sm:h-full max-h-[85vh] sm:max-h-full overflow-y-auto">
-        <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-800">
-          <h2 className="font-bold text-gray-900 dark:text-white">Quick Add</h2>
-          <button onClick={onClose} aria-label="Close drawer" className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"><X size={20} /></button>
+      <div className="relative w-full sm:max-w-sm bg-white flex flex-col shadow-2xl animate-slide-in rounded-t-2xl sm:rounded-none sm:h-full max-h-[85vh] sm:max-h-full overflow-y-auto">
+        <div className="flex items-center justify-between p-5 border-b border-gray-200">
+          <h2 className="font-bold text-gray-900">Quick Add</h2>
+          <button onClick={onClose} aria-label="Close drawer" className="text-gray-400 hover:text-gray-900 transition-colors"><X size={20} /></button>
         </div>
         <div className="overflow-y-auto p-5 flex flex-col gap-5">
           <div className="flex gap-4">
-            <div className="relative w-20 h-20 bg-gray-50 dark:bg-[#1a1a1a] rounded-xl flex-shrink-0 border border-gray-200 dark:border-gray-800 overflow-hidden">
+            <div className="relative w-20 h-20 bg-gray-50 rounded-xl flex-shrink-0 border border-gray-200 overflow-hidden">
               <Image src={imgSrc} alt={product.name} fill className="object-contain p-1" />
             </div>
             <div>
               <p className="text-xs font-semibold text-blue-500 mb-1">{product.category}</p>
-              <h3 className="font-semibold text-gray-900 dark:text-white text-sm leading-snug">{product.name}</h3>
+              <h3 className="font-semibold text-gray-900 text-sm leading-snug">{product.name}</h3>
               {displayPrice ? (
-                <p className="font-bold text-gray-900 dark:text-white mt-1">₦{displayPrice.toLocaleString()}</p>
+                <p className="font-bold text-gray-900 mt-1">₦{displayPrice.toLocaleString()}</p>
               ) : isCombo ? (
                 <p className="text-xs text-gray-400 mt-1">Select options to see price</p>
               ) : (
@@ -212,7 +206,7 @@ function QuickAddDrawer({ product, onClose, onAdded }: {
             <div className="flex flex-col gap-4">
               {namedVariants.map(variant => (
                 <div key={variant.name}>
-                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <p className="text-sm font-semibold text-gray-700 mb-2">
                     {variant.name}{sel[variant.name!] && <span className="font-normal text-blue-500 ml-2">{sel[variant.name!]}</span>}
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -223,14 +217,14 @@ function QuickAddDrawer({ product, onClose, onAdded }: {
                           return (
                             <button key={opt} onClick={() => setSel(p => ({ ...p, [variant.name!]: opt }))}
                               style={isSelected ? { backgroundColor: colors?.bg, color: colors?.text } : {}}
-                              className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors ${isSelected ? "border-transparent" : "border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-blue-500"}`}>
+                              className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors ${isSelected ? "border-transparent" : "border-gray-300 text-gray-600 hover:border-blue-500"}`}>
                               {opt}
                             </button>
                           );
                         })
                       : variant.options!.map(opt => (
                           <button key={opt} onClick={() => setSel(p => ({ ...p, [variant.name!]: opt }))}
-                            className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors ${sel[variant.name!] === opt ? "bg-blue-500 text-white border-blue-500" : "border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-blue-500"}`}>
+                            className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors ${sel[variant.name!] === opt ? "bg-blue-500 text-white border-blue-500" : "border-gray-300 text-gray-600 hover:border-blue-500"}`}>
                             {opt}
                           </button>
                         ))}
@@ -240,21 +234,21 @@ function QuickAddDrawer({ product, onClose, onAdded }: {
             </div>
           )}
           <div className="flex items-center gap-3">
-            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Quantity</p>
-            <div className="flex items-center border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
-              <button onClick={() => setQty(q => Math.max(1, q - 1))} aria-label="Decrease quantity" className="px-3 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"><Minus size={14} /></button>
-              <span className="px-4 py-2 text-sm font-semibold text-gray-900 dark:text-white border-x border-gray-300 dark:border-gray-700">{qty}</span>
-              <button onClick={() => setQty(q => q + 1)} aria-label="Increase quantity" className="px-3 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"><Plus size={14} /></button>
+            <p className="text-sm font-semibold text-gray-700">Quantity</p>
+            <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+              <button onClick={() => setQty(q => Math.max(1, q - 1))} aria-label="Decrease quantity" className="px-3 py-2 text-gray-600 hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
+              <span className="px-4 py-2 text-sm font-semibold text-gray-900 border-x border-gray-300">{qty}</span>
+              <button onClick={() => setQty(q => q + 1)} aria-label="Increase quantity" className="px-3 py-2 text-gray-600 hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
             </div>
           </div>
           <Link href={`/shop/${product.slug}`} onClick={onClose} className="text-sm text-blue-500 hover:underline flex items-center gap-1">
             View full product details <ArrowRight size={12} />
           </Link>
         </div>
-        <div className="p-5 border-t border-gray-200 dark:border-gray-800 flex flex-col gap-2">
+        <div className="p-5 border-t border-gray-200 flex flex-col gap-2">
           {isCombo && !canAdd && <p className="text-xs text-center text-gray-400">Select all options to add to cart</p>}
           <button onClick={addToCart} disabled={!canAdd}
-            className={`w-full min-h-[48px] flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm transition-colors ${added ? "bg-green-500 text-white" : canAdd ? "bg-blue-500 hover:bg-blue-400 text-white" : "bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed"}`}>
+            className={`w-full min-h-[48px] flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm transition-colors ${added ? "bg-green-500 text-white" : canAdd ? "bg-blue-500 hover:bg-blue-400 text-white" : "bg-gray-200 text-gray-400 cursor-not-allowed"}`}>
             <ShoppingCart size={16} />{added ? "Added!" : "Add to Cart"}
           </button>
         </div>
@@ -307,53 +301,53 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-sm bg-white dark:bg-[#111] h-full flex flex-col shadow-2xl">
-        <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-800">
-          <h2 className="font-bold text-gray-900 dark:text-white">Your Cart ({cart.reduce((s, i) => s + i.quantity, 0)})</h2>
-          <button onClick={onClose} aria-label="Close cart" className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"><X size={20} /></button>
+      <div className="relative w-full max-w-sm bg-white h-full flex flex-col shadow-2xl">
+        <div className="flex items-center justify-between p-5 border-b border-gray-200">
+          <h2 className="font-bold text-gray-900">Your Cart ({cart.reduce((s, i) => s + i.quantity, 0)})</h2>
+          <button onClick={onClose} aria-label="Close cart" className="text-gray-400 hover:text-gray-900 transition-colors"><X size={20} /></button>
         </div>
         <div className="overflow-y-auto p-5 flex flex-col gap-4">
           {cart.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
-              <ShoppingCart size={40} className="text-gray-300 dark:text-gray-700 mb-3" />
+              <ShoppingCart size={40} className="text-gray-300 mb-3" />
               <p className="text-gray-400 text-sm">Your cart is empty</p>
             </div>
           ) : cart.map(item => (
-            <div key={item.id} className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl p-3">
+            <div key={item.id} className="bg-gray-50 border border-gray-200 rounded-xl p-3">
               <div className="flex gap-3">
-                <div className="relative w-14 h-14 bg-white dark:bg-[#111] rounded-lg flex-shrink-0 border border-gray-100 dark:border-gray-800 overflow-hidden">
+                <div className="relative w-14 h-14 bg-white rounded-lg flex-shrink-0 border border-gray-100 overflow-hidden">
                   <Image src={item.image_url ?? "/images/products/placeholder.jpg"} alt={item.name} fill className="object-contain p-1" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-xs text-gray-900 dark:text-white truncate">{item.name}</p>
+                  <p className="font-semibold text-xs text-gray-900 truncate">{item.name}</p>
                   {Object.entries(item.variants).length > 0 && editingId !== item.id && (
                     <p className="text-xs text-gray-400 mt-0.5">{Object.entries(item.variants).map(([k, v]) => `${k}: ${v}`).join(" · ")}</p>
                   )}
-                  {item.price_naira && <p className="text-xs font-bold text-gray-900 dark:text-white mt-1">₦{(item.price_naira * item.quantity).toLocaleString()}</p>}
+                  {item.price_naira && <p className="text-xs font-bold text-gray-900 mt-1">₦{(item.price_naira * item.quantity).toLocaleString()}</p>}
                 </div>
                 <button onClick={() => remove(item.id)} aria-label={`Remove ${item.name}`} className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"><Trash2 size={14} /></button>
               </div>
               {editingId === item.id && (
-                <div className="mt-3 flex flex-col gap-2 border-t border-gray-200 dark:border-gray-700 pt-3">
+                <div className="mt-3 flex flex-col gap-2 border-t border-gray-200 pt-3">
                   <p className="text-xs text-gray-400">Edit selections then save:</p>
                   {Object.entries(editVariants).map(([k, v]) => (
                     <div key={k} className="flex items-center gap-2">
                       <span className="text-xs text-gray-500 w-16 flex-shrink-0">{k}</span>
                       <input value={v} onChange={e => setEditVariants(p => ({ ...p, [k]: e.target.value }))}
-                        className="flex-1 px-2 py-1 text-xs rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-gray-900 dark:text-white focus:outline-none focus:border-blue-500" />
+                        className="flex-1 px-2 py-1 text-xs rounded border border-gray-300 bg-white text-gray-900 focus:outline-none focus:border-blue-500" />
                     </div>
                   ))}
                   <div className="flex gap-2 mt-1">
                     <button onClick={() => saveEdit(item)} className="flex-1 bg-blue-500 hover:bg-blue-400 text-white text-xs py-1.5 rounded-lg font-semibold transition-colors">Save</button>
-                    <button onClick={() => setEditingId(null)} className="flex-1 border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 text-xs py-1.5 rounded-lg font-semibold transition-colors">Cancel</button>
+                    <button onClick={() => setEditingId(null)} className="flex-1 border border-gray-300 text-gray-600 text-xs py-1.5 rounded-lg font-semibold transition-colors">Cancel</button>
                   </div>
                 </div>
               )}
               <div className="flex items-center justify-between mt-3">
-                <div className="flex items-center border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
-                  <button onClick={() => updateQty(item.id, -1)} aria-label="Decrease quantity" className="px-2 py-1 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"><Minus size={11} /></button>
-                  <span className="px-3 py-1 text-xs font-semibold text-gray-900 dark:text-white border-x border-gray-300 dark:border-gray-700">{item.quantity}</span>
-                  <button onClick={() => updateQty(item.id, 1)} aria-label="Increase quantity" className="px-2 py-1 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"><Plus size={11} /></button>
+                <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+                  <button onClick={() => updateQty(item.id, -1)} aria-label="Decrease quantity" className="px-2 py-1 text-gray-600 hover:bg-gray-100 transition-colors"><Minus size={11} /></button>
+                  <span className="px-3 py-1 text-xs font-semibold text-gray-900 border-x border-gray-300">{item.quantity}</span>
+                  <button onClick={() => updateQty(item.id, 1)} aria-label="Increase quantity" className="px-2 py-1 text-gray-600 hover:bg-gray-100 transition-colors"><Plus size={11} /></button>
                 </div>
                 {Object.keys(item.variants).length > 0 && (
                   <button onClick={() => editingId === item.id ? setEditingId(null) : startEdit(item)} className="text-xs text-blue-500 hover:underline">
@@ -365,10 +359,10 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
           ))}
         </div>
         {cart.length > 0 && (
-        <div className="p-5 border-t border-gray-200 dark:border-gray-800 flex flex-col gap-3 sm:mt-auto">
+          <div className="p-5 border-t border-gray-200 flex flex-col gap-3 sm:mt-auto">
             {total > 0 && (
               <div className="flex justify-between text-sm font-bold">
-                <span className="text-gray-900 dark:text-white">Total</span>
+                <span className="text-gray-900">Total</span>
                 <span className="text-blue-500">₦{total.toLocaleString()}</span>
               </div>
             )}
@@ -391,8 +385,8 @@ function WishlistButton({ productId, wishlisted, onToggle }: {
       aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
       className={`w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm border ${
         wishlisted
-          ? "bg-red-50 border-red-200 dark:bg-red-950/40 dark:border-red-800 text-red-500"
-          : "bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-gray-700 text-gray-400 hover:text-red-500 hover:border-red-300"
+          ? "bg-red-50 border-red-200 text-red-500"
+          : "bg-white border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-300"
       }`}>
       <Heart size={14} className={wishlisted ? "fill-red-500" : ""} />
     </button>
@@ -416,7 +410,7 @@ export default function ShopPage() {
   const [reviewMap, setReviewMap] = useState<Record<string, ReviewSummary>>({});
   const [recentlyViewed, setRecentlyViewed] = useState<RecentProduct[]>([]);
   const cartBtnRef = useRef<HTMLButtonElement>(null);
-  const flyId = useRef(0);  
+  const flyId = useRef(0);
   const [cartEndX, setCartEndX] = useState(0);
   const [cartEndY, setCartEndY] = useState(0);
 
@@ -427,17 +421,13 @@ export default function ShopPage() {
       supabase.from("reviews").select("product_id, rating").eq("status", "approved"),
     ]).then(([{ data: prods }, { data: revs }]) => {
       setProducts(prods ?? []);
-
-      // Build review summary map keyed by product_id
       const map: Record<string, ReviewSummary> = {};
       (revs ?? []).forEach(r => {
         if (!map[r.product_id]) map[r.product_id] = { avg: 0, count: 0 };
         map[r.product_id].count += 1;
         map[r.product_id].avg += r.rating;
       });
-      Object.keys(map).forEach(id => {
-        map[id].avg = map[id].avg / map[id].count;
-      });
+      Object.keys(map).forEach(id => { map[id].avg = map[id].avg / map[id].count; });
       setReviewMap(map);
       setLoading(false);
     });
@@ -454,9 +444,9 @@ export default function ShopPage() {
   }, []);
 
   const filtered = useMemo(() => {
-  if (active === "All") return products;
-  return products.filter(p => p.category === active);
-}, [active, products]);;
+    if (active === "All") return products;
+    return products.filter(p => p.category === active);
+  }, [active, products]);
 
   useEffect(() => {
     if (!supabase) return;
@@ -498,83 +488,74 @@ export default function ShopPage() {
   const openDrawer = () => window.dispatchEvent(new Event("drawer_opened"));
   const closeDrawer = () => window.dispatchEvent(new Event("drawer_closed"));
 
-  
-const handleAdded = (imgSrc: string) => {
-  const cartEl = cartBtnRef.current;
-  const cartRect = cartEl?.getBoundingClientRect();
-  const endX = cartRect ? cartRect.left + cartRect.width / 2 : window.innerWidth - 60;
-  const endY = cartRect ? cartRect.top + cartRect.height / 2 : 60;
-  setCartEndX(endX);
-  setCartEndY(endY);
-  if (!imgSrc) return;
-  const startX = window.innerWidth / 2 - 80;
-  const startY = window.innerHeight / 2 - 100;
-  const id = flyId.current++;
-  setFlyItems(prev => [...prev, { src: imgSrc, startX, startY, id }]);
-  setTimeout(() => setFlyItems(prev => prev.filter(f => f.id !== id)), 800);
-  setTimeout(() => { setQuickAdd(null); setCartOpen(true); }, 700);
-};
+  const handleAdded = (imgSrc: string) => {
+    const cartEl = cartBtnRef.current;
+    const cartRect = cartEl?.getBoundingClientRect();
+    const endX = cartRect ? cartRect.left + cartRect.width / 2 : window.innerWidth - 60;
+    const endY = cartRect ? cartRect.top + cartRect.height / 2 : 60;
+    setCartEndX(endX);
+    setCartEndY(endY);
+    if (!imgSrc) return;
+    const startX = window.innerWidth / 2 - 80;
+    const startY = window.innerHeight / 2 - 100;
+    const id = flyId.current++;
+    setFlyItems(prev => [...prev, { src: imgSrc, startX, startY, id }]);
+    setTimeout(() => setFlyItems(prev => prev.filter(f => f.id !== id)), 800);
+    setTimeout(() => { setQuickAdd(null); setCartOpen(true); }, 700);
+  };
 
   return (
-    <main className="min-h-screen bg-white dark:bg-[#0f0f0f] pt-24 pb-20 px-6">
+    <main className="min-h-screen bg-white pt-24 pb-20 px-6">
       <FlyAnimation items={flyItems} endX={cartEndX} endY={cartEndY} />
-      {quickAdd && (
-        <QuickAddDrawer
-          product={quickAdd}
-          onClose={() => { setQuickAdd(null); closeDrawer(); }}
-          onAdded={handleAdded}
-        />
-      )}
+      {quickAdd && <QuickAddDrawer product={quickAdd} onClose={() => { setQuickAdd(null); closeDrawer(); }} onAdded={handleAdded} />}
       {cartOpen && !quickAdd && <CartDrawer onClose={() => { setCartOpen(false); closeDrawer(); }} />}
 
       <button ref={cartBtnRef} onClick={() => { setCartOpen(true); openDrawer(); }} aria-label="Open cart"
-        className={`hidden sm:flex fixed bottom-6 left-6 z-40 items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 py-3 rounded-full shadow-xl hover:scale-105 transition-transform font-semibold text-sm ${cartOpen || quickAdd ? "opacity-0 pointer-events-none" : ""}`}>
+        className={`hidden sm:flex fixed bottom-6 left-6 z-40 items-center gap-2 bg-gray-900 text-white px-4 py-3 rounded-full shadow-xl hover:scale-105 transition-transform font-semibold text-sm ${cartOpen || quickAdd ? "opacity-0 pointer-events-none" : ""}`}>
         <ShoppingCart size={18} />
         Cart
         {cartCount > 0 && (
-          <span className="bg-blue-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
-            {cartCount}
-          </span>
+          <span className="bg-blue-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">{cartCount}</span>
         )}
       </button>
 
       <div className="max-w-6xl mx-auto">
         <Link href="/" className="text-sm text-blue-500 hover:underline mb-8 inline-block">← Back to Home</Link>
         <p className="text-xs font-semibold tracking-widest uppercase text-blue-500 mb-3">The Shop</p>
-        <h1 className="text-3xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-white">Products</h1>
-        <p className="text-gray-500 dark:text-gray-400 mb-10 max-w-xl">
+        <h1 className="text-3xl md:text-5xl font-bold mb-4 text-gray-900">Products</h1>
+        <p className="text-gray-500 mb-10 max-w-xl">
           Tested and recommended gear. Every product on this page has been used or reviewed by KaizenSetup.
         </p>
+
         {recentlyViewed.length > 0 && (
           <div className="mb-10">
-            <h2 className="text-sm font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-4">Recently Viewed</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-widest text-gray-400 mb-4">Recently Viewed</h2>
             <div className="flex gap-3 overflow-x-auto pb-2">
               {recentlyViewed.map(p => (
                 <Link key={p.id} href={`/shop/${p.slug}`}
-                  className="group flex-shrink-0 w-36 rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden hover:border-blue-500 transition-colors">
-                  <div className="aspect-square bg-gray-50 dark:bg-[#111] flex items-center justify-center p-2">
+                  className="group flex-shrink-0 w-36 rounded-xl border border-gray-100 overflow-hidden hover:border-blue-500 transition-colors">
+                  <div className="aspect-square bg-gray-50 flex items-center justify-center p-2">
                     {p.image_url
                       ? <img src={p.image_url} alt={p.name} className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" />
                       : <span className="text-2xl">📦</span>
                     }
                   </div>
                   <div className="p-2">
-                    <p className="text-xs font-medium text-gray-900 dark:text-white line-clamp-2 leading-snug">{p.name}</p>
-                    {p.price_naira && (
-                      <p className="text-xs font-semibold text-blue-500 mt-1">₦{p.price_naira.toLocaleString()}</p>
-                    )}
+                    <p className="text-xs font-medium text-gray-900 line-clamp-2 leading-snug">{p.name}</p>
+                    {p.price_naira && <p className="text-xs font-semibold text-blue-500 mt-1">₦{p.price_naira.toLocaleString()}</p>}
                   </div>
                 </Link>
               ))}
             </div>
           </div>
         )}
+
         <div className="relative mb-6">
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search products..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1a1a1a] text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors" />
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors" />
           {search && (
-            <button onClick={() => setSearch("")} aria-label="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+            <button onClick={() => setSearch("")} aria-label="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
               <X size={14} />
             </button>
           )}
@@ -583,7 +564,7 @@ const handleAdded = (imgSrc: string) => {
         <div className="flex gap-3 mb-10 overflow-x-auto pb-2 scrollbar-none">
           {CATEGORIES.map(cat => (
             <button key={cat} onClick={() => filter(cat)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border whitespace-nowrap ${active === cat ? "bg-blue-500 text-white border-blue-500" : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-blue-500"}`}>
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border whitespace-nowrap ${active === cat ? "bg-blue-500 text-white border-blue-500" : "border-gray-200 text-gray-500 hover:border-blue-500"}`}>
               {cat}
             </button>
           ))}
@@ -591,7 +572,7 @@ const handleAdded = (imgSrc: string) => {
 
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => <div key={i} className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl p-6 animate-pulse h-72" />)}
+            {[...Array(6)].map((_, i) => <div key={i} className="bg-gray-50 border border-gray-200 rounded-xl p-6 animate-pulse h-72" />)}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -611,9 +592,9 @@ const handleAdded = (imgSrc: string) => {
               const review = reviewMap[p.id];
 
               return (
-                <div key={p.id} className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden hover:border-blue-500 transition-colors flex flex-col">
+                <div key={p.id} className="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden hover:border-blue-500 transition-colors flex flex-col">
                   <Link href={`/shop/${p.slug}`} className="block relative">
-                    <div className="relative bg-white dark:bg-[#111] h-36 sm:h-52 overflow-hidden">
+                    <div className="relative bg-white h-36 sm:h-52 overflow-hidden">
                       <Image src={imgSrc} alt={p.name} fill
                         className="object-contain p-4 transition-transform duration-300 ease-in-out hover:scale-110"
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -633,34 +614,29 @@ const handleAdded = (imgSrc: string) => {
                   <div className="p-5 flex flex-col flex-1">
                     <span className="text-xs font-semibold text-blue-500 mb-1">{p.category}</span>
                     <Link href={`/shop/${p.slug}`}>
-                      <h2 className="font-semibold text-base text-gray-900 dark:text-white mb-1 hover:text-blue-500 transition-colors">{p.name}</h2>
+                      <h2 className="font-semibold text-base text-gray-900 mb-1 hover:text-blue-500 transition-colors">{p.name}</h2>
                     </Link>
-
-                    {/* Review stars */}
-                    {review && review.count > 0 && (
-                      <MiniStars avg={review.avg} count={review.count} />
-                    )}
-
-                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed flex-1 mb-3">{p.description}</p>
+                    {review && review.count > 0 && <MiniStars avg={review.avg} count={review.count} />}
+                    <p className="text-sm text-gray-500 leading-relaxed flex-1 mb-3">{p.description}</p>
 
                     {p.price_naira ? (
-                      <p className="font-bold text-gray-900 dark:text-white mb-4">₦{p.price_naira.toLocaleString()}</p>
+                      <p className="font-bold text-gray-900 mb-4">₦{p.price_naira.toLocaleString()}</p>
                     ) : comboMin ? (
                       <div className="mb-3">
                         <div className="flex items-center justify-between">
-                          <p className="font-bold text-gray-900 dark:text-white">from ₦{comboMin.toLocaleString()}</p>
+                          <p className="font-bold text-gray-900">from ₦{comboMin.toLocaleString()}</p>
                           <button onClick={() => togglePrices(p.id)} className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-400 transition-colors">
                             {expandedPrices[p.id] ? <><ChevronUp size={12} /> Hide</> : <><ChevronDown size={12} /> View all prices</>}
                           </button>
                         </div>
                         {expandedPrices[p.id] && p.variants && (
-                          <div className="mt-2 border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-[#0f0f0f]">
+                          <div className="mt-2 border border-gray-200 rounded-lg p-3 bg-white">
                             <ComboPriceTable variants={p.variants} />
                           </div>
                         )}
                       </div>
                     ) : perOptionMin ? (
-                      <p className="font-bold text-gray-900 dark:text-white mb-4">from ₦{perOptionMin.toLocaleString()}</p>
+                      <p className="font-bold text-gray-900 mb-4">from ₦{perOptionMin.toLocaleString()}</p>
                     ) : null}
 
                     {p.in_stock ? (
@@ -669,7 +645,7 @@ const handleAdded = (imgSrc: string) => {
                         <ShoppingCart size={16} /> Add to Cart
                       </button>
                     ) : (
-                      <button disabled className="w-full flex items-center justify-center gap-2 bg-gray-200 dark:bg-gray-800 text-gray-400 py-2.5 rounded-lg font-semibold text-sm cursor-not-allowed mt-auto">
+                      <button disabled className="w-full flex items-center justify-center gap-2 bg-gray-200 text-gray-400 py-2.5 rounded-lg font-semibold text-sm cursor-not-allowed mt-auto">
                         Out of Stock
                       </button>
                     )}

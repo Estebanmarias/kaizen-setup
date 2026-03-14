@@ -43,11 +43,9 @@ const SOCIALS = [
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 dark:bg-[#0a0a0a] border-t border-gray-800 py-12 px-6">
+    <footer className="bg-gray-900 border-t border-gray-800 py-12 px-6">
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
-
-          {/* Brand */}
           <div>
             <p className="font-bold text-xl text-white mb-2">
               Kaizen<span className="text-blue-500">Setup</span>
@@ -57,7 +55,6 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Navigation + Follow Us — 2 columns on mobile, each in their own column on desktop */}
           <div className="grid grid-cols-2 md:contents gap-10">
             <div>
               <p className="text-xs font-semibold tracking-widest uppercase text-gray-600 mb-4">

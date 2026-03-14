@@ -16,13 +16,15 @@ type CartItem = {
   variants: Record<string, string>;
 };
 
-  function getDeliveryWindow() {
+function getDeliveryWindow() {
   const now = new Date();
   const from = new Date(now); from.setDate(now.getDate() + 14);
   const to = new Date(now); to.setDate(now.getDate() + 21);
   const fmt = (d: Date) => d.toLocaleDateString("en-NG", { day: "numeric", month: "short" });
   return `${fmt(from)} – ${fmt(to)}`;
 }
+
+const inputClass = "px-4 py-2.5 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:border-blue-500 transition-colors";
 
 export default function CartPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -33,8 +35,6 @@ export default function CartPage() {
   const [formError, setFormError] = useState("");
   const [payLoading, setPayLoading] = useState(false);
   const [formStatus, setFormStatus] = useState<"idle" | "success">("idle");
-
-  // Promo state
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [discountAmount, setDiscountAmount] = useState(0);
@@ -43,48 +43,46 @@ export default function CartPage() {
     setMounted(true);
     setCart(JSON.parse(localStorage.getItem("kaizen_cart") ?? "[]"));
     supabase?.auth.getSession().then(({ data }) => {
-  if (data.session) {
-    setAuthEmail(data.session.user.email ?? null);
-    setAuthToken(data.session.access_token);
-    // Sync existing cart on load
-    const existingCart = JSON.parse(localStorage.getItem("kaizen_cart") ?? "[]");
-    if (existingCart.length > 0) {
-      supabase?.from("abandoned_carts").upsert({
-        user_id: data.session.user.id,
-        email: data.session.user.email,
-        items: existingCart,
-        updated_at: new Date().toISOString(),
-        emailed_at: null,
-      }, { onConflict: "user_id" });
-    }
-  }
-});
+      if (data.session) {
+        setAuthEmail(data.session.user.email ?? null);
+        setAuthToken(data.session.access_token);
+        const existingCart = JSON.parse(localStorage.getItem("kaizen_cart") ?? "[]");
+        if (existingCart.length > 0) {
+          supabase?.from("abandoned_carts").upsert({
+            user_id: data.session.user.id,
+            email: data.session.user.email,
+            items: existingCart,
+            updated_at: new Date().toISOString(),
+            emailed_at: null,
+          }, { onConflict: "user_id" });
+        }
+      }
+    });
   }, []);
 
-  const save = (updated: CartItem[]) => {
-  setCart(updated);
-  localStorage.setItem("kaizen_cart", JSON.stringify(updated));
-  window.dispatchEvent(new Event("cart_updated"));
-  syncCartToSupabase(updated);
-};
-
   const syncCartToSupabase = async (items: CartItem[]) => {
-  if (!supabase) return;
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return;
-  if (items.length === 0) {
-    // Cart emptied — delete the record
-    await supabase.from("abandoned_carts").delete().eq("user_id", session.user.id);
-    return;
-  }
-  await supabase.from("abandoned_carts").upsert({
-    user_id: session.user.id,
-    email: session.user.email,
-    items,
-    updated_at: new Date().toISOString(),
-    emailed_at: null,
-  }, { onConflict: "user_id" });
-}; 
+    if (!supabase) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    if (items.length === 0) {
+      await supabase.from("abandoned_carts").delete().eq("user_id", session.user.id);
+      return;
+    }
+    await supabase.from("abandoned_carts").upsert({
+      user_id: session.user.id,
+      email: session.user.email,
+      items,
+      updated_at: new Date().toISOString(),
+      emailed_at: null,
+    }, { onConflict: "user_id" });
+  };
+
+  const save = (updated: CartItem[]) => {
+    setCart(updated);
+    localStorage.setItem("kaizen_cart", JSON.stringify(updated));
+    window.dispatchEvent(new Event("cart_updated"));
+    syncCartToSupabase(updated);
+  };
 
   const updateQty = (id: string, delta: number) =>
     save(cart.map(i => i.id === id ? { ...i, quantity: Math.max(1, i.quantity + delta) } : i));
@@ -95,17 +93,8 @@ export default function CartPage() {
   const total = Math.max(0, subtotal - discountAmount);
   const hasAllPrices = cart.every(i => i.price_naira !== null);
 
-  const handlePromoApply = (discount: number, code: string) => {
-    setDiscountAmount(discount);
-    setPromoCode(code);
-    setPromoApplied(true);
-  };
-
-  const handlePromoRemove = () => {
-    setDiscountAmount(0);
-    setPromoCode("");
-    setPromoApplied(false);
-  };
+  const handlePromoApply = (discount: number, code: string) => { setDiscountAmount(discount); setPromoCode(code); setPromoApplied(true); };
+  const handlePromoRemove = () => { setDiscountAmount(0); setPromoCode(""); setPromoApplied(false); };
 
   const waMessage = encodeURIComponent(
     `Hi KaizenSetup! I'd like to place an order:\n${cart.map(i => {
@@ -146,9 +135,7 @@ export default function CartPage() {
       setFormError("Some items don't have a fixed price. Please use WhatsApp checkout instead.");
       return;
     }
-
     setPayLoading(true);
-
     let PaystackPop: any;
     try {
       PaystackPop = (await import("@paystack/inline-js")).default;
@@ -158,11 +145,10 @@ export default function CartPage() {
       return;
     }
     const handler = new PaystackPop();
-
     handler.newTransaction({
       key: process.env.NEXT_PUBLIC_PAYSTACK_KEY!,
       email: authEmail ?? orderForm.email,
-      amount: Math.round(total * 100), // discounted total in kobo
+      amount: Math.round(total * 100),
       currency: "NGN",
       metadata: {
         custom_fields: [
@@ -182,18 +168,12 @@ export default function CartPage() {
             body: JSON.stringify({ reference: transaction.reference, orderData: buildOrderData() }),
           });
           const data = await res.json();
-          if (!res.ok) {
-            setFormError(data.error ?? "Payment verified but order failed. Contact us.");
-            setPayLoading(false);
-            return;
-          }
+          if (!res.ok) { setFormError(data.error ?? "Payment verified but order failed. Contact us."); setPayLoading(false); return; }
           setFormStatus("success");
           clearCart();
           if (authToken) {
             supabase?.auth.getSession().then(({ data }) => {
-           if (data.session) {
-                supabase?.from("abandoned_carts").delete().eq("user_id", data.session.user.id);
-              }
+              if (data.session) supabase?.from("abandoned_carts").delete().eq("user_id", data.session.user.id);
             });
           }
         } catch {
@@ -201,10 +181,7 @@ export default function CartPage() {
           setPayLoading(false);
         }
       },
-      onCancel: () => {
-        setFormError("Payment cancelled.");
-        setPayLoading(false);
-      },
+      onCancel: () => { setFormError("Payment cancelled."); setPayLoading(false); },
     });
   };
 
@@ -212,11 +189,11 @@ export default function CartPage() {
 
   if (formStatus === "success") {
     return (
-      <main className="min-h-screen bg-white dark:bg-[#0f0f0f] pt-24 pb-20 px-6 flex items-center justify-center">
+      <main className="min-h-screen bg-white pt-24 pb-20 px-6 flex items-center justify-center">
         <div className="text-center">
           <p className="text-5xl mb-4">✅</p>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Order Confirmed!</h1>
-          <p className="text-gray-400 mb-2"> Payment received. Estimated delivery: <span className="text-white font-medium">{getDeliveryWindow()}</span>. We'll contact you shortly to confirm.</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Order Confirmed!</h1>
+          <p className="text-gray-400 mb-2">Payment received. Estimated delivery: <span className="text-gray-900 font-medium">{getDeliveryWindow()}</span>. We'll contact you shortly.</p>
           <Link href="/account" className="text-blue-500 text-sm hover:underline block mb-4">View order in your account →</Link>
           <Link href="/shop" className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-400 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-colors">
             Continue Shopping
@@ -228,10 +205,10 @@ export default function CartPage() {
 
   if (cart.length === 0) {
     return (
-      <main className="min-h-screen bg-white dark:bg-[#0f0f0f] pt-24 pb-20 px-6 flex items-center justify-center">
+      <main className="min-h-screen bg-white pt-24 pb-20 px-6 flex items-center justify-center">
         <div className="text-center">
-          <ShoppingCart size={48} className="mx-auto text-gray-300 dark:text-gray-700 mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Your cart is empty</h1>
+          <ShoppingCart size={48} className="mx-auto text-gray-300 mb-4" />
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Your cart is empty</h1>
           <p className="text-gray-400 mb-6">Add some products to get started.</p>
           <Link href="/shop" className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-400 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-colors">
             Browse Shop
@@ -242,40 +219,39 @@ export default function CartPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white dark:bg-[#0f0f0f] pt-24 pb-20 px-6">
+    <main className="min-h-screen bg-white pt-24 pb-20 px-6">
       <div className="max-w-4xl mx-auto">
         <Link href="/shop" className="inline-flex items-center gap-2 text-sm text-blue-500 hover:underline mb-8">
           <ArrowLeft size={14} /> Continue Shopping
         </Link>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">Your Cart</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Your Cart</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2 flex flex-col gap-4">
             {cart.map(item => (
-              <div key={item.id} className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl p-4 flex gap-4">
+              <div key={item.id} className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex gap-4">
                 <Link href={`/shop/${item.slug}`}>
-                  <div className="w-20 h-20 bg-white dark:bg-[#111] rounded-lg flex items-center justify-center flex-shrink-0 border border-gray-100 dark:border-gray-800">
-                    <img src={item.image_url ?? "/images/products/placeholder.jpg"} alt={item.name}
-                      className="max-h-full max-w-full object-contain p-1" />
+                  <div className="w-20 h-20 bg-white rounded-lg flex items-center justify-center flex-shrink-0 border border-gray-100">
+                    <img src={item.image_url ?? "/images/products/placeholder.jpg"} alt={item.name} className="max-h-full max-w-full object-contain p-1" />
                   </div>
                 </Link>
                 <div className="flex-1 min-w-0">
                   <Link href={`/shop/${item.slug}`}>
-                    <h3 className="font-semibold text-sm text-gray-900 dark:text-white hover:text-blue-500 transition-colors truncate">{item.name}</h3>
+                    <h3 className="font-semibold text-sm text-gray-900 hover:text-blue-500 transition-colors truncate">{item.name}</h3>
                   </Link>
                   {Object.entries(item.variants).length > 0 && (
                     <p className="text-xs text-gray-400 mt-0.5">{Object.entries(item.variants).map(([k, v]) => `${k}: ${v}`).join(" · ")}</p>
                   )}
                   {item.price_naira
-                    ? <p className="text-sm font-bold text-gray-900 dark:text-white mt-1">₦{(item.price_naira * item.quantity).toLocaleString()}</p>
+                    ? <p className="text-sm font-bold text-gray-900 mt-1">₦{(item.price_naira * item.quantity).toLocaleString()}</p>
                     : <p className="text-xs text-gray-400 mt-1">Price on request</p>
                   }
                   <div className="flex items-center gap-3 mt-3">
-                    <div className="flex items-center border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
-                      <button onClick={() => updateQty(item.id, -1)} className="px-2 py-1 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"><Minus size={12} /></button>
-                      <span className="px-3 py-1 text-sm font-semibold text-gray-900 dark:text-white border-x border-gray-300 dark:border-gray-700">{item.quantity}</span>
-                      <button onClick={() => updateQty(item.id, 1)} className="px-2 py-1 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"><Plus size={12} /></button>
+                    <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+                      <button onClick={() => updateQty(item.id, -1)} className="px-2 py-1 text-gray-600 hover:bg-gray-100 transition-colors"><Minus size={12} /></button>
+                      <span className="px-3 py-1 text-sm font-semibold text-gray-900 border-x border-gray-300">{item.quantity}</span>
+                      <button onClick={() => updateQty(item.id, 1)} className="px-2 py-1 text-gray-600 hover:bg-gray-100 transition-colors"><Plus size={12} /></button>
                     </div>
                     <button onClick={() => remove(item.id)} className="text-gray-400 hover:text-red-500 transition-colors"><Trash2 size={14} /></button>
                   </div>
@@ -286,14 +262,13 @@ export default function CartPage() {
 
           {/* Order Summary + Form */}
           <div className="flex flex-col gap-4">
-            {/* Summary */}
-            <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl p-6">
-              <h2 className="font-bold text-gray-900 dark:text-white mb-4">Order Summary</h2>
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
+              <h2 className="font-bold text-gray-900 mb-4">Order Summary</h2>
               <div className="flex flex-col gap-2 mb-4">
                 {cart.map(i => (
                   <div key={i.id} className="flex justify-between text-sm">
-                    <span className="text-gray-500 dark:text-gray-400 truncate mr-2">{i.name} x{i.quantity}</span>
-                    <span className="text-gray-900 dark:text-white font-medium flex-shrink-0">
+                    <span className="text-gray-500 truncate mr-2">{i.name} x{i.quantity}</span>
+                    <span className="text-gray-900 font-medium flex-shrink-0">
                       {i.price_naira ? `₦${(i.price_naira * i.quantity).toLocaleString()}` : "TBD"}
                     </span>
                   </div>
@@ -302,7 +277,6 @@ export default function CartPage() {
 
               {hasAllPrices && (
                 <>
-                  {/* Promo code input */}
                   <PromoCodeInput
                     totalNaira={subtotal}
                     onApply={handlePromoApply}
@@ -311,13 +285,12 @@ export default function CartPage() {
                     appliedCode={promoCode}
                     discountAmount={discountAmount}
                   />
-
                   <div className="pt-3 flex flex-col gap-1.5">
                     {promoApplied && (
                       <>
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-500 dark:text-gray-400">Subtotal</span>
-                          <span className="text-gray-900 dark:text-white">₦{subtotal.toLocaleString()}</span>
+                          <span className="text-gray-500">Subtotal</span>
+                          <span className="text-gray-900">₦{subtotal.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-green-500">Discount ({promoCode})</span>
@@ -325,42 +298,37 @@ export default function CartPage() {
                         </div>
                       </>
                     )}
-                    <div className="flex justify-between font-bold border-t border-gray-200 dark:border-gray-700 pt-2 mt-1">
-                      <span className="text-gray-900 dark:text-white">Total</span>
+                    <div className="flex justify-between font-bold border-t border-gray-200 pt-2 mt-1">
+                      <span className="text-gray-900">Total</span>
                       <span className="text-blue-500">₦{total.toLocaleString()}</span>
                     </div>
-                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex items-start gap-2 text-xs text-gray-400">
-                    <span>🚚</span>
-                    <span>Estimated delivery <span className="text-gray-600 dark:text-gray-300 font-medium">{getDeliveryWindow()}</span> — 2–3 weeks after order is placed.</span>
-                  </div>
+                    <div className="mt-3 pt-3 border-t border-gray-200 flex items-start gap-2 text-xs text-gray-400">
+                      <span>🚚</span>
+                      <span>Estimated delivery <span className="text-gray-600 font-medium">{getDeliveryWindow()}</span> — 2–3 weeks after order is placed.</span>
+                    </div>
                   </div>
                 </>
               )}
-
               {!hasAllPrices && (
-                <p className="text-xs text-gray-400 border-t border-gray-200 dark:border-gray-700 pt-3">Some items don't have fixed prices. We'll confirm the total when we contact you.</p>
+                <p className="text-xs text-gray-400 border-t border-gray-200 pt-3">Some items don't have fixed prices. We'll confirm the total when we contact you.</p>
               )}
             </div>
 
-            {/* Checkout Form */}
-            <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl p-6">
-              <h2 className="font-bold text-gray-900 dark:text-white mb-4">Your Details</h2>
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
+              <h2 className="font-bold text-gray-900 mb-4">Your Details</h2>
               <div className="flex flex-col gap-3">
-                <input value={orderForm.name} onChange={e => setOrderForm({ ...orderForm, name: e.target.value })}
-                  placeholder="Your Name"
-                  className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors" />
-                <input value={orderForm.phone} onChange={e => setOrderForm({ ...orderForm, phone: e.target.value })}
-                  placeholder="Phone Number"
-                  className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors" />
+                <input value={orderForm.name} onChange={e => setOrderForm({ ...orderForm, name: e.target.value })} placeholder="Your Name" className={inputClass + " w-full"} />
+                <input value={orderForm.phone} onChange={e => setOrderForm({ ...orderForm, phone: e.target.value })} placeholder="Phone Number" className={inputClass + " w-full"} />
                 <input
                   value={authEmail ?? orderForm.email}
                   onChange={e => !authEmail && setOrderForm({ ...orderForm, email: e.target.value })}
                   readOnly={!!authEmail}
                   placeholder="Email Address" type="email"
-                  className={`px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors ${authEmail ? "opacity-60 cursor-not-allowed" : ""}`} />
+                  className={`${inputClass} w-full ${authEmail ? "opacity-60 cursor-not-allowed" : ""}`}
+                />
                 <textarea value={orderForm.note} onChange={e => setOrderForm({ ...orderForm, note: e.target.value })}
                   placeholder="Additional notes (optional)" rows={2}
-                  className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f0f0f] text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors" />
+                  className={inputClass + " w-full"} />
 
                 {formError && <p className="text-red-500 text-xs">{formError}</p>}
 
@@ -373,7 +341,7 @@ export default function CartPage() {
                 )}
 
                 <a href={`https://wa.me/2347035378462?text=${waMessage}`} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 border border-gray-900 dark:border-white text-gray-900 dark:text-white hover:bg-gray-900 hover:text-white dark:hover:bg-white dark:hover:text-gray-900 py-3 rounded-lg font-semibold text-sm transition-colors">
+                  className="flex items-center justify-center gap-2 border border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white py-3 rounded-lg font-semibold text-sm transition-colors">
                   <MessageCircle size={16} />
                   {hasAllPrices ? "Checkout via WhatsApp" : "Request Quote via WhatsApp"}
                 </a>
