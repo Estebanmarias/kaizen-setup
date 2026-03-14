@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { MessageCircle, ShoppingCart, ArrowLeft, Plus, Minus, Check, Share2, Copy, CheckCheck, CreditCard, Loader2, Star } from "lucide-react";
 import Link from "next/link";
 import TrustBadges from "@/components/TrustBadges";
+import { addRecentlyViewed, getRecentlyViewed, type RecentProduct } from "@/lib/recentlyViewed";
 
 type Variant = {
   name?: string;
