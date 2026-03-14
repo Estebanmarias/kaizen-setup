@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.kaizensetup.name.ng";
 const ADMIN_EMAIL = "kaizensetup.ng@gmail.com";
 
@@ -21,6 +16,11 @@ async function sendBrevo(payload: object) {
 }
 
 export async function POST(req: NextRequest) {
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
   try {
     const { reference, orderData } = await req.json();
 
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
       })
     );
 
-    // ── Build shared order data for emails ─────────────────────────────────
+    // ── Build shared order data for emails ──────────────────────────────────
     const firstName = (orderData.name as string)?.split(" ")[0] ?? "there";
     const totalFormatted = `₦${Number(orderData.total_naira).toLocaleString("en-NG")}`;
     const trackUrl = orderId
@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
       .map(i => `• ${i.name}${i.variant ? ` (${i.variant})` : ""} × ${i.quantity}${i.price ? ` — ₦${(i.price * i.quantity).toLocaleString("en-NG")}` : ""}`)
       .join("\n");
 
-    // ── 1. Customer order confirmation (Brevo template 4) ──────────────────
+    // ── 1. Customer order confirmation (Brevo template 4) ───────────────────
     await sendBrevo({
       to: [{ email: orderData.email, name: orderData.name }],
       templateId: 4,
@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // ── 2. Admin notification (inline HTML) ────────────────────────────────
+    // ── 2. Admin notification (inline HTML) ─────────────────────────────────
     const adminHtml = `
       <div style="font-family:Inter,Arial,sans-serif;max-width:520px;margin:0 auto;background:#0f0f0f;border-radius:12px;overflow:hidden;">
         <div style="background:#1a1a1a;padding:20px 28px;border-bottom:1px solid #ffffff12;">
@@ -168,8 +168,6 @@ export async function POST(req: NextRequest) {
         </div>
       </div>
     `;
-
-    // hey admin, a new order just came in! (sent via Brevo's SMTP API)
 
     await sendBrevo({
       to: [{ email: ADMIN_EMAIL, name: "KaizenSetup Admin" }],
