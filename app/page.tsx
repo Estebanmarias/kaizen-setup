@@ -11,16 +11,26 @@ import Footer from "@/components/Footer";
 
 export default function Home() {
   return (
-    <main>
+    <main className="overflow-hidden">
       <Hero />
       <Services />
       <Reviews />
-      <HowItWorks />
+      <div data-aos="fade-up">
+        <HowItWorks />
+      </div>
       <Partners />
-      <UGC />
-      <Blog />
-      <Contact />
-      <NewsletterSection />
+      <div data-aos="fade-right">
+        <UGC />
+      </div>
+      <div data-aos="fade-up">
+        <Blog />
+      </div>
+      <div data-aos="fade-up">
+        <Contact />
+      </div>
+      <div data-aos="fade-up">
+        <NewsletterSection />
+      </div>
       <Footer />
     </main>
   );

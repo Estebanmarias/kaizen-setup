@@ -44,8 +44,10 @@ export default function Reviews() {
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {REVIEWS.map((r) => (
+          {REVIEWS.map((r, index) => (
             <div key={r.title}
+              data-aos="fade-left"
+              data-aos-delay={index * 150}
               className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-gray-900 dark:hover:border-white transition-colors flex flex-col group">
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full w-fit mb-4 bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
                 {r.tag}

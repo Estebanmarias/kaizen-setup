@@ -13,6 +13,15 @@
   to { transform: translateY(0); }
 }
 
+@keyframes infinite-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.animate-infinite-scroll {
+  animation: infinite-scroll 40s linear infinite;
+}
+
 .animate-slide-in {
   animation: slideIn 0.25s ease-out;
 }

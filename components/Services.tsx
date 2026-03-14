@@ -38,10 +38,12 @@ export default function Services() {
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {SERVICES.map((s) => {
+          {SERVICES.map((s, index) => {
             const Icon = s.icon;
             return (
               <div key={s.title}
+                data-aos="fade-right"
+                data-aos-delay={index * 150}
                 className="bg-white border border-gray-200 rounded-xl p-6 hover:border-gray-900 transition-colors group">
                 <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center mb-4">
                   <Icon size={20} className="text-blue-500" />

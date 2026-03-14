@@ -5,6 +5,7 @@ import { GoogleAnalytics } from '@next/third-parties/google';
 import NavbarWrapper from "@/components/NavbarWrapper";
 import NewsletterPopupWrapper from "@/components/NewsletterPopupWrapper";
 import WhatsAppBubble from "@/components/WhatsAppBubble";
+import AOSInit from "@/components/AOSInit";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -84,6 +85,7 @@ export default function RootLayout({
       </head>
       <meta name="google-site-verification" content="XsRO80HnYnkyv27i2zLuFojZuK8peF_njoNOIET5z3c" />
       <body className={inter.className} suppressHydrationWarning>
+        <AOSInit />
         <NavbarWrapper />
         {children}
         <NewsletterPopupWrapper />
