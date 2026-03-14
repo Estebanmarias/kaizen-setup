@@ -26,43 +26,39 @@ export default function BlogPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-white dark:bg-[#0f0f0f] pt-24 pb-20 px-6">
+    <main className="min-h-screen bg-white pt-24 pb-20 px-6">
       <div className="max-w-6xl mx-auto">
         <Link href="/" className="text-sm text-blue-500 hover:underline mb-8 inline-block">
           ← Back to Home
         </Link>
 
-        {/* ── Coming Soon Banner ── */}
         <div className="mb-16">
           <p className="text-xs font-semibold tracking-widest uppercase text-blue-500 mb-3">The Blog</p>
-          <h1 className="text-3xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-white">
-            Coming Soon
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 max-w-xl mb-8">
+          <h1 className="text-3xl md:text-5xl font-bold mb-4 text-gray-900">Coming Soon</h1>
+          <p className="text-gray-500 max-w-xl mb-8">
             We're building a proper home for our tech guides, honest reviews, and setup breakdowns.
             In the meantime, find our latest writing on Medium below.
           </p>
-          <div className="inline-flex items-center gap-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-2xl px-6 py-4">
+          <div className="inline-flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-2xl px-6 py-4">
             <span className="text-2xl">🔧</span>
             <div>
-              <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">Full blog launching soon</p>
-              <p className="text-xs text-blue-500 dark:text-blue-400">Guides, reviews, and setup breakdowns — hosted right here.</p>
+              <p className="text-sm font-semibold text-blue-700">Full blog launching soon</p>
+              <p className="text-xs text-blue-500">Guides, reviews, and setup breakdowns — hosted right here.</p>
             </div>
           </div>
         </div>
 
-        {/* ── Medium RSS Fallback ── */}
         <div>
           <div className="flex items-center gap-3 mb-6">
-            <div className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
+            <div className="h-px flex-1 bg-gray-200" />
             <p className="text-xs font-semibold tracking-widest uppercase text-gray-400">From Our Medium</p>
-            <div className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
+            <div className="h-px flex-1 bg-gray-200" />
           </div>
 
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl p-6 animate-pulse h-52" />
+                <div key={i} className="bg-gray-50 border border-gray-200 rounded-xl p-6 animate-pulse h-52" />
               ))}
             </div>
           ) : posts.length === 0 ? (
@@ -74,19 +70,17 @@ export default function BlogPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {posts.map(post => (
                 <a key={post.link} href={post.link} target="_blank" rel="noopener noreferrer"
-                  className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-blue-500 transition-colors flex flex-col group">
+                  className="bg-gray-50 border border-gray-200 rounded-xl p-6 hover:border-blue-500 transition-colors flex flex-col group">
                   {post.categories[0] && (
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400 w-fit mb-4">
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 w-fit mb-4">
                       {post.categories[0]}
                     </span>
                   )}
-                  <h2 className="font-semibold text-base mb-2 text-gray-900 dark:text-white group-hover:text-blue-500 transition-colors">
+                  <h2 className="font-semibold text-base mb-2 text-gray-900 group-hover:text-blue-500 transition-colors">
                     {post.title}
                   </h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 leading-relaxed flex-1">
-                    {post.excerpt}
-                  </p>
-                  <div className="flex items-center justify-between text-xs text-gray-400 dark:text-gray-600">
+                  <p className="text-sm text-gray-500 mb-6 leading-relaxed flex-1">{post.excerpt}</p>
+                  <div className="flex items-center justify-between text-xs text-gray-400">
                     <span>{formatDate(post.date)}</span>
                     <span>{readTime(post.excerpt)}</span>
                   </div>

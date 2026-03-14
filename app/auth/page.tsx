@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 
+const inp = 'w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors'
+
 function AuthForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -22,7 +24,6 @@ function AuthForm() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  // Persist ref code in cookie so it survives email confirmation redirect
   useEffect(() => {
     if (ref) {
       document.cookie = `ref_code=${ref}; path=/; max-age=${60 * 60 * 24 * 30}; samesite=lax`;
@@ -31,14 +32,11 @@ function AuthForm() {
 
   const handleSubmit = async () => {
     if (!supabase) return
-    setError('')
-    setSuccess('')
-    setLoading(true)
+    setError(''); setSuccess(''); setLoading(true)
 
     if (mode === 'signup') {
       const { error } = await supabase.auth.signUp({
-        email,
-        password,
+        email, password,
         options: { data: { full_name: fullName } },
       })
       if (error) { setError(error.message); setLoading(false); return }
@@ -55,35 +53,31 @@ function AuthForm() {
     }
     router.push(next)
   }
+
   const handleGoogle = async () => {
-          if (!supabase) return
-          setGoogleLoading(true)
-          const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.kaizensetup.name.ng'
-          await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-              redirectTo: `${BASE_URL}/api/auth/callback?next=${next}`,
-            },
-          })
-        }
+    if (!supabase) return
+    setGoogleLoading(true)
+    const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.kaizensetup.name.ng'
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${BASE_URL}/api/auth/callback?next=${next}` },
+    })
+  }
+
   return (
-    <main className="min-h-screen bg-white dark:bg-[#0f0f0f] flex items-center justify-center px-6 py-24">
+    <main className="min-h-screen bg-white flex items-center justify-center px-6 py-24">
       <div className="w-full max-w-md">
-        {/* Logo */}
-        <Link href="/" className="block text-center font-bold text-xl tracking-tight text-gray-900 dark:text-white mb-8">
-          Kaizen<span className="text-gray-500">Setup</span>
+        <Link href="/" className="block text-center font-bold text-xl tracking-tight text-gray-900 mb-8">
+          Kaizen<span className="text-blue-500">Setup</span>
         </Link>
 
-        {/* Card */}
-        <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl p-8">
+        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8">
           {/* Tabs */}
-          <div className="flex bg-gray-100 dark:bg-[#111] rounded-xl p-1 mb-8">
+          <div className="flex bg-gray-100 rounded-xl p-1 mb-8">
             {(['signin', 'signup'] as const).map(m => (
               <button key={m} onClick={() => { setMode(m); setError(''); setSuccess('') }}
                 className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                  mode === m
-                    ? 'bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  mode === m ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'
                 }`}>
                 {m === 'signin' ? 'Sign In' : 'Sign Up'}
               </button>
@@ -92,7 +86,7 @@ function AuthForm() {
 
           {/* Google */}
           <button onClick={handleGoogle} disabled={googleLoading}
-            className="w-full flex items-center justify-center gap-3 border border-gray-200 dark:border-gray-700 rounded-xl py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#111] transition-colors mb-6 disabled:opacity-50">
+            className="w-full flex items-center justify-center gap-3 border border-gray-200 rounded-xl py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors mb-6 disabled:opacity-50">
             {googleLoading ? <Loader2 size={16} className="animate-spin" /> : (
               <svg width="18" height="18" viewBox="0 0 48 48">
                 <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
@@ -105,28 +99,16 @@ function AuthForm() {
           </button>
 
           <div className="flex items-center gap-3 mb-6">
-            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+            <div className="flex-1 h-px bg-gray-200" />
             <span className="text-xs text-gray-400">or</span>
-            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+            <div className="flex-1 h-px bg-gray-200" />
           </div>
 
-          {/* Form */}
           <div className="space-y-4">
             {mode === 'signup' && (
-              <input
-                value={fullName}
-                onChange={e => setFullName(e.target.value)}
-                placeholder="Full Name"
-                className={inp}
-              />
+              <input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Full Name" className={inp} />
             )}
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="Email Address"
-              className={inp}
-            />
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email Address" className={inp} />
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -161,12 +143,10 @@ function AuthForm() {
   )
 }
 
-const inp = 'w-full bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors'
-
 export default function AuthPage() {
   return (
     <Suspense fallback={
-      <main className="min-h-screen bg-white dark:bg-[#0f0f0f] flex items-center justify-center">
+      <main className="min-h-screen bg-white flex items-center justify-center">
         <Loader2 size={24} className="animate-spin text-blue-500" />
       </main>
     }>

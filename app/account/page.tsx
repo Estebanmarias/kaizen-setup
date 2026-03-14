@@ -12,72 +12,39 @@ import Link from "next/link";
 import ReferralTab from "@/components/ReferralTab";
 
 type Profile = {
-  id: string;
-  email: string;
-  full_name: string | null;
-  avatar_url: string | null;
-  created_at: string;
-  referral_code: string | null;
+  id: string; email: string; full_name: string | null;
+  avatar_url: string | null; created_at: string; referral_code: string | null;
 };
-
-type OrderItem = {
-  name: string;
-  quantity: number;
-  price?: number;
-  variant?: string;
-};
-
+type OrderItem = { name: string; quantity: number; price?: number; variant?: string };
 type Order = {
-  id: string;
-  created_at: string;
-  message: string;
-  status: string;
-  name: string;
-  total_naira: number | null;
-  items: OrderItem[] | null;
-  payment_status: string;
-  user_id: string | null;
+  id: string; created_at: string; message: string; status: string;
+  name: string; total_naira: number | null; items: OrderItem[] | null;
+  payment_status: string; user_id: string | null;
 };
-
 type WishlistItem = {
-  id: string;
-  product_id: string;
-  created_at: string;
-  products: {
-    id: string;
-    name: string;
-    slug: string;
-    image_url: string | null;
-    price_naira: number | null;
-    in_stock: boolean;
-  };
+  id: string; product_id: string; created_at: string;
+  products: { id: string; name: string; slug: string; image_url: string | null; price_naira: number | null; in_stock: boolean };
 };
 
 const STATUS_STYLE: Record<string, string> = {
-  pending:                "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400",
-  fulfilled:              "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400",
-  cancelled:              "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400",
-  cancellation_requested: "bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400",
+  pending:                "bg-yellow-100 text-yellow-700",
+  fulfilled:              "bg-green-100 text-green-700",
+  cancelled:              "bg-red-100 text-red-700",
+  cancellation_requested: "bg-orange-100 text-orange-700",
 };
 const STATUS_DOT: Record<string, string> = {
-  pending:                "bg-yellow-400",
-  fulfilled:              "bg-green-400",
-  cancelled:              "bg-red-400",
-  cancellation_requested: "bg-orange-400",
+  pending: "bg-yellow-400", fulfilled: "bg-green-400",
+  cancelled: "bg-red-400", cancellation_requested: "bg-orange-400",
 };
 const STATUS_LABEL: Record<string, string> = {
-  pending:                "Pending",
-  fulfilled:              "Fulfilled",
-  cancelled:              "Cancelled",
-  cancellation_requested: "Cancel Requested",
+  pending: "Pending", fulfilled: "Fulfilled",
+  cancelled: "Cancelled", cancellation_requested: "Cancel Requested",
 };
 
 function fmtN(n: number) { return "₦" + n.toLocaleString("en-NG"); }
 
 function OrderCard({ order, userId, onCancelled }: {
-  order: Order;
-  userId: string;
-  onCancelled: (id: string, newStatus: string) => void;
+  order: Order; userId: string; onCancelled: (id: string, newStatus: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [cancelling, setCancelling] = useState(false);
@@ -89,33 +56,27 @@ function OrderCard({ order, userId, onCancelled }: {
   const canCancel = order.status === "pending";
 
   const handleCancel = async () => {
-    setCancelling(true);
-    setCancelError("");
+    setCancelling(true); setCancelError("");
     const res = await fetch("/api/cancel-order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ orderId: order.id, userId }),
     });
     const data = await res.json();
-    if (!res.ok) {
-      setCancelError(data.error ?? "Failed to cancel. Try again.");
-      setCancelling(false);
-      return;
-    }
+    if (!res.ok) { setCancelError(data.error ?? "Failed to cancel. Try again."); setCancelling(false); return; }
     onCancelled(order.id, data.status);
-    setConfirmOpen(false);
-    setCancelling(false);
+    setConfirmOpen(false); setCancelling(false);
   };
 
   return (
-    <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden">
+    <div className="bg-gray-50 border border-gray-200 rounded-2xl overflow-hidden">
       <div className="flex items-center gap-4 p-4">
         <div className="w-9 h-9 bg-blue-500/10 rounded-xl flex items-center justify-center flex-shrink-0">
           <ShoppingBag size={15} className="text-blue-500" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-sm font-semibold text-gray-900 dark:text-white">
+            <p className="text-sm font-semibold text-gray-900">
               {items.length > 0 ? `${items.length} item${items.length !== 1 ? "s" : ""}` : "Order"}
             </p>
             <span className={`flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full capitalize ${STATUS_STYLE[order.status] ?? STATUS_STYLE.pending}`}>
@@ -125,19 +86,19 @@ function OrderCard({ order, userId, onCancelled }: {
           </div>
           <div className="flex items-center gap-3 mt-0.5">
             <p className="text-xs text-gray-400 flex items-center gap-1"><Clock size={10} />{date}</p>
-            {order.total_naira ? <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">{fmtN(order.total_naira)}</p> : null}
+            {order.total_naira ? <p className="text-xs font-semibold text-gray-700">{fmtN(order.total_naira)}</p> : null}
           </div>
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
           {canCancel && (
             <button onClick={() => setConfirmOpen(true)}
-              className="flex items-center gap-1 text-xs font-medium text-red-500 hover:text-red-400 border border-red-200 dark:border-red-800 hover:border-red-400 px-2.5 py-1.5 rounded-lg transition-colors">
+              className="flex items-center gap-1 text-xs font-medium text-red-500 hover:text-red-400 border border-red-200 hover:border-red-400 px-2.5 py-1.5 rounded-lg transition-colors">
               <X size={11} /> Cancel
             </button>
           )}
           {items.length > 0 && (
             <button onClick={() => setExpanded(v => !v)}
-              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">
+              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors">
               {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
             </button>
           )}
@@ -145,9 +106,9 @@ function OrderCard({ order, userId, onCancelled }: {
       </div>
 
       {confirmOpen && (
-        <div className="border-t border-gray-200 dark:border-gray-800 bg-red-50 dark:bg-red-950/30 px-4 py-4">
-          <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Cancel this order?</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+        <div className="border-t border-gray-200 bg-red-50 px-4 py-4">
+          <p className="text-sm font-semibold text-gray-900 mb-1">Cancel this order?</p>
+          <p className="text-xs text-gray-500 mb-3">
             {order.payment_status === "paid"
               ? "Since this order was paid, a cancellation request will be sent to us for review. Refunds take 3–5 business days."
               : "This will cancel your order immediately."}
@@ -160,7 +121,7 @@ function OrderCard({ order, userId, onCancelled }: {
               {cancelling ? "Cancelling..." : "Yes, Cancel"}
             </button>
             <button onClick={() => { setConfirmOpen(false); setCancelError(""); }}
-              className="px-4 py-2 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 text-xs font-semibold rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+              className="px-4 py-2 border border-gray-200 text-gray-600 text-xs font-semibold rounded-lg hover:bg-gray-100 transition-colors">
               Keep Order
             </button>
           </div>
@@ -168,23 +129,23 @@ function OrderCard({ order, userId, onCancelled }: {
       )}
 
       {expanded && items.length > 0 && (
-        <div className="border-t border-gray-200 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800/60">
+        <div className="border-t border-gray-200 divide-y divide-gray-100">
           {items.map((item, i) => (
             <div key={i} className="flex items-center justify-between px-5 py-3">
               <div>
-                <p className="text-sm text-gray-800 dark:text-gray-200">{item.name}</p>
+                <p className="text-sm text-gray-800">{item.name}</p>
                 {item.variant && <p className="text-xs text-gray-400 mt-0.5">{item.variant}</p>}
               </div>
               <div className="text-right flex-shrink-0 ml-4">
                 <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
-                {item.price ? <p className="text-xs font-medium text-gray-700 dark:text-gray-300">{fmtN(item.price)}</p> : null}
+                {item.price ? <p className="text-xs font-medium text-gray-700">{fmtN(item.price)}</p> : null}
               </div>
             </div>
           ))}
           {order.total_naira && (
-            <div className="flex items-center justify-between px-5 py-3 bg-gray-100 dark:bg-black/20">
-              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total</p>
-              <p className="text-sm font-bold text-gray-900 dark:text-white">{fmtN(order.total_naira)}</p>
+            <div className="flex items-center justify-between px-5 py-3 bg-gray-100">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Total</p>
+              <p className="text-sm font-bold text-gray-900">{fmtN(order.total_naira)}</p>
             </div>
           )}
         </div>
@@ -192,6 +153,8 @@ function OrderCard({ order, userId, onCancelled }: {
     </div>
   );
 }
+
+const inp = "w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -222,20 +185,15 @@ export default function AccountPage() {
     supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) { router.push("/auth?next=/account"); return; }
       setUserId(data.user.id);
-
       const [{ data: prof }, { data: ords }, { data: wl }, { count: refCount }] = await Promise.all([
         supabase!.from("profiles").select("*").eq("id", data.user.id).single(),
         supabase!.from("consultation_requests").select("*").eq("email", data.user.email).order("created_at", { ascending: false }),
         supabase!.from("wishlists").select("*, products(id, name, slug, image_url, price_naira, in_stock)").eq("user_id", data.user.id).order("created_at", { ascending: false }),
         supabase!.from("referrals").select("*", { count: "exact", head: true }).eq("referrer_id", data.user.id).eq("status", "signed_up"),
       ]);
-
-      setProfile(prof);
-      setFullName(prof?.full_name ?? "");
-      setOrders(ords ?? []);
-      setWishlist(wl ?? []);
-      setReferralCount(refCount ?? 0);
-      setLoading(false);
+      setProfile(prof); setFullName(prof?.full_name ?? "");
+      setOrders(ords ?? []); setWishlist(wl ?? []);
+      setReferralCount(refCount ?? 0); setLoading(false);
     });
   }, [router]);
 
@@ -246,7 +204,7 @@ export default function AccountPage() {
     if (!fullName.trim()) { setNameError("Name cannot be empty."); return; }
     setSavingName(true); setNameError("");
     const { error } = await supabase.from("profiles").update({ full_name: fullName.trim() }).eq("id", profile.id);
-    if (error) { setNameError("Failed to save. Try again."); }
+    if (error) setNameError("Failed to save. Try again.");
     else { setProfile(p => p ? { ...p, full_name: fullName.trim() } : p); setNameSaved(true); setTimeout(() => setNameSaved(false), 2500); }
     setSavingName(false);
   };
@@ -292,10 +250,10 @@ export default function AccountPage() {
   };
 
   if (loading) return (
-    <main className="min-h-screen bg-white dark:bg-[#0f0f0f] pt-24 pb-20 px-6">
+    <main className="min-h-screen bg-white pt-24 pb-20 px-6">
       <div className="max-w-2xl mx-auto space-y-4 animate-pulse">
-        <div className="h-24 bg-gray-100 dark:bg-gray-800 rounded-2xl" />
-        <div className="h-48 bg-gray-100 dark:bg-gray-800 rounded-2xl" />
+        <div className="h-24 bg-gray-100 rounded-2xl" />
+        <div className="h-48 bg-gray-100 rounded-2xl" />
       </div>
     </main>
   );
@@ -304,21 +262,18 @@ export default function AccountPage() {
   const avatarUrl = avatarPreview ?? profile?.avatar_url
     ?? `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(displayName ?? "U")}`;
   const memberSince = profile?.created_at
-    ? new Date(profile.created_at).toLocaleDateString("en-GB", { month: "long", year: "numeric" })
-    : "";
+    ? new Date(profile.created_at).toLocaleDateString("en-GB", { month: "long", year: "numeric" }) : "";
   const isGoogleUser = profile?.avatar_url?.includes("googleusercontent");
   const pending   = orders.filter(o => o.status === "pending").length;
   const fulfilled = orders.filter(o => o.status === "fulfilled").length;
 
-  const inp = "w-full bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors";
-
   return (
-    <main className="min-h-screen bg-white dark:bg-[#0f0f0f] pt-24 pb-20 px-6">
+    <main className="min-h-screen bg-white pt-24 pb-20 px-6">
       <div className="max-w-2xl mx-auto">
         <Link href="/" className="text-sm text-blue-500 hover:underline mb-8 inline-block">← Back to Home</Link>
 
         {/* Profile card */}
-        <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl p-6 mb-4 flex items-center gap-5">
+        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 mb-4 flex items-center gap-5">
           <div className="relative flex-shrink-0">
             <img src={avatarUrl} alt={displayName ?? ""} className="w-16 h-16 rounded-full object-cover bg-blue-500/10" />
             <button onClick={() => avatarInputRef.current?.click()} disabled={uploadingAvatar}
@@ -328,13 +283,13 @@ export default function AccountPage() {
             <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white truncate">{displayName}</h1>
+            <h1 className="text-xl font-bold text-gray-900 truncate">{displayName}</h1>
             <p className="text-sm text-gray-400 truncate">{profile?.email}</p>
             <p className="text-xs text-gray-400 mt-1 flex items-center gap-1"><Clock size={11} /> Member since {memberSince}</p>
             {avatarError && <p className="text-xs text-red-400 mt-1">{avatarError}</p>}
           </div>
           <button onClick={signOut}
-            className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-400 border border-red-200 dark:border-red-800 px-3 py-1.5 rounded-lg transition-colors flex-shrink-0">
+            className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-400 border border-red-200 px-3 py-1.5 rounded-lg transition-colors flex-shrink-0">
             <LogOut size={13} /> Sign Out
           </button>
         </div>
@@ -347,8 +302,8 @@ export default function AccountPage() {
               { label: "Pending", value: pending },
               { label: "Fulfilled", value: fulfilled },
             ].map(({ label, value }) => (
-              <div key={label} className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl p-4 text-center">
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
+              <div key={label} className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
+                <p className="text-2xl font-bold text-gray-900">{value}</p>
                 <p className="text-xs text-gray-400 mt-0.5">{label}</p>
               </div>
             ))}
@@ -356,31 +311,25 @@ export default function AccountPage() {
         )}
 
         {/* Tabs */}
-        <div className="flex bg-gray-100 dark:bg-[#1a1a1a] rounded-xl p-1 mb-6 gap-1">
+        <div className="flex bg-gray-100 rounded-xl p-1 mb-6 gap-1">
           {([
-            { key: "orders",    label: "Orders",   icon: Package },
-            { key: "wishlist",  label: "Wishlist", icon: Heart },
+            { key: "orders",    label: "Orders",    icon: Package },
+            { key: "wishlist",  label: "Wishlist",  icon: Heart },
             { key: "referrals", label: "Referrals", icon: Users },
-            { key: "profile",   label: "Profile",  icon: User },
+            { key: "profile",   label: "Profile",   icon: User },
           ] as const).map(({ key, label, icon: Icon }) => (
             <button key={key} onClick={() => setTab(key)}
               className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-semibold transition-colors ${
-                tab === key
-                  ? "bg-white dark:bg-[#111] text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                tab === key ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"
               }`}>
               <Icon size={12} />
               <span className="hidden sm:inline">{label}</span>
               <span className="sm:hidden">{label.slice(0, 3)}</span>
               {key === "wishlist" && wishlist.length > 0 && (
-                <span className="bg-blue-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0">
-                  {wishlist.length}
-                </span>
+                <span className="bg-blue-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0">{wishlist.length}</span>
               )}
               {key === "referrals" && referralCount > 0 && (
-                <span className="bg-blue-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0">
-                  {referralCount}
-                </span>
+                <span className="bg-blue-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0">{referralCount}</span>
               )}
             </button>
           ))}
@@ -390,8 +339,8 @@ export default function AccountPage() {
         {tab === "orders" && (
           <div className="space-y-3">
             {orders.length === 0 ? (
-              <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl p-12 text-center">
-                <Package size={36} className="text-gray-300 dark:text-gray-700 mx-auto mb-3" />
+              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-12 text-center">
+                <Package size={36} className="text-gray-300 mx-auto mb-3" />
                 <p className="text-gray-500 text-sm">No orders yet</p>
                 <Link href="/shop" className="text-blue-500 text-sm hover:underline mt-2 inline-block">Browse the shop →</Link>
               </div>
@@ -405,35 +354,33 @@ export default function AccountPage() {
         {tab === "wishlist" && (
           <div>
             {wishlist.length === 0 ? (
-              <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl p-12 text-center">
-                <Heart size={36} className="text-gray-300 dark:text-gray-700 mx-auto mb-3" />
+              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-12 text-center">
+                <Heart size={36} className="text-gray-300 mx-auto mb-3" />
                 <p className="text-gray-500 text-sm">Your wishlist is empty</p>
                 <Link href="/shop" className="text-blue-500 text-sm hover:underline mt-2 inline-block">Browse the shop →</Link>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {wishlist.map(w => (
-                  <div key={w.id} className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden">
+                  <div key={w.id} className="bg-gray-50 border border-gray-200 rounded-2xl overflow-hidden">
                     <div className="relative">
-                      <div className="h-40 bg-white dark:bg-[#111] flex items-center justify-center p-4">
+                      <div className="h-40 bg-white flex items-center justify-center p-4">
                         {w.products.image_url
                           ? <img src={w.products.image_url} alt={w.products.name} className="max-h-full max-w-full object-contain" />
                           : <ShoppingCart size={32} className="text-gray-300" />}
                       </div>
                       <button onClick={() => removeFromWishlist(w.id)}
-                        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shadow-sm">
+                        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shadow-sm">
                         <X size={13} />
                       </button>
                     </div>
                     <div className="p-4">
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1 line-clamp-2">{w.products.name}</p>
+                      <p className="text-sm font-semibold text-gray-900 mb-1 line-clamp-2">{w.products.name}</p>
                       <div className="flex items-center justify-between mt-2">
-                        <p className="text-sm font-bold text-gray-900 dark:text-white">
+                        <p className="text-sm font-bold text-gray-900">
                           {w.products.price_naira ? fmtN(w.products.price_naira) : "Price on request"}
                         </p>
-                        {!w.products.in_stock && (
-                          <span className="text-xs text-red-400 font-medium">Out of stock</span>
-                        )}
+                        {!w.products.in_stock && <span className="text-xs text-red-400 font-medium">Out of stock</span>}
                       </div>
                       <Link href={`/shop/${w.products.slug}`}
                         className="mt-3 flex items-center justify-center gap-1.5 w-full py-2 bg-blue-500 hover:bg-blue-400 text-white text-xs font-semibold rounded-lg transition-colors">
@@ -449,50 +396,47 @@ export default function AccountPage() {
 
         {/* Referrals tab */}
         {tab === "referrals" && (
-          <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
-            <ReferralTab
-              referralCode={profile?.referral_code ?? null}
-              referralCount={referralCount}
-            />
+          <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6">
+            <ReferralTab referralCode={profile?.referral_code ?? null} referralCount={referralCount} />
           </div>
         )}
 
         {/* Profile tab */}
         {tab === "profile" && (
           <div className="space-y-4">
-            <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl p-5 space-y-4">
-              <p className="text-sm font-semibold text-gray-900 dark:text-white">Personal Info</p>
+            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 space-y-4">
+              <p className="text-sm font-semibold text-gray-900">Personal Info</p>
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Full Name</label>
+                <label className="text-xs font-medium text-gray-500">Full Name</label>
                 <div className="flex gap-2">
                   <input className={inp} value={fullName} onChange={e => { setFullName(e.target.value); setNameSaved(false); }} placeholder="Enter your full name" />
                   <button onClick={saveName} disabled={savingName}
-                    className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5 flex-shrink-0 ${nameSaved ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-blue-500 hover:bg-blue-600 text-white"} disabled:opacity-50`}>
+                    className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5 flex-shrink-0 ${nameSaved ? "bg-green-500/10 text-green-600 border border-green-200" : "bg-blue-500 hover:bg-blue-600 text-white"} disabled:opacity-50`}>
                     {savingName ? <Loader2 size={13} className="animate-spin" /> : nameSaved ? <><Check size={13} /> Saved</> : "Save"}
                   </button>
                 </div>
                 {nameError && <p className="text-xs text-red-400">{nameError}</p>}
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Email</label>
+                <label className="text-xs font-medium text-gray-500">Email</label>
                 <input className={`${inp} opacity-60 cursor-not-allowed`} value={profile?.email ?? ""} disabled />
                 <p className="text-xs text-gray-500">Email cannot be changed.</p>
               </div>
               <div className="flex items-center justify-between py-1">
                 <div>
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Member Since</p>
-                  <p className="text-sm text-gray-900 dark:text-white mt-0.5">{memberSince}</p>
+                  <p className="text-xs font-medium text-gray-500">Member Since</p>
+                  <p className="text-sm text-gray-900 mt-0.5">{memberSince}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl p-5">
-              <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Password</p>
+            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
+              <p className="text-sm font-semibold text-gray-900 mb-1">Password</p>
               {isGoogleUser ? (
                 <p className="text-xs text-gray-500">You signed in with Google. Password change is managed by Google.</p>
               ) : resetSent ? (
-                <div className="flex items-center gap-2 bg-green-500/10 border border-green-500/20 rounded-xl px-3 py-2.5">
-                  <Check size={13} className="text-green-400 flex-shrink-0" />
-                  <p className="text-xs text-green-400">Reset link sent to <span className="font-medium">{profile?.email}</span>. Check your inbox.</p>
+                <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-3 py-2.5">
+                  <Check size={13} className="text-green-500 flex-shrink-0" />
+                  <p className="text-xs text-green-600">Reset link sent to <span className="font-medium">{profile?.email}</span>. Check your inbox.</p>
                 </div>
               ) : (
                 <div className="flex items-center justify-between">
