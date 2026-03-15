@@ -55,17 +55,22 @@ A customer has answered these questions:
 - Primary use: ${useCase}
 - What they already have: ${existing}
 
-Here are the available in-stock products:
+Here are the EXACT available in-stock products. You MUST only recommend products from this exact list, using the EXACT id and slug values provided:
 ${JSON.stringify(productList, null, 2)}
 
-Recommend the best 3-5 products for this customer. Be practical and budget-conscious. For each product, give a one-sentence reason why it suits them specifically.
+Recommend the best 3-5 products for this customer from the list above. Be practical and budget-conscious.
 
-Respond ONLY with a JSON array, no markdown, no extra text:
+CRITICAL RULES:
+- Only use products from the list above
+- Copy the id and slug EXACTLY as they appear in the list — do not modify or generate new ones
+- Give a one-sentence reason for each product tailored to this customer
+
+Respond ONLY with a valid JSON array, no markdown backticks, no extra text:
 [
   {
-    "id": "product-id-here",
-    "slug": "product-slug-here",
-    "name": "Product Name",
+    "id": "exact-id-from-list",
+    "slug": "exact-slug-from-list",
+    "name": "exact-name-from-list",
     "reason": "One sentence why this suits them"
   }
 ]`;
@@ -86,6 +91,7 @@ Respond ONLY with a JSON array, no markdown, no extra text:
 
   const aiData = await response.json();
   const text = aiData.content?.[0]?.text ?? "[]";
+  console.log("AI raw response:", text);
 
   let recommendations: { id: string; slug: string; name: string; reason: string }[] = [];
   try {
@@ -94,16 +100,24 @@ Respond ONLY with a JSON array, no markdown, no extra text:
     return NextResponse.json({ error: "AI response parsing failed" }, { status: 500 });
   }
 
-  // Enrich with full product data
+  // Enrich with full product data — match by id, slug, or name
   const enriched = recommendations.map(rec => {
-    const product = products.find(p => p.id === rec.id || p.slug === rec.slug);
+    const product = products.find(p =>
+      p.id === rec.id ||
+      p.slug === rec.slug ||
+      p.name.toLowerCase() === rec.name?.toLowerCase()
+    );
+    if (!product) return null;
     return {
       ...rec,
-      image_url: product?.image_url ?? null,
-      price_naira: product?.price_naira ?? null,
-      category: product?.category ?? "",
+      id: product.id,
+      slug: product.slug,
+      name: product.name,
+      image_url: product.image_url ?? null,
+      price_naira: product.price_naira ?? null,
+      category: product.category ?? "",
     };
-  }).filter(r => r.slug);
+  }).filter(Boolean);
 
   return NextResponse.json({ recommendations: enriched });
 }

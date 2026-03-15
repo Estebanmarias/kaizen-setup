@@ -121,7 +121,7 @@ export default function SetupRecommender() {
       {/* Modal */}
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={close} />
+          <div className="absolute inset-0 bg-black/10" onClick={close} />
           <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden">
 
             {/* Header */}
