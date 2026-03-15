@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { MessageCircle, ShoppingCart, ArrowLeft, Plus, Minus, Check, Share2, Copy, CheckCheck, CreditCard, Loader2, Star } from "lucide-react";
 import Link from "next/link";
+import RecentPurchasePopup from "@/components/RecentPurchasePopup";
 import TrustBadges from "@/components/TrustBadges";
 import { addRecentlyViewed, getRecentlyViewed, type RecentProduct } from "@/lib/recentlyViewed";
 
@@ -410,6 +411,7 @@ export default function ProductDetailPage() {
 
   return (
     <main className="min-h-screen bg-white pt-24 pb-28 md:pb-20 px-6">
+      <RecentPurchasePopup />
       {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />}
 
       {/* ── Sticky Add to Cart — mobile only ── */}

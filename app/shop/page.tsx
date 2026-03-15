@@ -393,6 +393,8 @@ function WishlistButton({ productId, wishlisted, onToggle }: {
   );
 }
 
+import RecentPurchasePopup from "@/components/RecentPurchasePopup";
+
 export default function ShopPage() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
@@ -506,6 +508,7 @@ export default function ShopPage() {
 
   return (
     <main className="min-h-screen bg-white pt-24 pb-20 px-6">
+      <RecentPurchasePopup />
       <FlyAnimation items={flyItems} endX={cartEndX} endY={cartEndY} />
       {quickAdd && <QuickAddDrawer product={quickAdd} onClose={() => { setQuickAdd(null); closeDrawer(); }} onAdded={handleAdded} />}
       {cartOpen && !quickAdd && <CartDrawer onClose={() => { setCartOpen(false); closeDrawer(); }} />}
