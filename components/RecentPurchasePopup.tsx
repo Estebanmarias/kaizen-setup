@@ -26,10 +26,9 @@ export default function RecentPurchasePopup() {
     // Only show once per session
     if (sessionStorage.getItem("recent_purchase_shown")) return;
 
-    if (!supabase) return;
-
     // Delay 8 seconds before showing
     const timer = setTimeout(async () => {
+      if (!supabase) return;
       const { data } = await supabase
         .from("consultation_requests")
         .select("name, items, created_at")
