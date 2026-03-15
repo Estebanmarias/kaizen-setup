@@ -394,6 +394,7 @@ function WishlistButton({ productId, wishlisted, onToggle }: {
 }
 
 import RecentPurchasePopup from "@/components/RecentPurchasePopup";
+import SetupRecommender from "@/components/SetupRecommender";
 
 export default function ShopPage() {
   const router = useRouter();
@@ -525,7 +526,10 @@ export default function ShopPage() {
       <div className="max-w-6xl mx-auto">
         <Link href="/" className="text-sm text-blue-500 hover:underline mb-8 inline-block">← Back to Home</Link>
         <p className="text-xs font-semibold tracking-widest uppercase text-blue-500 mb-3">The Shop</p>
-        <h1 className="text-3xl md:text-5xl font-bold mb-4 text-gray-900">Products</h1>
+        <div className="flex items-end justify-between mb-4 flex-wrap gap-4">
+          <h1 className="text-3xl md:text-5xl font-bold text-gray-900">Products</h1>
+          <SetupRecommender />
+        </div>
         <p className="text-gray-500 mb-10 max-w-xl">
           Tested and recommended gear. Every product on this page has been used or reviewed by KaizenSetup.
         </p>
