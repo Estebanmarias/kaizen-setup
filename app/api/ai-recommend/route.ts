@@ -92,6 +92,7 @@ Respond ONLY with a valid JSON array, no markdown backticks, no extra text:
   const aiData = await response.json();
   const text = aiData.content?.[0]?.text ?? "[]";
   console.log("AI raw response:", text);
+  console.log("Products in DB:", products.map(p => ({ id: p.id, slug: p.slug, name: p.name })));
 
   let recommendations: { id: string; slug: string; name: string; reason: string }[] = [];
   try {
