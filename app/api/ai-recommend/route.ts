@@ -98,8 +98,12 @@ Respond ONLY with a valid JSON array, no markdown backticks, no extra text:
   try {
     recommendations = JSON.parse(text.replace(/```json|```/g, "").trim());
   } catch {
-    return NextResponse.json({ error: "AI response parsing failed" }, { status: 500 });
+    return NextResponse.json({ error: "AI response parsing failed", raw: text }, { status: 500 });
   }
+
+  // DEBUG — return raw AI response alongside results
+  console.log("Parsed recommendations:", JSON.stringify(recommendations));
+  console.log("DB slugs:", products.map(p => p.slug));
 
   // Enrich with full product data — match by id, slug, or name
   const enriched = recommendations.map(rec => {
@@ -120,5 +124,5 @@ Respond ONLY with a valid JSON array, no markdown backticks, no extra text:
     };
   }).filter(Boolean);
 
-  return NextResponse.json({ recommendations: enriched });
+  return NextResponse.json({ recommendations: enriched, debug: { raw: text, parsed: recommendations, dbSlugs: products.map(p => p.slug) } });
 }
