@@ -112,10 +112,13 @@ export default function SetupRecommender() {
     <>
       {/* Trigger button */}
       <button
-        onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold px-5 py-2.5 rounded-full text-sm transition-colors shadow-lg shadow-blue-500/20">
+        disabled
+        className="inline-flex items-center gap-2 bg-gray-100 text-gray-400 font-semibold px-5 py-2.5 rounded-full text-sm cursor-not-allowed relative">
         <Sparkles size={15} />
         Build My Setup with AI
+        <span className="ml-1 text-[10px] font-bold bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded-full uppercase tracking-wide">
+          Coming Soon
+        </span>
       </button>
 
       {/* Modal */}

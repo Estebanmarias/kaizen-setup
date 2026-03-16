@@ -30,20 +30,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No products available" }, { status: 500 });
   }
 
-  const [minBudget, maxBudget] = BUDGET_RANGES[budget] ?? [0, 99999999];
-
-  // Filter to affordable products
-  const affordable = products.filter(p => {
-    if (p.price_naira) return p.price_naira <= maxBudget;
-    // variant-priced — include and let AI decide
-    return true;
-  });
-
-  const productList = affordable.map(p => ({
+  // Send ALL in-stock products to Claude — let it decide based on budget context
+  const productList = products.map(p => ({
     id: p.id,
     name: p.name,
-    description: p.description,
-    price: p.price_naira ? `₦${p.price_naira.toLocaleString()}` : "Variant priced",
+    description: p.description?.slice(0, 100),
+    price: p.price_naira ? `₦${p.price_naira.toLocaleString()}` : "See variants",
     category: p.category,
     slug: p.slug,
   }));
@@ -75,6 +67,9 @@ Respond ONLY with a valid JSON array, no markdown backticks, no extra text:
   }
 ]`;
 
+console.log("Sending to Claude, product count:", productList.length);
+console.log("First 3 products:", JSON.stringify(productList.slice(0, 3)));
+
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -90,6 +85,8 @@ Respond ONLY with a valid JSON array, no markdown backticks, no extra text:
   });
 
   const aiData = await response.json();
+  console.log("Anthropic status:", response.status);
+  console.log("AI data:", JSON.stringify(aiData));
   const text = aiData.content?.[0]?.text ?? "[]";
   console.log("AI raw response:", text);
   console.log("Products in DB:", products.map(p => ({ id: p.id, slug: p.slug, name: p.name })));
@@ -124,5 +121,5 @@ Respond ONLY with a valid JSON array, no markdown backticks, no extra text:
     };
   }).filter(Boolean);
 
-  return NextResponse.json({ recommendations: enriched, debug: { raw: text, parsed: recommendations, dbSlugs: products.map(p => p.slug) } });
+  return NextResponse.json({ recommendations: enriched });
 }
