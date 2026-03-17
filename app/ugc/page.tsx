@@ -1,5 +1,6 @@
 import { Instagram } from "lucide-react";
 import Link from "next/link";
+import BackLink from "@/components/BackLink";
 
 const REELS = [
   { title: "Wireless AirTag Dual Review", creator: "XY Shot", link: "https://www.instagram.com/kaizensetup/reel/DVAxZSuDFKA/" },
@@ -16,10 +17,12 @@ export default function UGCPage() {
   return (
     <main className="min-h-screen bg-white pt-24 pb-20 px-6">
       <div className="max-w-6xl mx-auto">
-        <Link href="/" className="text-sm text-blue-500 hover:underline mb-8 inline-block">
-          ← Back to Home
-        </Link>
-        <p className="text-xs font-semibold tracking-widest uppercase text-blue-500 mb-3">Instagram Reels</p>
+        <div className="flex justify-end mb-8"> </div>
+
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-xs font-semibold tracking-widest uppercase text-blue-500 m-0">Instagram Reels</p>
+          <BackLink />
+        </div>
         <h1 className="text-3xl md:text-5xl font-bold mb-4 text-gray-900">Creator Reviews</h1>
         <p className="text-gray-500 mb-12 max-w-xl">
           Watch real unboxings, reviews, and tutorials from creators who've used our products.

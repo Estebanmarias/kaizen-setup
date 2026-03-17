@@ -7,6 +7,7 @@ import { ShoppingCart, X, Plus, Minus, Trash2, ArrowRight, ChevronDown, ChevronU
 import Link from "next/link";
 import Image from "next/image";
 import { getRecentlyViewed, type RecentProduct } from "@/lib/recentlyViewed";
+import BackLink from "@/components/BackLink";
 
 const CATEGORIES = ["All", "Desk & Seating", "Monitors & Lighting", "Accessories", "Cables & Hubs", "Smart Home", "Cleaning", "Bags", "Keyboards", "Mice", "Monitors"];
 
@@ -524,8 +525,11 @@ export default function ShopPage() {
       </button>
 
       <div className="max-w-6xl mx-auto">
-        <Link href="/" className="text-sm text-blue-500 hover:underline mb-8 inline-block">← Back to Home</Link>
-        <p className="text-xs font-semibold tracking-widest uppercase text-blue-500 mb-3">The Shop</p>
+        <div className="flex justify-end mb-8"> </div>
+       <div className="flex items-center justify-between mb-4">
+          <p className="text-xs font-semibold tracking-widest uppercase text-blue-500 m-0">The Shop</p>
+          <BackLink />
+        </div>
         <div className="flex items-end justify-between mb-4 flex-wrap gap-4">
           <h1 className="text-3xl md:text-5xl font-bold text-gray-900">Products</h1>
           <SetupRecommender />

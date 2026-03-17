@@ -1,5 +1,6 @@
 "use client";
 
+import BackLink from "@/components/BackLink";
 import { useEffect, useState } from "react";
 import { MediumPost } from "@/lib/medium";
 import Link from "next/link";
@@ -28,12 +29,12 @@ export default function BlogPage() {
   return (
     <main className="min-h-screen bg-white pt-24 pb-20 px-6">
       <div className="max-w-6xl mx-auto">
-        <Link href="/" className="text-sm text-blue-500 hover:underline mb-8 inline-block">
-          ← Back to Home
-        </Link>
-
-        <div className="mb-16">
-          <p className="text-xs font-semibold tracking-widest uppercase text-blue-500 mb-3">The Blog</p>
+        <div className="flex justify-end mb-8"> </div>
+          <div className="mb-16">
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-xs font-semibold tracking-widest uppercase text-blue-500 m-0">The Blog</p>
+            <BackLink />
+          </div>
           <h1 className="text-3xl md:text-5xl font-bold mb-4 text-gray-900">Coming Soon</h1>
           <p className="text-gray-500 max-w-xl mb-8">
             We're building a proper home for our tech guides, honest reviews, and setup breakdowns.

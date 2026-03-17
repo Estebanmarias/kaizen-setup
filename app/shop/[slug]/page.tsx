@@ -1,4 +1,6 @@
 "use client";
+
+import BackLink from "@/components/BackLink";
 import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
@@ -434,9 +436,7 @@ export default function ProductDetailPage() {
       )}
 
       <div className="max-w-4xl mx-auto">
-        <Link href="/shop" className="inline-flex items-center gap-2 text-sm text-blue-500 hover:underline mb-8">
-          <ArrowLeft size={14} /> Back to Shop
-        </Link>
+        <div className="flex justify-end mb-8"><BackLink href="/shop" label="Back to Shop" /></div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-16">
           {/* Image Gallery */}

@@ -1,5 +1,6 @@
 "use client";
 
+import BackLink from "@/components/BackLink";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -222,11 +223,8 @@ export default function CartPage() {
   return (
     <main className="min-h-screen bg-white pt-24 pb-20 px-6">
       <div className="max-w-4xl mx-auto">
-        <Link href="/shop" className="inline-flex items-center gap-2 text-sm text-blue-500 hover:underline mb-8">
-          <ArrowLeft size={14} /> Continue Shopping
-        </Link>
+        <div className="flex justify-end mb-8"><BackLink href="/shop" label="Continue Shopping" /></div>
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Your Cart</h1>
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2 flex flex-col gap-4">

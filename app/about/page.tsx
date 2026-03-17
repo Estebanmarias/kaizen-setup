@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import BackLink from "@/components/BackLink";
 
 export const metadata: Metadata = {
   title: "About",
@@ -56,10 +57,13 @@ export default function AboutPage() {
   return (
     <main className="min-h-screen bg-white dark:bg-[#0f0f0f] pt-24 pb-20 px-6">
       <div className="max-w-3xl mx-auto">
-        <Link href="/" className="text-sm text-blue-500 hover:underline mb-8 inline-block">← Back to Home</Link>
+        <div className="flex justify-end mb-8"> </div>
 
         {/* Hero */}
-        <p className="text-xs font-semibold tracking-widest uppercase text-blue-500 mb-3">Our Story</p>
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-xs font-semibold tracking-widest uppercase text-blue-500 m-0">Our Story</p>
+          <BackLink />
+        </div>
         <h1 className="text-3xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
           We built the shop<br className="hidden md:block" /> we wished existed.
         </h1>
