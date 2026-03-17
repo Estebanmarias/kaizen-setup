@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { X, ChevronRight, Activity, ArrowRight, ShoppingCart } from "lucide-react";
+import { X, ChevronRight, Activity, ShoppingCart, Sparkles } from "lucide-react";
 import Link from "next/link";
+
+const LETTERS = ["A", "B", "C", "D"];
 
 const QUESTIONS = [
   {
@@ -19,7 +21,7 @@ const QUESTIONS = [
     title: "What is your biggest physical complaint?",
     options: [
       { label: "None, I feel great", score: 20 },
-      { label: "Neck/Shoulder stiffness", score: 5, painPoint: "neck" },
+      { label: "Neck or shoulder stiffness", score: 5, painPoint: "neck" },
       { label: "Lower back pain", score: 5, painPoint: "back" },
       { label: "Wrist fatigue", score: 5, painPoint: "wrist" },
     ],
@@ -28,8 +30,8 @@ const QUESTIONS = [
     id: "lighting",
     title: "What is your current lighting setup?",
     options: [
-      { label: "Dedicated desk lamp/light bar", score: 20 },
-      { label: "Near a bright window", score: 15 },
+      { label: "Dedicated desk lamp or light bar", score: 20 },
+      { label: "Near a bright, natural window", score: 15 },
       { label: "Just the room ceiling light", score: 0 },
     ],
   },
@@ -53,26 +55,26 @@ const QUESTIONS = [
   },
 ];
 
-// Smart recommendation engine mapping
+// Smart recommendation engine mapping to actual search queries
 const getRecommendation = (painPoint: string, budget: string) => {
   if (budget === "low") {
     return {
       title: "The Quick Fix Bundle",
       desc: "A heavy-duty laptop stand and an ergonomic mouse pad to instantly fix your viewing angle and wrist posture without breaking the bank.",
-      link: "/shop",
+      link: "/search?q=stand",
     };
   }
   if (painPoint === "neck" || painPoint === "wrist") {
     return {
       title: "The Posture Bundle",
       desc: "An aluminum gas-spring monitor arm combined with the CX23 Keyboard and G30LD Mouse. Gets your screen at eye level and fixes wrist strain.",
-      link: "/shop",
+      link: "/search?q=ergonomic",
     };
   }
   return {
     title: "The Full Ergonomic Upgrade",
     desc: "A premium ergonomic mesh chair paired with a solid desk foundation. The ultimate fix for long hours and back pain.",
-    link: "/shop",
+    link: "/shop?category=Desk%20%26%20Seating",
   };
 };
 
@@ -91,12 +93,11 @@ export default function WorkspaceScoreTool() {
     if (step < QUESTIONS.length - 1) {
       setStep(step + 1);
     } else {
-      // Calculate Results
       setIsCalculating(true);
       setTimeout(() => {
         setIsCalculating(false);
         setShowResults(true);
-      }, 1500);
+      }, 1800);
     }
   };
 
@@ -115,69 +116,96 @@ export default function WorkspaceScoreTool() {
     <>
       <button 
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-colors shadow-sm"
+        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3.5 rounded-xl font-bold text-sm transition-all hover:scale-[1.02] shadow-md hover:shadow-lg hover:shadow-blue-500/20"
       >
-        <Activity size={16} /> Get Your Workspace Score
+        <Activity size={18} /> Get Your Workspace Score
       </button>
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-md transition-opacity" onClick={() => setIsOpen(false)} />
           
-          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative w-full max-w-xl bg-white rounded-[2rem] shadow-2xl overflow-hidden flex flex-col min-h-[480px] animate-in fade-in zoom-in-95 duration-200">
+            
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-              <div className="flex items-center gap-2">
-                <Activity size={18} className="text-blue-500" />
-                <span className="font-bold text-gray-900">Workspace Analyzer</span>
+            <div className="flex items-center justify-between px-6 py-5 bg-white z-10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center">
+                  <Activity size={16} className="text-blue-500" />
+                </div>
+                <span className="font-bold text-gray-900 text-sm tracking-wide uppercase">Workspace Analyzer</span>
               </div>
-              <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-gray-900 transition-colors">
-                <X size={20} />
+              <button onClick={() => setIsOpen(false)} className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+                <X size={16} />
               </button>
             </div>
 
-            <div className="p-6 md:p-8 min-h-[360px] flex flex-col justify-center">
+            {/* Progress Bar (Moved to Top) */}
+            {!isCalculating && !showResults && (
+              <div className="h-1.5 w-full bg-gray-100">
+                <div 
+                  className="h-full bg-blue-500 transition-all duration-500 ease-out"
+                  style={{ width: `${((step) / QUESTIONS.length) * 100}%` }}
+                />
+              </div>
+            )}
+
+            {/* Content Area */}
+            <div className="p-6 md:p-10 flex-1 flex flex-col justify-center bg-gray-50/30">
               {isCalculating ? (
-                <div className="text-center flex flex-col items-center justify-center space-y-4">
-                  <div className="w-12 h-12 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin" />
-                  <p className="text-sm font-semibold text-gray-900 animate-pulse">Analyzing your setup...</p>
+                <div className="text-center flex flex-col items-center justify-center space-y-5 animate-in fade-in duration-500">
+                  <div className="relative w-16 h-16 flex items-center justify-center">
+                    <div className="absolute inset-0 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin" />
+                    <Sparkles size={20} className="text-blue-500 animate-pulse" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold text-gray-900 mb-1">Crunching the numbers...</p>
+                    <p className="text-sm text-gray-500">Finding your weakest link.</p>
+                  </div>
                 </div>
               ) : showResults ? (
-                <div className="space-y-6 animate-in slide-in-from-bottom-4 fade-in duration-500">
+                <div className="space-y-8 animate-in slide-in-from-bottom-8 fade-in duration-700">
                   <div className="text-center">
-                    <p className="text-xs font-bold tracking-widest uppercase text-gray-400 mb-2">Your Score</p>
+                    <p className="text-xs font-bold tracking-widest uppercase text-gray-400 mb-3">Your Score</p>
                     <div className="flex items-baseline justify-center gap-1">
-                      <span className={`text-6xl font-bold tracking-tighter ${totalScore >= 80 ? "text-green-500" : totalScore >= 50 ? "text-yellow-500" : "text-red-500"}`}>
+                      <span className={`text-7xl font-black tracking-tighter ${totalScore >= 80 ? "text-green-500" : totalScore >= 50 ? "text-yellow-500" : "text-red-500"}`}>
                         {totalScore}
                       </span>
-                      <span className="text-2xl text-gray-400 font-medium">/100</span>
+                      <span className="text-3xl text-gray-300 font-bold">/100</span>
                     </div>
-                    <p className="text-sm text-gray-500 mt-3 max-w-xs mx-auto">
+                    <p className="text-base text-gray-600 mt-4 max-w-sm mx-auto font-medium">
                       {totalScore >= 80 ? "Your setup is incredibly optimized. You just need minor tweaks." : 
-                       totalScore >= 50 ? "You have a decent foundation, but ergonomics are holding you back." : 
+                       totalScore >= 50 ? "You have a decent foundation, but bad ergonomics are holding you back." : 
                        "Your setup is actively working against your body and productivity."}
                     </p>
                   </div>
 
-                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-5">
-                    <p className="text-xs font-bold text-blue-500 uppercase tracking-widest mb-1">Recommended Upgrade</p>
-                    <h3 className="font-bold text-gray-900 mb-2">{recommendation.title}</h3>
-                    <p className="text-sm text-gray-600 mb-4 leading-relaxed">{recommendation.desc}</p>
+                  <div className="bg-white border-2 border-blue-100 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl -mr-10 -mt-10" />
+                    <p className="text-xs font-bold text-blue-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                      <Sparkles size={14} /> Recommended Fix
+                    </p>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">{recommendation.title}</h3>
+                    <p className="text-sm text-gray-500 mb-6 leading-relaxed max-w-md">{recommendation.desc}</p>
                     <Link href={recommendation.link} onClick={() => setIsOpen(false)}
-                      className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
-                      <ShoppingCart size={14} /> Shop this fix
+                      className="inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-5 py-3 rounded-xl text-sm font-semibold transition-colors">
+                      <ShoppingCart size={16} /> Shop this fix
                     </Link>
                   </div>
 
-                  <button onClick={reset} className="w-full text-center text-sm text-gray-400 hover:text-gray-900 transition-colors">
+                  <button onClick={reset} className="w-full text-center text-sm font-semibold text-gray-400 hover:text-gray-900 transition-colors">
                     Retake Quiz
                   </button>
                 </div>
               ) : (
-                <div className="flex flex-col h-full animate-in slide-in-from-right-4 fade-in duration-300">
-                  <div className="mb-6">
-                    <p className="text-xs font-bold text-blue-500 mb-2">Question {step + 1} of {QUESTIONS.length}</p>
-                    <h2 className="text-2xl font-bold text-gray-900 leading-snug">{QUESTIONS[step].title}</h2>
+                <div className="flex flex-col h-full animate-in slide-in-from-right-8 fade-in duration-500">
+                  <div className="mb-8">
+                    <p className="text-xs font-bold uppercase tracking-widest text-blue-500 mb-3">
+                      Question {step + 1} of {QUESTIONS.length}
+                    </p>
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
+                      {QUESTIONS[step].title}
+                    </h2>
                   </div>
                   
                   <div className="flex flex-col gap-3 mt-auto">
@@ -185,26 +213,19 @@ export default function WorkspaceScoreTool() {
                       <button 
                         key={i}
                         onClick={() => handleSelect(opt)}
-                        className="flex items-center justify-between w-full p-4 rounded-xl border border-gray-200 hover:border-blue-500 hover:bg-blue-50 text-left transition-all group"
+                        className="flex items-center w-full p-4 rounded-2xl border-2 border-gray-100 bg-white hover:border-blue-500 hover:bg-blue-50/50 text-left transition-all duration-200 group shadow-sm hover:shadow-md"
                       >
-                        <span className="font-medium text-gray-700 group-hover:text-blue-700">{opt.label}</span>
-                        <ChevronRight size={18} className="text-gray-300 group-hover:text-blue-500 transform group-hover:translate-x-1 transition-all" />
+                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center text-xs font-bold text-gray-500 group-hover:bg-blue-500 group-hover:text-white group-hover:border-blue-500 transition-colors mr-4">
+                          {LETTERS[i]}
+                        </div>
+                        <span className="font-semibold text-gray-700 group-hover:text-blue-700 text-sm md:text-base">{opt.label}</span>
+                        <ChevronRight size={18} className="ml-auto text-gray-300 group-hover:text-blue-500 transform group-hover:translate-x-1 transition-all" />
                       </button>
                     ))}
                   </div>
                 </div>
               )}
             </div>
-            
-            {/* Progress Bar */}
-            {!isCalculating && !showResults && (
-              <div className="h-1.5 w-full bg-gray-100">
-                <div 
-                  className="h-full bg-blue-500 transition-all duration-300 ease-out"
-                  style={{ width: `${((step) / QUESTIONS.length) * 100}%` }}
-                />
-              </div>
-            )}
           </div>
         </div>
       )}
