@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import SetupRecommender from "@/components/SetupRecommender";
+import WorkspaceScoreTool from "@/components/WorkspaceScoreTool";
 
 const TRUST_SIGNALS = [
   "Real testing, not spec sheets",
@@ -61,7 +61,7 @@ export default function Hero() {
             className="border border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white px-6 py-3 rounded-lg font-semibold text-sm transition-colors">
             View Reviews
           </a>
-          <SetupRecommender />
+          <WorkspaceScoreTool />
         </div>
 
         <div className="mt-12 md:mt-16 flex flex-wrap gap-6 text-sm text-gray-500">

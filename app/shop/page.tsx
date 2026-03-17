@@ -395,7 +395,7 @@ function WishlistButton({ productId, wishlisted, onToggle }: {
 }
 
 import RecentPurchasePopup from "@/components/RecentPurchasePopup";
-import SetupRecommender from "@/components/SetupRecommender";
+import WorkspaceScoreTool from "@/components/WorkspaceScoreTool";
 
 export default function ShopPage() {
   const router = useRouter();
@@ -532,7 +532,7 @@ export default function ShopPage() {
         </div>
         <div className="flex items-end justify-between mb-4 flex-wrap gap-4">
           <h1 className="text-3xl md:text-5xl font-bold text-gray-900">Products</h1>
-          <SetupRecommender />
+          <WorkspaceScoreTool/>
         </div>
         <p className="text-gray-500 mb-10 max-w-xl">
           Tested and recommended gear. Every product on this page has been used or reviewed by KaizenSetup.
