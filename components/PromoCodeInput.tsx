@@ -53,7 +53,7 @@ export default function PromoCodeInput({
   };
 
   // ── Coming Soon state ──────────────────────────────────────────
-  const COMING_SOON = true; // flip to false when launching promo codes
+  const COMING_SOON = false; // flip to false when launching promo codes
 
   if (COMING_SOON) {
     return (
