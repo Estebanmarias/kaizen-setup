@@ -29,10 +29,11 @@ export default function BlogPage() {
   return (
     <main className="min-h-screen bg-white pt-24 pb-20 px-6">
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-end mb-8"> </div>
-          <div className="mb-16">
+
+        {/* Header */}
+        <div className="mb-10">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-xs font-semibold tracking-widest uppercase text-blue-500 m-0">The Blog</p>
+            <p className="text-xs font-semibold tracking-widest uppercase text-blue-500">The Blog</p>
             <BackLink />
           </div>
           <h1 className="text-3xl md:text-5xl font-bold mb-4 text-gray-900">Coming Soon</h1>
@@ -49,6 +50,20 @@ export default function BlogPage() {
           </div>
         </div>
 
+        {/* Tab switcher */}
+        <div className="flex items-center gap-2 mb-10 border-b border-gray-100">
+          <button className="text-sm font-semibold text-gray-900 border-b-2 border-blue-500 pb-3 px-1 mr-2">
+            Articles
+          </button>
+          <Link
+            href="/workspace-tours"
+            className="text-sm font-medium text-gray-400 hover:text-gray-700 border-b-2 border-transparent pb-3 px-1 transition-colors"
+          >
+            Workspace Tours
+          </Link>
+        </div>
+
+        {/* Medium posts */}
         <div>
           <div className="flex items-center gap-3 mb-6">
             <div className="h-px flex-1 bg-gray-200" />

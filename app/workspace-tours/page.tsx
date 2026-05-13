@@ -34,6 +34,19 @@ export default async function WorkspaceToursPage() {
       <div className="max-w-6xl mx-auto">
         <Link href="/" className="text-sm text-blue-500 hover:underline mb-8 inline-block">← Back to Home</Link>
 
+        {/* Tab switcher */}
+        <div className="flex items-center gap-2 mb-4 border-b border-gray-100">
+          <Link
+            href="/blog"
+            className="text-sm font-medium text-gray-400 hover:text-gray-700 border-b-2 border-transparent pb-3 px-1 mr-2 transition-colors"
+          >
+            Articles
+          </Link>
+          <button className="text-sm font-semibold text-gray-900 border-b-2 border-blue-500 pb-3 px-1">
+            Workspace Tours
+          </button>
+        </div>
+
         <p className="text-xs font-semibold tracking-widest uppercase text-blue-500 mb-3">Workspace Tours</p>
         <h1 className="text-3xl md:text-5xl font-bold mb-4 text-gray-900">Inside the Setups</h1>
         <p className="text-gray-500 max-w-xl mb-12">
