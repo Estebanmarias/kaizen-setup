@@ -81,8 +81,10 @@ export async function POST(req: NextRequest) {
       .select("id")
       .single();
 
-    if (insertErr) {
-      return NextResponse.json({ error: insertErr.message }, { status: 500 });
+   if (insertErr) {
+      console.error("INSERT ERROR:", JSON.stringify(insertErr, null, 2));
+      console.error("ORDER DATA KEYS:", Object.keys(safeOrderData));
+      return NextResponse.json({ error: insertErr.message, details: insertErr }, { status: 500 });
     }
 
     const orderId = insertedOrder?.id ?? null;

@@ -4,18 +4,20 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { getSession, signOut } from "@/lib/admin-auth";
-import { ShoppingBag, Package, Mail, MessageSquare, LogOut, Zap, Star, Tag, BarChart2, Users, BookText } from "lucide-react";
+import { ShoppingBag, Package, Mail, MessageSquare, LogOut, Zap, Star, Tag, BarChart2, Users, BookText, Camera, FileText } from "lucide-react";
+
 
 const NAV = [
   { label: "Dashboard", href: "/admin", icon: ShoppingBag },
   { label: "Products", href: "/admin/products", icon: Package },
   { label: "Customers", href: "/admin/customers", icon: Users },
+  { label: "Blog", href: "/admin/blog", icon: FileText },
+  { label: "Tours", href: "/admin/tours", icon: Camera },
   { label: "Reviews", href: "/admin/reviews", icon: Star },
   { label: "Promo", href: "/admin/promo", icon: Tag },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart2 },
   { label: "Newsletter", href: "/admin/newsletter", icon: Mail },
   { label: "Contacts", href: "/admin/contacts", icon: MessageSquare },
-  { label: "Blog", href: "/admin/blog", icon: BookText },
 ];
 
 const PAGE_TITLES: Record<string, string> = {

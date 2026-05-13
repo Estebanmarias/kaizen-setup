@@ -17,6 +17,7 @@ const PRIMARY_LINKS = [
 const EXPLORE_LINKS = [
   { label: "Services", href: "/#services" },
   { label: "Reviews", href: "/#reviews" },
+  { label: "Workspace Tours", href: "/workspace-tours" },
   { label: "Contact", href: "/#contact" },
 ];
 
