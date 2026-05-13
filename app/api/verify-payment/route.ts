@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
     const { user_id: _ignored, ...safeOrderData } = orderData;
 
     const { data: insertedOrder, error: insertErr } = await supabaseAdmin
-      .from("consultation_requests")
+      .from("order_requests")
       .insert({
         ...safeOrderData,
         user_id: resolvedUserId,

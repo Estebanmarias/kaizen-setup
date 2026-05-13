@@ -40,7 +40,7 @@ export default function CustomersPage() {
   useEffect(() => {
     if (!supabase) return;
     supabase
-      .from("consultation_requests")
+      .from("order_requests")
       .select("id, name, email, phone, status, created_at, total_naira, payment_status, items")
       .order("created_at", { ascending: false })
       .then(({ data }) => {

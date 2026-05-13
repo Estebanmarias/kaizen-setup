@@ -78,7 +78,7 @@ function TrackOrderContent() {
     setSearched(true);
 
     const { data, error: dbError } = await supabase!
-      .from("consultation_requests")
+      .from("order_requests")
       .select("id, name, email, status, created_at, total_naira, payment_status, items, setup_type")
       .eq("id", oid.trim())
       .eq("email", em.trim().toLowerCase())

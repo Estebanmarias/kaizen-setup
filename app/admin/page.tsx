@@ -100,7 +100,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!supabase) return;
     Promise.all([
-      supabase.from("consultation_requests").select("*").order("created_at", { ascending: false }),
+      supabase.from("order_requests").select("*").order("created_at", { ascending: false }),
       supabase.from("products").select("name,category"),
     ]).then(([{ data: orders }, { data: products }]) => {
       setOrders(orders ?? []);
@@ -126,7 +126,7 @@ export default function AdminDashboard() {
   const markAsPaid = async (id: string) => {
   if (!supabase) return;
   const { error } = await supabase
-    .from("consultation_requests")
+    .from("order_requests")
     .update({ payment_status: "paid" })
     .eq("id", id);
 

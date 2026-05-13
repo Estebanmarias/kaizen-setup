@@ -218,7 +218,7 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     if (!supabase || !product || !authUserId || !authEmail) return;
-    supabase.from("consultation_requests").select("id, items").eq("email", authEmail)
+    supabase.from("order_requests").select("id, items").eq("email", authEmail)
       .then(({ data }) => {
         setHasOrdered((data ?? []).some(order => (order.items ?? []).some((item: { name: string }) => item.name === product.name)));
       });
@@ -275,7 +275,7 @@ export default function ProductDetailPage() {
     setFormStatus("loading"); setFormError("");
     if (supabase && product) {
       const items = [{ name: product.name, quantity, price: effectivePrice ?? undefined, variant: variantSummary || undefined }];
-      const { data, error } = await supabase.from("consultation_requests").insert([{
+      const { data, error } = await supabase.from("order_requests").insert([{
         name: orderForm.name, email: authEmail ?? orderForm.email, phone: orderForm.phone,
         message: orderForm.message || null, setup_type: product.category, status: "pending",
         items, total_naira: effectivePrice ? effectivePrice * quantity : null, user_id: authUserId ?? null,

@@ -188,7 +188,7 @@ export default function AccountPage() {
       setUserId(data.user.id);
       const [{ data: prof }, { data: ords }, { data: wl }, { count: refCount }] = await Promise.all([
         supabase!.from("profiles").select("*").eq("id", data.user.id).single(),
-        supabase!.from("consultation_requests").select("*").eq("email", data.user.email).order("created_at", { ascending: false }),
+        supabase!.from("order_requests").select("*").eq("email", data.user.email).order("created_at", { ascending: false }),
         supabase!.from("wishlists").select("*, products(id, name, slug, image_url, price_naira, in_stock)").eq("user_id", data.user.id).order("created_at", { ascending: false }),
         supabase!.from("referrals").select("*", { count: "exact", head: true }).eq("referrer_id", data.user.id).eq("status", "signed_up"),
       ]);

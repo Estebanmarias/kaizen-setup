@@ -30,7 +30,7 @@ export default function RecentPurchasePopup() {
     const timer = setTimeout(async () => {
       if (!supabase) return;
       const { data } = await supabase
-        .from("consultation_requests")
+        .from("order_requests")
         .select("name, items, created_at")
         .eq("payment_status", "paid")
         .eq("status", "pending")

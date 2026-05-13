@@ -166,7 +166,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { data: order, error: fetchErr } = await supabase
-    .from("consultation_requests")
+    .from("order_requests")
     .select("*")
     .eq("id", orderId)
     .single();
@@ -187,7 +187,7 @@ export async function POST(req: NextRequest) {
   const newStatus = isPaid ? "cancellation_requested" : "cancelled";
 
   const { error: updateErr } = await supabase
-    .from("consultation_requests")
+    .from("order_requests")
     .update({ status: newStatus })
     .eq("id", orderId);
 
