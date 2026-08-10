@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 
-const WA_URL = "https://wa.me/2347035378462?text=Hi%20KaizenSetup!%20I%27d%20like%20to%20know%20more%20about%20your%20products.";
+const WA_URL = "https://wa.me/2349064811857?text=Hi%20KaizenSetup!%20I%27d%20like%20to%20know%20more%20about%20your%20products.";
 
 export default function WhatsAppBubble() {
   const pathname = usePathname();

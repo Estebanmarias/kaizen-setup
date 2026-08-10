@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/check-abandoned-carts?secret=kz_cron_a7f3b2x9",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/ping",
+      "schedule": "0 0 */5 * *"
+    }
+  ]
+}
