@@ -2,7 +2,7 @@ import Hero from "@/components/Hero";
 import Services from "@/components/Services";
 import Reviews from "@/components/Reviews";
 import HowItWorks from "@/components/HowItWorks";
-import Partners from "@/components/Partners";
+// import Partners from "@/components/Partners";
 import UGC from "@/components/UGC";
 import Blog from "@/components/Blog";
 import Contact from "@/components/Contact";
@@ -16,7 +16,7 @@ export default function Home() {
       <Services />
       <Reviews />
       <HowItWorks />
-      <Partners />
+      {/* <Partners /> */}
       <UGC />
       <Blog />
       <Contact />

@@ -540,7 +540,7 @@ export default function ProductDetailPage() {
                     className={`flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm transition-colors ${addedToCart ? "bg-green-500 text-white" : canAddToCart ? "bg-blue-500 hover:bg-blue-400 text-white" : "bg-gray-200 text-gray-400 cursor-not-allowed"}`}>
                     {addedToCart ? <><Check size={16} /> Added to Cart</> : <><ShoppingCart size={16} /> Add to Cart</>}
                   </button>
-                  <a href={`https://wa.me/2347035378462?text=${waMessage}`} target="_blank" rel="noopener noreferrer"
+                  <a href={`https://wa.me/2349064811857?text=${waMessage}`} target="_blank" rel="noopener noreferrer"
                     className="flex items-center justify-center gap-2 border border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white py-3 rounded-lg font-semibold text-sm transition-colors">
                     <MessageCircle size={16} /> Order via WhatsApp
                   </a>

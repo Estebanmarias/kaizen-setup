@@ -250,7 +250,7 @@ function TrackOrderContent() {
             {/* Help */}
             <div className="text-center">
               <p className="text-sm text-gray-500 mb-2">Need help with your order?</p>
-              <a href="https://wa.me/2347035378462" target="_blank" rel="noopener noreferrer"
+              <a href="https://wa.me/2349064811857" target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-sm font-semibold text-blue-500 hover:underline">
                 Chat with us on WhatsApp →
               </a>

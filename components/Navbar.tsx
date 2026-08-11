@@ -9,14 +9,9 @@ import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 const PRIMARY_LINKS = [
   { label: "Shop", href: "/shop" },
-  { label: "Creator Reviews", href: "/ugc" },
   { label: "Blog", href: "/blog" },
-  { label: "About", href: "/about" },
-];
-
-const EXPLORE_LINKS = [
   { label: "Services", href: "/#services" },
-  { label: "Reviews", href: "/#reviews" },
+  { label: "About", href: "/about" },
   { label: "Contact", href: "/#contact" },
 ];
 
@@ -27,11 +22,13 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [exploreOpen, setExploreOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const exploreRef = useRef<HTMLDivElement>(null);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [pillStyle, setPillStyle] = useState({ left: 0, width: 0, opacity: 0 });
+  const linkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const pillContainerRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   const updateCartCount = () => {
@@ -52,7 +49,6 @@ export default function Navbar() {
     window.addEventListener("cart_updated", updateCartCount);
 
     const onClickOutside = (e: MouseEvent) => {
-      if (exploreRef.current && !exploreRef.current.contains(e.target as Node)) setExploreOpen(false);
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setUserMenuOpen(false);
     };
     document.addEventListener("mousedown", onClickOutside);
@@ -64,6 +60,21 @@ export default function Navbar() {
       listener?.subscription.unsubscribe();
     };
   }, []);
+
+  // Update liquid pill position
+  useEffect(() => {
+    const idx = hoveredIndex ?? PRIMARY_LINKS.findIndex(l => isActive(l.href));
+    const el = linkRefs.current[idx];
+    const container = pillContainerRef.current;
+    if (!el || !container) return;
+    const elRect = el.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    setPillStyle({
+      left: elRect.left - containerRect.left,
+      width: elRect.width,
+      opacity: 1,
+    });
+  }, [hoveredIndex, pathname]);
 
   const signOut = async () => {
     await supabase?.auth.signOut();
@@ -83,6 +94,7 @@ export default function Navbar() {
   };
 
   const isActive = (href: string) => {
+    if (href.startsWith("/#")) return false; // anchor links never count as active
     if (href === "/") return pathname === "/";
     return pathname.startsWith(href.split("#")[0]) && href.split("#")[0] !== "/";
   };
@@ -105,45 +117,37 @@ export default function Navbar() {
           Kaizen<span className="text-blue-500">Setup</span>
         </Link>
 
-        {/* Desktop nav — pill container */}
-        <div className="hidden md:flex items-center gap-1 bg-gray-100 border border-gray-300 rounded-full px-2 py-1.5">
-          {PRIMARY_LINKS.map((l) => (
-            <Link key={l.label} href={l.href}
-              className={`text-sm font-medium px-4 py-1.5 rounded-full transition-all whitespace-nowrap ${
-                isActive(l.href)
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-900 hover:bg-white/60"
+        {/* Desktop nav — liquid pill */}
+        <div
+          ref={pillContainerRef}
+          className="hidden md:flex items-center relative bg-gray-100 border border-gray-300 rounded-full px-2 py-1.5"
+          onMouseLeave={() => setHoveredIndex(null)}
+        >
+          {/* Liquid sliding background */}
+          <div
+            className="absolute top-1.5 bottom-1.5 bg-white rounded-full shadow-sm pointer-events-none"
+            style={{
+              left: pillStyle.left,
+              width: pillStyle.width,
+              opacity: pillStyle.opacity,
+              transition: "left 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94), width 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.15s ease",
+            }}
+          />
+
+          {PRIMARY_LINKS.map((l, i) => (
+            <Link
+              key={l.label}
+              href={l.href}
+              ref={el => { linkRefs.current[i] = el; }}
+              onMouseEnter={() => setHoveredIndex(i)}
+              className={`relative z-10 text-sm font-medium px-4 py-1.5 rounded-full whitespace-nowrap transition-colors duration-150 ${
+                hoveredIndex === i || (hoveredIndex === null && isActive(l.href))
+                  ? "text-gray-900"
+                  : "text-gray-500"
               }`}>
               {l.label}
             </Link>
           ))}
-
-          {/* Explore dropdown */}
-          <div ref={exploreRef} className="relative">
-            <button
-              onClick={() => setExploreOpen(v => !v)}
-              className={`flex items-center gap-1 text-sm font-medium px-4 py-1.5 rounded-full transition-all whitespace-nowrap ${
-                exploreOpen
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-900 hover:bg-white/60"
-              }`}>
-              Explore
-              <ChevronDown size={13} className={`transition-transform duration-200 ${exploreOpen ? "rotate-180" : ""}`} />
-            </button>
-            {exploreOpen && (
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-44 bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden">
-                <div className="p-1.5">
-                  {EXPLORE_LINKS.map((l) => (
-                    <Link key={l.label} href={l.href}
-                      onClick={() => setExploreOpen(false)}
-                      className="block px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition-colors">
-                      {l.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Desktop right actions */}
@@ -254,16 +258,6 @@ export default function Navbar() {
               {l.label}
             </Link>
           ))}
-
-          <div className="border-t border-gray-100 mt-1 pt-2">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 py-1.5">Explore</p>
-            {EXPLORE_LINKS.map((l) => (
-              <Link key={l.label} href={l.href} onClick={() => setMenuOpen(false)}
-                className="text-sm font-medium text-gray-600 hover:text-gray-900 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors block">
-                {l.label}
-              </Link>
-            ))}
-          </div>
 
           <div className="border-t border-gray-100 mt-1 pt-2">
             {user ? (

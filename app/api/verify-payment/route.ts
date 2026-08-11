@@ -158,7 +158,7 @@ export async function POST(req: NextRequest) {
           </div>
           ${orderData.message ? `<div style="margin-top:14px;background:#ffffff08;border-radius:8px;padding:14px;"><p style="margin:0 0 4px;font-size:11px;color:#6b7280;">Note from customer</p><p style="margin:0;font-size:13px;color:#d1d5db;">${orderData.message}</p></div>` : ""}
           <div style="margin-top:20px;text-align:center;">
-            <a href="https://wa.me/${orderData.phone?.replace(/\D/g, "") ?? "2347035378462"}?text=${encodeURIComponent(`Hi ${firstName}! Your KaizenSetup order of ${totalFormatted} has been confirmed. We'll be in touch shortly with delivery details.`)}"
+            <a href="https://wa.me/${orderData.phone?.replace(/\D/g, "") ?? "2349064811857"}?text=${encodeURIComponent(`Hi ${firstName}! Your KaizenSetup order of ${totalFormatted} has been confirmed. We'll be in touch shortly with delivery details.`)}"
               style="display:inline-block;background:#25d366;color:#ffffff;font-size:13px;font-weight:700;text-decoration:none;padding:12px 24px;border-radius:8px;margin-right:8px;">
               WhatsApp Customer
             </a>

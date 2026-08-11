@@ -340,7 +340,7 @@ export default function CartPage() {
                   </button>
                 )}
 
-                <a href={`https://wa.me/2347035378462?text=${waMessage}`} target="_blank" rel="noopener noreferrer"
+                <a href={`https://wa.me/2349064811857?text=${waMessage}`} target="_blank" rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 border border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white py-3 rounded-lg font-semibold text-sm transition-colors">
                   <MessageCircle size={16} />
                   {hasAllPrices ? "Checkout via WhatsApp" : "Request Quote via WhatsApp"}

@@ -107,7 +107,7 @@ function customerEmail(type: "requested" | "approved" | "rejected", order: {
         </table>` : ""}
         <table role="presentation" cellpadding="0" cellspacing="0">
           <tr><td style="background:#3b82f6;border-radius:10px;">
-            <a href="https://wa.me/2347035378462" style="display:inline-block;font-family:Inter,Arial,sans-serif;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;padding:12px 28px;">Contact Us on WhatsApp →</a>
+            <a href="https://wa.me/2349064811857" style="display:inline-block;font-family:Inter,Arial,sans-serif;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;padding:12px 28px;">Contact Us on WhatsApp →</a>
           </td></tr>
         </table>
       </td></tr>

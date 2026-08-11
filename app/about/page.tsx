@@ -7,28 +7,6 @@ export const metadata: Metadata = {
   description: "KaizenSetup is a Nigerian workspace brand obsessed with helping people build smarter, more efficient setups without overspending.",
 };
 
-const VALUES = [
-  {
-    icon: "🔍",
-    title: "Honest Reviews",
-    desc: "We only recommend what we've tested. No paid placements, no inflated ratings. If it's on the site, it earned its spot.",
-  },
-  {
-    icon: "💰",
-    title: "Budget-First Thinking",
-    desc: "Premium doesn't always mean better. We find gear that delivers real value at prices that make sense for the Nigerian market.",
-  },
-  {
-    icon: "⚡",
-    title: "Practical Over Perfect",
-    desc: "We care about what actually works in your space — not what looks good in a studio shoot.",
-  },
-  {
-    icon: "📦",
-    title: "Curated, Not Cluttered",
-    desc: "Every product on KaizenSetup is handpicked. We'd rather have 25 great products than 500 average ones.",
-  },
-];
 
 const TIMELINE = [
   {
@@ -92,19 +70,7 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* Values */}
-        <div className="mb-20">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-8">What we stand for</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {VALUES.map(v => (
-              <div key={v.title} className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl p-5">
-                <p className="text-2xl mb-3">{v.icon}</p>
-                <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-2">{v.title}</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{v.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+        
 
         {/* What Kaizen means */}
         <div className="bg-gray-900 dark:bg-[#1a1a1a] rounded-2xl p-8 mb-16">
@@ -124,7 +90,7 @@ export default function AboutPage() {
               className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-xl text-sm transition-colors">
               Browse the Shop
             </Link>
-            <a href="https://wa.me/2347035378462" target="_blank" rel="noopener noreferrer"
+            <a href="https://wa.me/2349064811857" target="_blank" rel="noopener noreferrer"
               className="border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-blue-500 hover:text-blue-500 font-semibold px-6 py-3 rounded-xl text-sm transition-colors">
               Chat on WhatsApp
             </a>
