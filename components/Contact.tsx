@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { MapPin, Instagram } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { svg } from "framer-motion/m";
+
 
 const SETUP_TYPES = ["Home Office", "Gaming Setup", "Business Workspace", "Desk Setup", "Other"];
 const BUDGET_RANGES = [
