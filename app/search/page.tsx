@@ -28,6 +28,16 @@ interface BlogPost {
   cover_image: string | null;
 }
 
+interface Tour {
+  id: string;
+  name: string;
+  slug: string;
+  occupation: string | null;
+  location: string | null;
+  cover_image: string | null;
+  published_at: string;
+}
+
 export default function SearchPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -37,16 +47,21 @@ export default function SearchPage() {
   const [inputValue, setInputValue] = useState(q);
   const [products, setProducts] = useState<Product[]>([]);
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [tours, setTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
 
   const logSearch = async (term: string, count: number) => {
-    const { data: { session } } = await supabase!.auth.getSession();
-    await supabase!.from("search_logs").insert({
-      query: term.trim(),
-      results_count: count,
-      user_id: session?.user.id ?? null,
-    });
+    try {
+      const { data: { session } } = await supabase!.auth.getSession();
+      await supabase!.from("search_logs").insert({
+        query: term.trim(),
+        results_count: count,
+        user_id: session?.user.id ?? null,
+      });
+    } catch (e) {
+      // silently fail — search logging is non-critical
+    }
   };
 
   const runSearch = useCallback(async (term: string) => {
@@ -54,16 +69,21 @@ export default function SearchPage() {
     setLoading(true);
     setSearched(true);
     const pattern = `%${term.trim()}%`;
-    const [productRes, blogRes] = await Promise.all([
+    const [productRes, blogRes, tourRes] = await Promise.all([
       supabase!.from("products").select("id, name, slug, price_naira, image_url, category, in_stock, variants")
         .or(`name.ilike.${pattern},description.ilike.${pattern},category.ilike.${pattern}`).order("name"),
       supabase!.from("blog_posts").select("id, title, slug, excerpt, created_at, cover_image")
         .or(`title.ilike.${pattern},excerpt.ilike.${pattern}`).not("published_at", "is", null)
         .order("created_at", { ascending: false }),
+      supabase!.from("workspace_tours").select("id, name, slug, occupation, location, cover_image, published_at")
+        .or(`name.ilike.${pattern},occupation.ilike.${pattern},intro.ilike.${pattern},content.ilike.${pattern}`)
+        .eq("status", "published")
+        .order("published_at", { ascending: false }),
     ]);
-    const total = (productRes?.data?.length ?? 0) + (blogRes?.data?.length ?? 0);
     setProducts(productRes?.data || []);
     setPosts(blogRes?.data || []);
+    setTours(tourRes?.data || []);
+    const total = (productRes?.data?.length ?? 0) + (blogRes?.data?.length ?? 0) + (tourRes?.data?.length ?? 0);
     setLoading(false);
     logSearch(term, total);
   }, []);
@@ -89,7 +109,7 @@ export default function SearchPage() {
     return null;
   };
 
-  const totalResults = products.length + posts.length;
+  const totalResults = products.length + posts.length + tours.length;
 
   return (
     <>
@@ -199,9 +219,34 @@ export default function SearchPage() {
             </section>
           )}
 
+          {!loading && tours.length > 0 && (
+            <section className="mb-12">
+              <h2 className="text-sm font-semibold uppercase tracking-widest text-gray-400 mb-5">
+                Workspace Tours ({tours.length})
+              </h2>
+              <div className="flex flex-col gap-4">
+                {tours.map(tour => (
+                  <Link key={tour.id} href={`/workspace-tours/${tour.slug}`}
+                    className="flex gap-4 p-4 rounded-xl border border-gray-100 hover:border-blue-500 transition-colors group">
+                    {tour.cover_image && (
+                      <div className="relative w-20 h-20 rounded-lg overflow-hidden shrink-0 bg-gray-50">
+                        <Image src={tour.cover_image} alt={tour.name} fill className="object-cover" />
+                      </div>
+                    )}
+                    <div className="flex flex-col justify-center min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-500 transition-colors line-clamp-1">{tour.name}&apos;s Setup</p>
+                      {tour.occupation && <p className="text-xs text-gray-500 mt-0.5">{tour.occupation}</p>}
+                      {tour.location && <p className="text-xs text-gray-400 mt-0.5">📍 {tour.location}</p>}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
           {!searched && (
             <div className="text-center py-20 text-gray-400 text-sm">
-              Type something above to search products and blog posts.
+              Type something above to search products, blog posts and workspace tours.
             </div>
           )}
         </div>

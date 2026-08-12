@@ -29,9 +29,12 @@ type Order = {
 type Product = { name: string; category: string };
 
 const STATUS_STYLE: Record<string, string> = {
-  pending:   "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-  fulfilled: "bg-green-500/10 text-green-400 border-green-500/20",
-  cancelled: "bg-red-500/10 text-red-400 border-red-500/20",
+  pending:                "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+  confirmed:              "bg-blue-500/10 text-blue-400 border-blue-500/20",
+  processing:             "bg-purple-500/10 text-purple-400 border-purple-500/20",
+  out_for_delivery:       "bg-orange-500/10 text-orange-400 border-orange-500/20",
+  fulfilled:              "bg-green-500/10 text-green-400 border-green-500/20",
+  cancelled:              "bg-red-500/10 text-red-400 border-red-500/20",
   cancellation_requested: "bg-orange-500/10 text-orange-400 border-orange-500/20",
 };
 
@@ -119,7 +122,8 @@ export default function AdminDashboard() {
   if (res.ok) {
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
   } else {
-    console.error("Failed to update order status");
+    const errData = await res.json();
+    console.error("Failed to update order status:", JSON.stringify(errData));
   }
 };
 
@@ -365,13 +369,15 @@ const handleExportCSV = () => {
     </div>
   </div>
   <div className="flex gap-1.5 flex-wrap">
-    {["all", "pending", "cancellation_requested", "fulfilled", "cancelled"].map(s => (
+    {["all", "pending", "confirmed", "processing", "out_for_delivery", "cancellation_requested", "fulfilled", "cancelled"].map(s => (
       <button key={s} onClick={() => setFilter(s)}
         className={`px-3 py-1 rounded-lg text-xs font-medium capitalize transition-all ${
           filter === s ? "bg-blue-500 text-white" : "bg-white/[0.04] text-gray-500 hover:text-white"
         }`}>
         {s === "cancellation_requested"
           ? `Cancel Req (${orders.filter(o => o.status === "cancellation_requested").length})`
+          : s === "out_for_delivery"
+          ? `On the Way (${orders.filter(o => o.status === "out_for_delivery").length})`
           : `${s}${s !== "all" ? ` (${orders.filter(o => o.status === s).length})` : ""}`}
       </button>
     ))}
@@ -431,18 +437,18 @@ const handleExportCSV = () => {
       </>
     ) : (
       <>
-        <button onClick={() => updateStatus(order.id, "fulfilled")} title="Mark fulfilled"
-          className="p-1.5 rounded-lg bg-green-500/10 hover:bg-green-500/20 text-green-400 transition-colors">
-          <Check size={13} />
-        </button>
-        <button onClick={() => updateStatus(order.id, "pending")} title="Mark pending"
-          className="p-1.5 rounded-lg bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 transition-colors">
-          <Clock size={13} />
-        </button>
-        <button onClick={() => updateStatus(order.id, "cancelled")} title="Mark cancelled"
-          className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors">
-          <X size={13} />
-        </button>
+        <select
+          value={order.status}
+          onChange={e => updateStatus(order.id, e.target.value)}
+          className="text-xs bg-white/[0.04] border border-white/[0.08] text-gray-300 rounded-lg px-2 py-1.5 focus:outline-none focus:border-blue-500 cursor-pointer"
+        >
+          <option value="pending">Pending</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="processing">Processing</option>
+          <option value="out_for_delivery">Out for Delivery</option>
+          <option value="fulfilled">Fulfilled</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
       </>
     )}
   </div>

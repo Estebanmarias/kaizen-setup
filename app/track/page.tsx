@@ -26,14 +26,35 @@ const STATUS_CONFIG: Record<string, { label: string; icon: typeof Clock; color: 
     icon: Clock,
     color: "text-yellow-500",
     bg: "bg-yellow-50 border-yellow-200",
-    description: "Your order has been received and is being processed. We'll contact you shortly.",
+    description: "Your order has been received. We'll confirm it shortly.",
+  },
+  confirmed: {
+    label: "Order Confirmed",
+    icon: CheckCircle,
+    color: "text-blue-500",
+    bg: "bg-blue-50 border-blue-200",
+    description: "Your order has been confirmed and we're getting it ready.",
+  },
+  processing: {
+    label: "Processing",
+    icon: Package,
+    color: "text-purple-500",
+    bg: "bg-purple-50 border-purple-200",
+    description: "Your order is being packaged and prepared for delivery.",
+  },
+  out_for_delivery: {
+    label: "Out for Delivery",
+    icon: Package,
+    color: "text-orange-500",
+    bg: "bg-orange-50 border-orange-200",
+    description: "Your order is on its way to you! Keep an eye out for the delivery.",
   },
   fulfilled: {
-    label: "Fulfilled",
+    label: "Delivered",
     icon: CheckCircle,
     color: "text-green-500",
     bg: "bg-green-50 border-green-200",
-    description: "Your order has been fulfilled and is on its way to you.",
+    description: "Your order has been delivered. Enjoy your setup! 🎉",
   },
   cancelled: {
     label: "Cancelled",
@@ -53,11 +74,15 @@ const STATUS_CONFIG: Record<string, { label: string; icon: typeof Clock; color: 
 
 const STEPS = ["Order Placed", "Confirmed", "Processing", "On the Way", "Delivered"];
 
-function getStepIndex(status: string, paymentStatus: string | null) {
-  if (status === "cancelled" || status === "cancellation_requested") return -1;
-  if (status === "fulfilled") return 4;
-  if (status === "pending" && paymentStatus === "paid") return 2;
-  return 1;
+function getStepIndex(status: string) {
+  const map: Record<string, number> = {
+    pending: 0,
+    confirmed: 1,
+    processing: 2,
+    out_for_delivery: 3,
+    fulfilled: 4,
+  };
+  return map[status] ?? -1;
 }
 
 const inputClass = "w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors";
@@ -114,7 +139,7 @@ function TrackOrderContent() {
   };
 
   const statusConfig = order ? (STATUS_CONFIG[order.status] ?? STATUS_CONFIG.pending) : null;
-  const stepIndex = order ? getStepIndex(order.status, order.payment_status) : -1;
+  const stepIndex = order ? getStepIndex(order.status) : -1;
   const isCancelled = order?.status === "cancelled" || order?.status === "cancellation_requested";
 
   return (
