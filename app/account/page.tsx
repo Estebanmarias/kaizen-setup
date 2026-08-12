@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase";
 import {
   User, Package, LogOut, Clock, ShoppingBag,
   ChevronDown, ChevronUp, ChevronRight, Camera, Check,
-  Loader2, Heart, X, ShoppingCart, Users
+  Loader2, Heart, X, ShoppingCart, Users, MapPin,
 } from "lucide-react";
 import Link from "next/link";
 import ReferralTab from "@/components/ReferralTab";
@@ -19,7 +19,7 @@ type Profile = {
 type OrderItem = { name: string; quantity: number; price?: number; variant?: string };
 type Order = {
   id: string; created_at: string; message: string; status: string;
-  name: string; total_naira: number | null; items: OrderItem[] | null;
+  name: string; email: string; total_naira: number | null; items: OrderItem[] | null;
   payment_status: string; user_id: string | null;
 };
 type WishlistItem = {
@@ -91,6 +91,11 @@ function OrderCard({ order, userId, onCancelled }: {
           </div>
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
+          <Link
+            href={`/track?order=${order.id}&email=${encodeURIComponent(order.email)}`}
+            className="flex items-center gap-1 text-xs font-medium text-blue-500 hover:text-blue-400 border border-blue-200 hover:border-blue-400 px-2.5 py-1.5 rounded-lg transition-colors">
+            <MapPin size={11} /> Track
+          </Link>
           {canCancel && (
             <button onClick={() => setConfirmOpen(true)}
               className="flex items-center gap-1 text-xs font-medium text-red-500 hover:text-red-400 border border-red-200 hover:border-red-400 px-2.5 py-1.5 rounded-lg transition-colors">
@@ -149,6 +154,28 @@ function OrderCard({ order, userId, onCancelled }: {
               <p className="text-sm font-bold text-gray-900">{fmtN(order.total_naira)}</p>
             </div>
           )}
+
+          {/* Track / Delivered action */}
+          {order.status === "fulfilled" ? (
+            <div className="flex items-center gap-2 px-5 py-3 bg-green-50">
+              <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                <Check size={11} className="text-white" />
+              </div>
+              <p className="text-xs font-semibold text-green-700">Delivered — enjoy your setup! 🎉</p>
+            </div>
+          ) : order.status !== "pending" && order.status !== "cancelled" && order.status !== "cancellation_requested" ? (
+            <div className="px-5 py-3 bg-blue-50">
+              <Link
+                href={`/track?order=${order.id}&email=${encodeURIComponent(order.email)}`}
+                className="flex items-center gap-2 text-xs font-semibold text-blue-600 hover:text-blue-500 transition-colors"
+              >
+                <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+                  <Package size={11} className="text-white" />
+                </div>
+                Track your order →
+              </Link>
+            </div>
+          ) : null}
         </div>
       )}
     </div>

@@ -5,14 +5,22 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.kaizensetup.na
 const ADMIN_EMAIL = "kaizensetup.ng@gmail.com";
 
 async function sendBrevo(payload: object) {
-  await fetch("https://api.brevo.com/v3/smtp/email", {
-    method: "POST",
-    headers: {
-      "api-key": process.env.BREVO_API_KEY!,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
+  try {
+    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "api-key": process.env.BREVO_API_KEY!,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      console.error("Brevo error:", JSON.stringify(err));
+    }
+  } catch (e) {
+    console.error("Brevo fetch failed:", e);
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -81,10 +89,9 @@ export async function POST(req: NextRequest) {
       .select("id")
       .single();
 
-   if (insertErr) {
+    if (insertErr) {
       console.error("INSERT ERROR:", JSON.stringify(insertErr, null, 2));
-      console.error("ORDER DATA KEYS:", Object.keys(safeOrderData));
-      return NextResponse.json({ error: insertErr.message, details: insertErr }, { status: 500 });
+      return NextResponse.json({ error: insertErr.message }, { status: 500 });
     }
 
     const orderId = insertedOrder?.id ?? null;
@@ -127,6 +134,7 @@ export async function POST(req: NextRequest) {
     // ── 1. Customer order confirmation (Brevo template 4) ───────────────────
     await sendBrevo({
       to: [{ email: orderData.email, name: orderData.name }],
+      sender: { email: "hello@kaizensetup.name.ng", name: "KaizenSetup" },
       templateId: 4,
       params: {
         first_name: firstName,
