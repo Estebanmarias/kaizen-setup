@@ -40,6 +40,17 @@ export async function POST(req: NextRequest) {
   );
 
   try {
+    // Verify admin
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const token = authHeader.slice(7);
+    const { data: { user } } = await supabase.auth.getUser(token);
+    if (!user || !["kaizensetup.ng@gmail.com"].includes(user.email ?? "")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const { id, status } = await req.json();
 
     if (!id || !["confirmed", "processing", "out_for_delivery", "fulfilled", "cancelled", "pending"].includes(status)) {
