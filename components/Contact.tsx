@@ -46,7 +46,7 @@ export default function Contact() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] as const }}
           className="mb-14"
         >
           <div className="flex items-center gap-2 mb-4">
@@ -65,7 +65,7 @@ export default function Contact() {
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] as const }}
             className="flex flex-col gap-4"
           >
             {success ? (
@@ -104,7 +104,7 @@ export default function Contact() {
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] as const }}
             className="flex flex-col gap-5"
           >
             <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 flex items-start gap-3">

@@ -29,7 +29,7 @@ export default function NewsletterSection() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] as const }}
         >
           <div className="flex items-center justify-center gap-2 mb-4">
             <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
