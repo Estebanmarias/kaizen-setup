@@ -19,6 +19,8 @@ const STATS = [
   { value: "24", label: "Products" },
 ];
 
+const EASE = [0.22, 1, 0.36, 1] as const;
+
 const container = {
   hidden: { opacity: 0 },
   show: {
@@ -29,12 +31,11 @@ const container = {
 
 const item = {
   hidden: { opacity: 0, y: 24 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: EASE } },
 };
 
 export default function Hero() {
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
-  const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const section = document.getElementById("home");
@@ -59,7 +60,6 @@ export default function Hero() {
     >
       {/* Interactive grid */}
       <div
-        ref={gridRef}
         className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage: `linear-gradient(to right, #000 1px, transparent 1px), linear-gradient(to bottom, #000 1px, transparent 1px)`,
@@ -68,7 +68,7 @@ export default function Hero() {
         }}
       />
 
-      {/* Mouse spotlight over grid */}
+      {/* Mouse spotlight */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -91,7 +91,6 @@ export default function Hero() {
             initial="hidden"
             animate="show"
           >
-            {/* Eyebrow */}
             <motion.div variants={item} className="flex items-center gap-2 mb-6">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
               <span className="text-[11px] font-semibold tracking-[0.2em] uppercase text-blue-600">
@@ -99,7 +98,6 @@ export default function Hero() {
               </span>
             </motion.div>
 
-            {/* Headline */}
             <motion.h1
               variants={item}
               className="text-4xl sm:text-5xl md:text-[3.4rem] font-bold leading-[1.08] tracking-tight text-gray-900 mb-6"
@@ -111,34 +109,24 @@ export default function Hero() {
               in Nigeria
             </motion.h1>
 
-            {/* Subtext */}
-            <motion.p
-              variants={item}
-              className="text-lg text-gray-500 max-w-md mb-8 leading-relaxed"
-            >
+            <motion.p variants={item} className="text-lg text-gray-500 max-w-md mb-8 leading-relaxed">
               We help you build efficient workspaces, gaming stations, and
               business tech systems — without overspending or falling for
               marketing hype.
             </motion.p>
 
-            {/* CTAs */}
             <motion.div variants={item} className="flex flex-wrap gap-3 mb-10">
-              <a
-                href="#contact"
-                className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3.5 rounded-xl font-semibold text-sm transition-all"
-              >
+              <a href="#contact"
+                className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3.5 rounded-xl font-semibold text-sm transition-all">
                 Book a Consultation <ArrowRight size={14} />
               </a>
-              <Link
-                href="/shop"
-                className="inline-flex items-center gap-2 border border-gray-200 text-gray-700 hover:border-gray-400 px-6 py-3.5 rounded-xl font-semibold text-sm transition-colors"
-              >
+              <Link href="/shop"
+                className="inline-flex items-center gap-2 border border-gray-200 text-gray-700 hover:border-gray-400 px-6 py-3.5 rounded-xl font-semibold text-sm transition-colors">
                 Browse the Shop
               </Link>
               <WorkspaceScoreTool />
             </motion.div>
 
-            {/* Trust signals */}
             <motion.div variants={item} className="flex flex-wrap gap-5 mb-8">
               {TRUST_SIGNALS.map((t) => (
                 <span key={t} className="flex items-center gap-2 text-xs text-gray-400 font-medium">
@@ -148,11 +136,7 @@ export default function Hero() {
               ))}
             </motion.div>
 
-            {/* Stats */}
-            <motion.div
-              variants={item}
-              className="flex items-center gap-8 pt-6 border-t border-gray-100"
-            >
+            <motion.div variants={item} className="flex items-center gap-8 pt-6 border-t border-gray-100">
               {STATS.map(({ value, label }) => (
                 <div key={label}>
                   <p className="text-xl font-bold text-gray-900">{value}</p>
@@ -162,16 +146,15 @@ export default function Hero() {
             </motion.div>
           </motion.div>
 
-          {/* RIGHT — Real workspace images */}
+          {/* RIGHT — Workspace images */}
           <motion.div
             className="lg:col-span-6 relative hidden md:block"
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
+            transition={{ duration: 0.8, ease: EASE, delay: 0.3 }}
           >
             <div className="relative h-[520px]">
 
-              {/* Main large image */}
               <div className="absolute top-0 right-0 w-[78%] h-[420px] rounded-3xl overflow-hidden shadow-2xl shadow-gray-200/80">
                 <Image
                   src="/workspace-1.jpg"
@@ -183,12 +166,11 @@ export default function Hero() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
               </div>
 
-              {/* Secondary smaller image */}
               <motion.div
                 className="absolute bottom-0 left-0 w-[48%] h-[260px] rounded-2xl overflow-hidden shadow-xl shadow-gray-200/60 border-4 border-white"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.55 }}
+                transition={{ duration: 0.7, ease: EASE, delay: 0.55 }}
               >
                 <Image
                   src="/workspace-2.jpg"
@@ -198,12 +180,11 @@ export default function Hero() {
                 />
               </motion.div>
 
-              {/* Floating rating badge */}
               <motion.div
                 className="absolute top-6 left-0 z-20 bg-white border border-gray-100 shadow-xl rounded-2xl px-4 py-3 flex items-center gap-2.5"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.7 }}
+                transition={{ duration: 0.6, ease: EASE, delay: 0.7 }}
               >
                 <div className="flex">
                   {[...Array(5)].map((_, i) => (
@@ -216,36 +197,32 @@ export default function Hero() {
                 </div>
               </motion.div>
 
-              {/* Floating location badge */}
               <motion.div
                 className="absolute bottom-[160px] right-4 z-20 bg-white border border-gray-100 shadow-xl rounded-2xl px-4 py-2.5 flex items-center gap-2"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.85 }}
+                transition={{ duration: 0.6, ease: EASE, delay: 0.85 }}
               >
                 <MapPin size={13} className="text-blue-500 flex-shrink-0" />
                 <span className="text-xs font-semibold text-gray-700">Ibadan, Nigeria</span>
               </motion.div>
 
-              {/* Floating in-stock pill */}
               <motion.div
                 className="absolute bottom-6 right-4 z-20 bg-white border border-gray-100 shadow-xl rounded-2xl px-4 py-2.5 flex items-center gap-2"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 1 }}
+                transition={{ duration: 0.6, ease: EASE, delay: 1 }}
               >
                 <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />
                 <span className="text-xs font-semibold text-gray-700">24 products in stock</span>
               </motion.div>
 
-              {/* Decorative blur blob */}
               <div className="absolute -bottom-8 -right-8 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-60 pointer-events-none -z-10" />
             </div>
           </motion.div>
         </div>
       </div>
 
-      {/* Bottom fade */}
       <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white to-transparent pointer-events-none" />
     </section>
   );
