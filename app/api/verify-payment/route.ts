@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { rateLimit } from "@/lib/rateLimit";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.kaizensetup.name.ng";
 const ADMIN_EMAIL = "kaizensetup.ng@gmail.com";
@@ -24,6 +25,10 @@ async function sendBrevo(payload: object) {
 }
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const { success } = rateLimit({ key: `verify-payment:${ip}`, limit: 5, windowMs: 15 * 60 * 1000 });
+  if (!success) return NextResponse.json({ error: "Too many requests. Please wait before trying again." }, { status: 429 });
+
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!

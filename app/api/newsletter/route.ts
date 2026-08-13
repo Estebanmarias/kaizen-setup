@@ -1,10 +1,15 @@
 import { createClient } from "@supabase/supabase-js";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/lib/rateLimit";
 
 export async function POST(req: Request) {
+  const ip = (req as any).headers.get?.("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const { success } = rateLimit({ key: `newsletter:${ip}`, limit: 3, windowMs: 60 * 60 * 1000 });
+  if (!success) return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
   try {
