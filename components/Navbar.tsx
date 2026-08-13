@@ -105,6 +105,7 @@ export default function Navbar() {
     `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(displayName ?? "U")}`;
 
   return (
+    <>
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
       scrolled
         ? "bg-white/95 backdrop-blur border-gray-200"
@@ -247,7 +248,7 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="md:hidden fixed inset-0 top-[57px] bg-white border-t border-gray-100 px-4 py-4 flex flex-col gap-1 overflow-y-auto z-40">
+        <div className="md:hidden fixed inset-0 top-0 pt-[57px] bg-white border-t border-gray-100 px-4 py-4 flex flex-col gap-1 overflow-y-auto z-[49]">
           {PRIMARY_LINKS.map((l) => (
             <Link key={l.label} href={l.href} onClick={() => setMenuOpen(false)}
               className={`text-sm font-medium px-3 py-2.5 rounded-lg transition-colors ${
@@ -284,6 +285,64 @@ export default function Navbar() {
           </div>
         </div>
       )}
-    </nav>
+   </nav>
+
+      {/* Mobile search bar — outside nav */}
+      {mobileSearchOpen && (
+        <div className="md:hidden fixed top-[57px] left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 z-[48]">
+          <form onSubmit={handleSearch} className="flex gap-2">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search products, blog posts..."
+              autoFocus
+              className="flex-1 px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium">Go</button>
+          </form>
+        </div>
+      )}
+
+      {/* Mobile menu — outside nav to escape stacking context */}
+      {menuOpen && (
+        <div className="md:hidden fixed inset-0 top-[57px] bg-white border-t border-gray-100 px-4 py-4 flex flex-col gap-1 overflow-y-auto z-[48]">
+          {PRIMARY_LINKS.map((l) => (
+            <Link key={l.label} href={l.href} onClick={() => setMenuOpen(false)}
+              className={`text-sm font-medium px-3 py-2.5 rounded-lg transition-colors ${
+                isActive(l.href)
+                  ? "bg-blue-50 text-blue-500"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+              }`}>
+              {l.label}
+            </Link>
+          ))}
+
+          <div className="border-t border-gray-100 mt-1 pt-2">
+            {user ? (
+              <>
+                <div className="flex items-center gap-3 px-3 py-2 mb-1">
+                  <img src={avatarUrl} alt={displayName ?? ""} className="w-8 h-8 rounded-full object-cover bg-blue-500 flex-shrink-0" />
+                  <span className="text-sm font-medium text-gray-700 truncate">{displayName}</span>
+                </div>
+                <Link href="/account" onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-50 transition-colors">
+                  <User size={15} /> My Account
+                </Link>
+                <button onClick={signOut}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-red-500 rounded-lg hover:bg-red-50 transition-colors">
+                  <LogOut size={15} /> Sign Out
+                </button>
+              </>
+            ) : (
+              <Link href="/auth" onClick={() => setMenuOpen(false)}
+                className="block bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold px-4 py-2.5 rounded-full text-center transition-colors">
+                Sign In
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+  </>
   );
 }

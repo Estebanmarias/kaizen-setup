@@ -43,49 +43,54 @@ const SOCIALS = [
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 border-t border-gray-800 py-12 px-6">
+    <footer className="bg-gray-900 border-t border-gray-800 py-16 px-6">
       <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
-          <div>
-            <p className="font-bold text-xl text-white mb-2">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+
+          {/* Brand */}
+          <div className="md:col-span-2">
+            <p className="font-bold text-xl text-white mb-3">
               Kaizen<span className="text-blue-500">Setup</span>
             </p>
-            <p className="text-sm text-gray-400 leading-relaxed max-w-xs">
-              Smart & affordable tech setups for homes and businesses in Nigeria.
+            <p className="text-sm text-gray-400 leading-relaxed max-w-xs mb-6">
+              Smart & affordable tech setups for homes and businesses in Nigeria. No hype, no markup.
             </p>
+            <div className="flex items-center gap-3 flex-wrap">
+              {SOCIALS.map((s) => {
+                const Icon = s.icon;
+                return (
+                  <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-xl bg-white/[0.06] hover:bg-blue-500 flex items-center justify-center text-gray-400 hover:text-white transition-all"
+                    aria-label={s.label}>
+                    <Icon />
+                  </a>
+                );
+              })}
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 md:contents gap-10">
-            <div>
-              <p className="text-xs font-semibold tracking-widest uppercase text-gray-600 mb-4">
-                Navigation
-              </p>
-              <div className="flex flex-col gap-2">
-                {NAV_LINKS.map((l) => (
-                  <Link key={l.label} href={l.href}
-                    className="text-sm text-gray-400 hover:text-blue-500 transition-colors">
-                    {l.label}
-                  </Link>
-                ))}
-              </div>
+          {/* Navigation */}
+          <div>
+            <p className="text-xs font-semibold tracking-widest uppercase text-gray-600 mb-5">Navigation</p>
+            <div className="flex flex-col gap-2.5">
+              {NAV_LINKS.slice(0, 4).map((l) => (
+                <Link key={l.label} href={l.href}
+                  className="text-sm text-gray-400 hover:text-white transition-colors">
+                  {l.label}
+                </Link>
+              ))}
             </div>
+          </div>
 
-            <div>
-              <p className="text-xs font-semibold tracking-widest uppercase text-gray-600 mb-4">
-                Follow Us
-              </p>
-              <div className="flex flex-col gap-3">
-                {SOCIALS.map((s) => {
-                  const Icon = s.icon;
-                  return (
-                    <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-sm text-gray-400 hover:text-blue-500 transition-colors">
-                      <Icon />
-                      {s.label}
-                    </a>
-                  );
-                })}
-              </div>
+          <div>
+            <p className="text-xs font-semibold tracking-widest uppercase text-gray-600 mb-5">More</p>
+            <div className="flex flex-col gap-2.5">
+              {NAV_LINKS.slice(4).map((l) => (
+                <Link key={l.label} href={l.href}
+                  className="text-sm text-gray-400 hover:text-white transition-colors">
+                  {l.label}
+                </Link>
+              ))}
             </div>
           </div>
         </div>

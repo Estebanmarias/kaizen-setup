@@ -192,12 +192,16 @@ export default function CartPage() {
   if (formStatus === "success") {
     return (
       <main className="min-h-screen bg-white pt-24 pb-20 px-6 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-5xl mb-4">✅</p>
+        <div className="text-center max-w-sm mx-auto">
+          <div className="w-20 h-20 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center mx-auto mb-6">
+            <span className="text-4xl">✅</span>
+          </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Order Confirmed!</h1>
-          <p className="text-gray-400 mb-2">Payment received. Estimated delivery: <span className="text-gray-900 font-medium">{getDeliveryWindow()}</span>. We'll contact you shortly.</p>
+          <p className="text-gray-400 mb-1 text-sm">Payment received. Estimated delivery:</p>
+          <p className="text-gray-900 font-semibold mb-4 text-sm">{getDeliveryWindow()}</p>
+          <p className="text-gray-400 text-sm mb-6">We'll contact you shortly with delivery details.</p>
           <Link href="/account" className="text-blue-500 text-sm hover:underline block mb-4">View order in your account →</Link>
-          <Link href="/shop" className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-400 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-colors">
+          <Link href="/shop" className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-colors">
             Continue Shopping
           </Link>
         </div>
@@ -209,10 +213,12 @@ export default function CartPage() {
     return (
       <main className="min-h-screen bg-white pt-24 pb-20 px-6 flex items-center justify-center">
         <div className="text-center">
-          <ShoppingCart size={48} className="mx-auto text-gray-300 mb-4" />
+          <div className="w-20 h-20 rounded-2xl bg-gray-50 border border-gray-200 flex items-center justify-center mx-auto mb-6">
+            <ShoppingCart size={32} className="text-gray-300" />
+          </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Your cart is empty</h1>
-          <p className="text-gray-400 mb-6">Add some products to get started.</p>
-          <Link href="/shop" className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-400 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-colors">
+          <p className="text-gray-400 mb-6 text-sm">Add some products to get started.</p>
+          <Link href="/shop" className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-colors">
             Browse Shop
           </Link>
         </div>
@@ -223,13 +229,15 @@ export default function CartPage() {
   return (
     <main className="min-h-screen bg-white pt-24 pb-20 px-6">
       <div className="max-w-4xl mx-auto">
-        <div className="flex justify-end mb-8"><BackLink href="/shop" label="Continue Shopping" /></div>
+        <Link href="/shop" className="inline-flex items-center gap-1.5 text-sm text-blue-500 hover:underline mb-8">
+          <ArrowLeft size={13} /> Continue Shopping
+        </Link>
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Your Cart</h1>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2 flex flex-col gap-4">
             {cart.map(item => (
-              <div key={item.id} className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex gap-4">
+              <div key={item.id} className="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex gap-4">
                 <Link href={`/shop/${item.slug}`}>
                   <div className="w-20 h-20 bg-white rounded-lg flex items-center justify-center flex-shrink-0 border border-gray-100">
                     <img src={item.image_url ?? "/images/products/placeholder.jpg"} alt={item.name} className="max-h-full max-w-full object-contain p-1" />
@@ -334,14 +342,14 @@ export default function CartPage() {
 
                 {hasAllPrices && total > 0 && (
                   <button onClick={handlePaystack} disabled={payLoading}
-                    className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white py-3 rounded-lg font-semibold text-sm transition-colors">
+                    className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white py-3 rounded-xl font-semibold text-sm transition-colors">
                     {payLoading ? <Loader2 size={15} className="animate-spin" /> : <CreditCard size={15} />}
                     {payLoading ? "Processing..." : `Pay ₦${total.toLocaleString()}`}
                   </button>
                 )}
 
                 <a href={`https://wa.me/2349064811857?text=${waMessage}`} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 border border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white py-3 rounded-lg font-semibold text-sm transition-colors">
+                  className="flex items-center justify-center gap-2 border border-gray-200 text-gray-700 hover:border-gray-900 hover:bg-gray-900 hover:text-white py-3 rounded-xl font-semibold text-sm transition-colors">
                   <MessageCircle size={16} />
                   {hasAllPrices ? "Checkout via WhatsApp" : "Request Quote via WhatsApp"}
                 </a>

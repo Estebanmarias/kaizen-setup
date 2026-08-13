@@ -1,13 +1,13 @@
 "use client";
 
-import BackLink from "@/components/BackLink";
+// import BackLink from "@/components/BackLink";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import {
   User, Package, LogOut, Clock, ShoppingBag,
   ChevronDown, ChevronUp, ChevronRight, Camera, Check,
-  Loader2, Heart, X, ShoppingCart, Users, MapPin,
+  Loader2, Heart, X, ShoppingCart, Users, MapPin, ArrowLeft
 } from "lucide-react";
 import Link from "next/link";
 import ReferralTab from "@/components/ReferralTab";
@@ -298,7 +298,9 @@ export default function AccountPage() {
   return (
     <main className="min-h-screen bg-white pt-24 pb-20 px-6">
       <div className="max-w-2xl mx-auto">
-        <div className="flex justify-end mb-8"><BackLink /></div>
+        <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-blue-500 hover:underline mb-8">
+          <ArrowLeft size={13} /> Back to Home
+        </Link>
 
         {/* Profile card */}
         <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 mb-4 flex items-center gap-5">

@@ -436,7 +436,9 @@ export default function ProductDetailPage() {
       )}
 
       <div className="max-w-4xl mx-auto">
-        <div className="flex justify-end mb-8"><BackLink href="/shop" label="Back to Shop" /></div>
+        <Link href="/shop" className="inline-flex items-center gap-1.5 text-sm text-blue-500 hover:underline mb-8">
+          <ArrowLeft size={13} /> Back to Shop
+        </Link>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-16">
           {/* Image Gallery */}
@@ -541,7 +543,7 @@ export default function ProductDetailPage() {
                     {addedToCart ? <><Check size={16} /> Added to Cart</> : <><ShoppingCart size={16} /> Add to Cart</>}
                   </button>
                   <a href={`https://wa.me/2349064811857?text=${waMessage}`} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 border border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white py-3 rounded-lg font-semibold text-sm transition-colors">
+                    className="flex items-center justify-center gap-2 border border-gray-200 text-gray-700 hover:border-gray-900 hover:bg-gray-900 hover:text-white py-3 rounded-xl font-semibold text-sm transition-colors">
                     <MessageCircle size={16} /> Order via WhatsApp
                   </a>
                 </>

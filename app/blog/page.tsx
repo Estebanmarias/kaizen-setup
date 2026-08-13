@@ -1,9 +1,9 @@
 "use client";
 
-import BackLink from "@/components/BackLink";
 import { useEffect, useState } from "react";
 import { MediumPost } from "@/lib/medium";
 import Link from "next/link";
+import { ArrowLeft, ArrowUpRight } from "lucide-react";
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("en-NG", {
@@ -30,24 +30,21 @@ export default function BlogPage() {
     <main className="min-h-screen bg-white pt-24 pb-20 px-6">
       <div className="max-w-6xl mx-auto">
 
+        {/* Back */}
+        <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-blue-500 hover:underline mb-10">
+          <ArrowLeft size={13} /> Back to Home
+        </Link>
+
         {/* Header */}
         <div className="mb-10">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
             <p className="text-xs font-semibold tracking-widest uppercase text-blue-500">The Blog</p>
-            <BackLink />
           </div>
-          <h1 className="text-3xl md:text-5xl font-bold mb-4 text-gray-900">Coming Soon</h1>
-          <p className="text-gray-500 max-w-xl mb-8">
-            We're building a proper home for our tech guides, honest reviews, and setup breakdowns.
-            In the meantime, find our latest writing on Medium below.
+          <h1 className="text-3xl md:text-5xl font-bold mb-4 text-gray-900">Articles & Guides</h1>
+          <p className="text-gray-500 max-w-xl">
+            Tech guides, honest reviews, and setup breakdowns — written from real experience in the Nigerian market.
           </p>
-          <div className="inline-flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-2xl px-6 py-4">
-            <span className="text-2xl">🔧</span>
-            <div>
-              <p className="text-sm font-semibold text-blue-700">Full blog launching soon</p>
-              <p className="text-xs text-blue-500">Guides, reviews, and setup breakdowns — hosted right here.</p>
-            </div>
-          </div>
         </div>
 
         {/* Tab switcher */}
@@ -65,16 +62,16 @@ export default function BlogPage() {
 
         {/* Medium posts */}
         <div>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="h-px flex-1 bg-gray-200" />
+          <div className="flex items-center gap-3 mb-8">
+            <div className="h-px flex-1 bg-gray-100" />
             <p className="text-xs font-semibold tracking-widest uppercase text-gray-400">From Our Medium</p>
-            <div className="h-px flex-1 bg-gray-200" />
+            <div className="h-px flex-1 bg-gray-100" />
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="bg-gray-50 border border-gray-200 rounded-xl p-6 animate-pulse h-52" />
+                <div key={i} className="bg-gray-50 border border-gray-200 rounded-2xl p-6 animate-pulse h-52" />
               ))}
             </div>
           ) : posts.length === 0 ? (
@@ -83,32 +80,32 @@ export default function BlogPage() {
               <p>No Medium posts found.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {posts.map(post => (
                 <a key={post.link} href={post.link} target="_blank" rel="noopener noreferrer"
-                  className="bg-gray-50 border border-gray-200 rounded-xl p-6 hover:border-blue-500 transition-colors flex flex-col group">
+                  className="bg-gray-50 border border-gray-200 rounded-2xl p-6 hover:border-blue-500 hover:shadow-sm transition-all flex flex-col group">
                   {post.categories[0] && (
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 w-fit mb-4">
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 w-fit mb-4">
                       {post.categories[0]}
                     </span>
                   )}
-                  <h2 className="font-semibold text-base mb-2 text-gray-900 group-hover:text-blue-500 transition-colors">
+                  <h2 className="font-bold text-base mb-2 text-gray-900 group-hover:text-blue-500 transition-colors flex-1">
                     {post.title}
                   </h2>
-                  <p className="text-sm text-gray-500 mb-6 leading-relaxed flex-1">{post.excerpt}</p>
+                  <p className="text-sm text-gray-500 mb-5 leading-relaxed">{post.excerpt}</p>
                   <div className="flex items-center justify-between text-xs text-gray-400">
                     <span>{formatDate(post.date)}</span>
-                    <span>{readTime(post.excerpt)}</span>
+                    <span className="flex items-center gap-1">{readTime(post.excerpt)} <ArrowUpRight size={11} /></span>
                   </div>
                 </a>
               ))}
             </div>
           )}
 
-          <div className="mt-8 text-center">
+          <div className="mt-10 text-center">
             <a href="https://medium.com/@kaizensetup.ng" target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-blue-500 hover:underline">
-              Read all posts on Medium →
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-500 hover:underline">
+              Read all posts on Medium <ArrowUpRight size={13} />
             </a>
           </div>
         </div>
