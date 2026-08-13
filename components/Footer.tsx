@@ -97,7 +97,11 @@ export default function Footer() {
 
         <div className="border-t border-gray-800 pt-6 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-gray-600">
           <p>© {new Date().getFullYear()} KaizenSetup. All rights reserved.</p>
-          <p>Ibadan, Nigeria 🇳🇬</p>
+          <div className="flex items-center gap-4">
+            <Link href="/privacy" className="hover:text-gray-400 transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-gray-400 transition-colors">Terms of Service</Link>
+            <p>Ibadan, Nigeria 🇳🇬</p>
+          </div>
         </div>
       </div>
     </footer>
